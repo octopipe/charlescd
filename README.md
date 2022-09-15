@@ -1,5 +1,3 @@
-# The Charles project has been archived by Zup Innovation. It might start again eventually; however, we won't deliver support for now.
-
 ![build butler](https://github.com/ZupIT/charlescd/workflows/build%20butler/badge.svg)
 [![codecov](https://codecov.io/gh/ZupIT/charlescd/branch/master/graph/badge.svg)](https://codecov.io/gh/ZupIT/charlescd)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
