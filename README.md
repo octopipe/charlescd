@@ -1,11 +1,6 @@
 # The Charles project has been archived by Zup Innovation. It might start again eventually; however, we won't deliver support for now.
 
 ![build butler](https://github.com/ZupIT/charlescd/workflows/build%20butler/badge.svg)
-![build circle-matcher](https://github.com/ZupIT/charlescd/workflows/build%20circle-matcher/badge.svg)
-![build compass](https://github.com/ZupIT/charlescd/workflows/build%20compass/badge.svg)
-![build moove](https://github.com/ZupIT/charlescd/workflows/build%20moove/badge.svg)
-![build octopipe](https://github.com/ZupIT/charlescd/workflows/build%20octopipe/badge.svg)
-![build villager](https://github.com/ZupIT/charlescd/workflows/build%20villager/badge.svg)
 [![codecov](https://codecov.io/gh/ZupIT/charlescd/branch/master/graph/badge.svg)](https://codecov.io/gh/ZupIT/charlescd)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -39,13 +34,6 @@ It is possible to segment your customers through specific characteristics (circl
 Currently, CharlesCD works with these modules: 
 
 - [**Butler**](https://github.com/ZupIT/charlescd/tree/main/butler)
-- [**Circle-Matcher**](https://github.com/ZupIT/charlescd/tree/main/circle-matcher)
-- [**Compass**](https://github.com/ZupIT/charlescd/tree/main/compass)
-- [**Gate**](https://github.com/ZupIT/charlescd/tree/main/gate)
-- [**Hermes**](https://github.com/ZupIT/charlescd/tree/main/hermes)
-- [**Moove**](https://github.com/ZupIT/charlescd/tree/main/moove)
-- [**UI**](https://github.com/ZupIT/charlescd/tree/main/ui)
-- [**Villager**](https://github.com/ZupIT/charlescd/tree/main/villager)
 
 ## **How was the project created?**
 The project's concept refers to the theory proposed by biologist Charles Darwin (1809-1882), that evolution occurs through adaptation to a new environment. In the development's case, this logic happens through constant improvements in applications, for example, when you build and test hypotheses to deploy more effective releases.
@@ -74,10 +62,6 @@ CharlesCD's installation considers these components:
 
 1. Charles' architecture specific modules; 
 2. **Keycloak**, used for the project's authentication and authorization. However, if you already have an Identity Manager (IDM) and you want to use it, you have just to configure it during Charles' installation;
-3. A PostgreSQL database for backend modules (`charlescd-moove`, `charlescd-butler`,`charlescd-villager`, `charlescd-gate` e `charlescd-compass`) and Keycloak;
-4. A **Redis** to be used by Circle Matcher module (`charlescd-circle-matcher`);
-5. A **RabbitMQ** for `charlescd-hermes` module's use.
-6. **Ingress** which is used to expose the HTTP and HTTPS routes outside the cluster to services inside the cluster. When you install Charles, it already has a default ingress, however, you can use your own.
 
 ### **Usage**
 For more details, check out the [**documentation**](https://docs.charlescd.io/v1.0.x/overview/).

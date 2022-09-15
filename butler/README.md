@@ -1,53 +1,86 @@
-
 # **CharlesCD Butler**
 
 ## **Table of contents**
-### 1. [**About**](#about)
-### 2. [**How does Butler work?**](#how-does-butler-work?)
-### 3. [**Usage**](#usage)
->#### 3.1. [**Requirements**](#requirements)
->#### 3.2. [**Configuration**](#configuration)
-### 4. [**Documentation**](#documentation)
+### 1. [**Getting Started**](#getting-started)
+>#### 1.1. [**Running on the cluster**](#requirements)
+>#### 1.2. [**Uninstall CRDs**](#uninstall-crds)
+>#### 1.3. [**Undeploy controller**](#undeploy-controller)
+>#### 1.4. [**How it works**](#how-it-works)
+>#### 1.5. [**Test It Out**](#test-it-out)
+>#### 1.6. [**Modifying the API definitions**](#modifying-the-api-definitions)
 ### 5. [**Contributing**](#contributing)
 ### 6. [**License**](#license)
 ### 7. [**Community**](#community)
 
-## **About**
-Butler is a Kubernetes deployment tool that abstracts the routing feature of Istio's service mesh. It enables access to different applications versions based on a custom header value. 
 
-## **How does Butler work?** 
+## Getting Started
+You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
+**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
-* Butler has a pluggable architecture and enables different Continuous Deployment (CD) tools that communicate with the Kubernetes cluster.
-* It abstracts the state of the cluster inside its database, diminishing the coupling with Continuous Deployment (CD) tools, therefore allowing them to be changed without a problem.
-* It has an easy-to-use API that enables the deployment of various applications at the same time.
+### Running on the cluster
+1. Install Instances of Custom Resources:
 
-## **Usage**
-
-### **Requirements**
-See below the requirements to run Butler: 
-- A working [**Node environment**](https://nodejs.org/en/);
-- [**Docker**](https://docs.docker.com/get-docker/) installed.
-
-
-### **Configuration** 
-
-1. Clone this project and run the following commands inside the root folder:
-
-```
-npm install
-docker-compose up
-npm start
+```sh
+kubectl apply -f config/samples/
 ```
 
-2. These commands will install all project dependencies. Right after, you must: 
-    - Run two containers with a PostgreSQL database and a stub server;
-    - Start the application on port 3000.
+2. Build and push your image to the location specified by `IMG`:
+	
+```sh
+make docker-build docker-push IMG=<some-registry>/butler:tag
+```
+	
+3. Deploy the controller to the cluster with the image specified by `IMG`:
 
-A **Swagger API Documentation** is provided on application startup. We also provide an up to date [**Postman Collection**](https://www.postman.com/).
+```sh
+make deploy IMG=<some-registry>/butler:tag
+```
 
-## **Documentation**
+### Uninstall CRDs
+To delete the CRDs from the cluster:
 
-For more information about CharlesCD, please check out the [**documentation**](https://docs.charlescd.io/).
+```sh
+make uninstall
+```
+
+### Undeploy controller
+UnDeploy the controller to the cluster:
+
+```sh
+make undeploy
+```
+
+### How it works
+This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
+
+It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
+which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
+
+### Test It Out
+1. Install the CRDs into the cluster:
+
+```sh
+make install
+```
+
+2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
+
+```sh
+make run
+```
+
+**NOTE:** You can also run this in one step by running: `make install run`
+
+### Modifying the API definitions
+If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
+
+```sh
+make manifests
+```
+
+**NOTE:** Run `make --help` for more information on all potential `make` targets
+
+More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
 
 ## **Contributing**
 
@@ -97,3 +130,4 @@ For this method, your name and e-mail must be the same registered on your GitHub
 ## **Community**
 
 Do you have any question about CharlesCD? Let's chat in our [**forum**](https://forum.zup.com.br/).
+

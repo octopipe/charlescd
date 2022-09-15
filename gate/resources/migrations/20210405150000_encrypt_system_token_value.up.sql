@@ -1,1 +1,0 @@
-ALTER TABLE system_tokens ADD token bytea;

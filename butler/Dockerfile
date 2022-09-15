@@ -1,24 +1,27 @@
-FROM node@sha256:be1c8c7f0b61e86c4ee94b12d18a810fedfc2a29d4d0ef0ce1ff89c1f2efca11
+# Build the manager binary
+FROM golang:1.18 as builder
 
-ENV APP_PATH /opt/darwin-deploy
+WORKDIR /workspace
+# Copy the Go Modules manifests
+COPY go.mod go.mod
+COPY go.sum go.sum
+# cache deps before building and copying source so that we don't need to re-download as much
+# and so that source changes don't invalidate our downloaded layer
+RUN go mod download
 
-RUN apk upgrade --update-cache --available && \
-    apk add openssl && \
-    rm -rf /var/cache/apk/*
+# Copy the go source
+COPY main.go main.go
+COPY api/ api/
+COPY controllers/ controllers/
 
-ARG HELM_VERSION=v3.5.1
+# Build
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager main.go
 
-RUN wget -q -O - https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | /bin/sh -s -- --version $HELM_VERSION
+# Use distroless as minimal base image to package the manager binary
+# Refer to https://github.com/GoogleContainerTools/distroless for more details
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
+COPY --from=builder /workspace/manager .
+USER 65532:65532
 
-RUN helm version
-
-RUN mkdir -p $APP_PATH
-WORKDIR $APP_PATH
-COPY . $APP_PATH
-
-RUN npm ci
-RUN npm run build
-
-ENV NODE_OPTIONS --enable-source-maps
-
-ENTRYPOINT node dist/main.js
+ENTRYPOINT ["/manager"]
