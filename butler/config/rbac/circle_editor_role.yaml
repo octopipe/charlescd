@@ -1,13 +1,13 @@
-# permissions for end users to edit stacks.
+# permissions for end users to edit circles.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: stack-editor-role
+  name: circle-editor-role
 rules:
 - apiGroups:
-  - stack.octopipe.io
+  - charlescd.io
   resources:
-  - stacks
+  - circles
   verbs:
   - create
   - delete
@@ -17,8 +17,8 @@ rules:
   - update
   - watch
 - apiGroups:
-  - stack.octopipe.io
+  - charlescd.io
   resources:
-  - stacks/status
+  - circles/status
   verbs:
   - get

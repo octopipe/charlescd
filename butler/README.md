@@ -130,4 +130,3 @@ For this method, your name and e-mail must be the same registered on your GitHub
 ## **Community**
 
 Do you have any question about CharlesCD? Let's chat in our [**forum**](https://forum.zup.com.br/).
-

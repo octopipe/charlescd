@@ -1,0 +1,6 @@
+apiVersion: charlescd.io/v1alpha1
+kind: Circle
+metadata:
+  name: circle-sample
+spec:
+  # TODO(user): Add fields here

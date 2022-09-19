@@ -23,48 +23,54 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// StackSpec defines the desired state of Stack
-type StackSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of Stack. Edit stack_types.go to remove/update
-	Resources []string `json:"resources,omitempty"`
+type CircleModule struct {
+	ModuleRef string `json:"moduleRef,omitempty"`
+	Revision  string `json:"revision,omitempty"`
 }
 
-type StackError struct {
-	Message string `json:"message,omitempty"`
+type CircleEnvironments struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
-// StackStatus defines the observed state of Stack
-type StackStatus struct {
+// CircleSpec defines the desired state of Circle
+type CircleSpec struct {
+	Author       string               `json:"author,omitempty"`
+	Modules      []CircleModule       `json:"modules,omitempty"`
+	Environments []CircleEnvironments `json:"environments,omitempty"`
+	Overrides    map[string]string    `json:"Overrides,omitempty"`
+}
+
+// CircleStatus defines the observed state of Circle
+type CircleStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Status string       `json:"status,omitempty"`
-	Errors []StackError `json:"errors,omitempty"`
+
+	Status string   `json:"status,omitempty"`
+	Errors []string `json:"errors,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Stack is the Schema for the stacks API
-type Stack struct {
+// Circle is the Schema for the circles API
+type Circle struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   StackSpec   `json:"spec,omitempty"`
-	Status StackStatus `json:"status,omitempty"`
+	Spec   CircleSpec   `json:"spec,omitempty"`
+	Status CircleStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// StackList contains a list of Stack
-type StackList struct {
+// CircleList contains a list of Circle
+type CircleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Stack `json:"items"`
+	Items           []Circle `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Stack{}, &StackList{})
+	SchemeBuilder.Register(&Circle{}, &CircleList{})
 }

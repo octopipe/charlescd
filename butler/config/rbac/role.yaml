@@ -6,9 +6,9 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - stack.octopipe.io
+  - charlescd.io
   resources:
-  - resources
+  - circles
   verbs:
   - create
   - delete
@@ -18,23 +18,23 @@ rules:
   - update
   - watch
 - apiGroups:
-  - stack.octopipe.io
+  - charlescd.io
   resources:
-  - resources/finalizers
+  - circles/finalizers
   verbs:
   - update
 - apiGroups:
-  - stack.octopipe.io
+  - charlescd.io
   resources:
-  - resources/status
+  - circles/status
   verbs:
   - get
   - patch
   - update
 - apiGroups:
-  - stack.octopipe.io
+  - charlescd.io
   resources:
-  - stacks
+  - modules
   verbs:
   - create
   - delete
@@ -44,15 +44,15 @@ rules:
   - update
   - watch
 - apiGroups:
-  - stack.octopipe.io
+  - charlescd.io
   resources:
-  - stacks/finalizers
+  - modules/finalizers
   verbs:
   - update
 - apiGroups:
-  - stack.octopipe.io
+  - charlescd.io
   resources:
-  - stacks/status
+  - modules/status
   verbs:
   - get
   - patch

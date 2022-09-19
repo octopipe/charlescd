@@ -1,0 +1,11 @@
+apiVersion: charlescd.io/v1alpha1
+kind: Module
+metadata:
+  name: charlescd-guestbook-simple
+spec:
+  author: Mayco Pacheco
+  repositoryPath: git@github.com:octopipe/charlescd-samples.git
+  deploymentPath: guestbook
+  secretRef: default/mysecret
+  templateType: simple
+  # TODO(user): Add fields here

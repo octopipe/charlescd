@@ -5,20 +5,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
-  name: resources.stack.octopipe.io
+  name: modules.charlescd.io
 spec:
-  group: stack.octopipe.io
+  group: charlescd.io
   names:
-    kind: Resource
-    listKind: ResourceList
-    plural: resources
-    singular: resource
+    kind: Module
+    listKind: ModuleList
+    plural: modules
+    singular: module
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Resource is the Schema for the resources API
+        description: Module is the Schema for the modules API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,24 +33,24 @@ spec:
           metadata:
             type: object
           spec:
-            description: ResourceSpec defines the desired state of Resource
             properties:
-              category:
+              author:
                 type: string
-              configRef:
+              deploymentPath:
                 type: string
-              type:
+              repositoryPath:
+                type: string
+              secretRef:
+                type: string
+              templateType:
                 type: string
             type: object
           status:
-            description: ResourceStatus defines the observed state of Resource
+            description: ModuleStatus defines the observed state of Module
             properties:
               error:
                 type: string
               status:
-                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
-                  of cluster Important: Run "make" to regenerate code after modifying
-                  this file'
                 type: string
             type: object
         type: object

@@ -5,20 +5,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
-  name: stacks.stack.octopipe.io
+  name: circles.charlescd.io
 spec:
-  group: stack.octopipe.io
+  group: charlescd.io
   names:
-    kind: Stack
-    listKind: StackList
-    plural: stacks
-    singular: stack
+    kind: Circle
+    listKind: CircleList
+    plural: circles
+    singular: circle
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Stack is the Schema for the stacks API
+        description: Circle is the Schema for the circles API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,29 +33,41 @@ spec:
           metadata:
             type: object
           spec:
-            description: StackSpec defines the desired state of Stack
+            description: CircleSpec defines the desired state of Circle
             properties:
-              resources:
-                description: Foo is an example field of Stack. Edit stack_types.go
-                  to remove/update
-                items:
+              Overrides:
+                additionalProperties:
                   type: string
-                type: array
-            type: object
-          status:
-            description: StackStatus defines the observed state of Stack
-            properties:
-              errors:
+                type: object
+              author:
+                type: string
+              environments:
                 items:
                   properties:
-                    message:
+                    key:
+                      type: string
+                    value:
                       type: string
                   type: object
                 type: array
+              modules:
+                items:
+                  properties:
+                    moduleRef:
+                      type: string
+                    revision:
+                      type: string
+                  type: object
+                type: array
+            type: object
+          status:
+            description: CircleStatus defines the observed state of Circle
+            properties:
+              errors:
+                items:
+                  type: string
+                type: array
               status:
-                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
-                  of cluster Important: Run "make" to regenerate code after modifying
-                  this file'
                 type: string
             type: object
         type: object

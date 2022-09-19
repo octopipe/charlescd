@@ -23,20 +23,21 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// ResourceSpec defines the desired state of Resource
-type ResourceSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+// ModuleSpec defines the desired state of Module
 
-	Category  string `json:"category,omitempty"`
-	Type      string `json:"type,omitempty"`
-	ConfigRef string `json:"configRef,omitempty"`
+type ModuleSpec struct {
+	Author         string  `json:"author,omitempty"`
+	RepositoryPath string  `json:"repositoryPath,omitempty"`
+	SecretRef      *string `json:"secretRef,omitempty"`
+	DeploymentPath string  `json:"deploymentPath,omitempty"`
+	TemplateType   string  `json:"templateType,omitempty"`
 }
 
-// ResourceStatus defines the observed state of Resource
-type ResourceStatus struct {
+// ModuleStatus defines the observed state of Module
+type ModuleStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
 	Status string `json:"status,omitempty"`
 	Error  string `json:"error,omitempty"`
 }
@@ -44,24 +45,24 @@ type ResourceStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Resource is the Schema for the resources API
-type Resource struct {
+// Module is the Schema for the modules API
+type Module struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ResourceSpec   `json:"spec,omitempty"`
-	Status ResourceStatus `json:"status,omitempty"`
+	Spec   ModuleSpec   `json:"spec,omitempty"`
+	Status ModuleStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// ResourceList contains a list of Resource
-type ResourceList struct {
+// ModuleList contains a list of Module
+type ModuleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Resource `json:"items"`
+	Items           []Module `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Resource{}, &ResourceList{})
+	SchemeBuilder.Register(&Module{}, &ModuleList{})
 }

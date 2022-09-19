@@ -34,7 +34,7 @@ import (
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/engine"
-	stackv1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
+	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -55,7 +55,7 @@ type ResourceInfo struct {
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(stackv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(charlescdiov1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -73,6 +73,7 @@ func main() {
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
+
 	config := ctrl.GetConfigOrDie()
 	logger := zap.New(zap.UseFlagOptions(&opts))
 
@@ -89,13 +90,14 @@ func main() {
 	gitOpsEngine := engine.NewEngine(config, clusterCache, engine.WithLogr(logger))
 
 	ctrl.SetLogger(logger)
-	mgr, err := ctrl.NewManager(config, ctrl.Options{
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "41ac184c.octopipe.io",
+		LeaderElectionID:       "dec90f54.charlescd.io",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
@@ -113,20 +115,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.StackReconciler{
+	if err = (&controllers.ModuleReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		GitOpsEngine: gitOpsEngine,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Stack")
+		setupLog.Error(err, "unable to create controller", "controller", "Module")
 		os.Exit(1)
 	}
-	if err = (&controllers.ResourceReconciler{
+	if err = (&controllers.CircleReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		GitOpsEngine: gitOpsEngine,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Resource")
+		setupLog.Error(err, "unable to create controller", "controller", "Circle")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
