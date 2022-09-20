@@ -67,16 +67,12 @@ type ModuleReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *ModuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-	logger.Info("MODULE SYNC")
-
-	// TODO(user): your logic here
-	fmt.Println(req)
+	_ = log.FromContext(ctx)
 
 	return ctrl.Result{}, nil
 }
 
-func (r *ModuleReconciler) getSecretByModule(secretRef string) (transport.AuthMethod, error) {
+func (r *ModuleReconciler) getSecretByModule(secretRef string) (apiv1.Secret, error) {
 	path := strings.Split(secretRef, "/")
 	name := ""
 	namespace := "default"
@@ -91,9 +87,13 @@ func (r *ModuleReconciler) getSecretByModule(secretRef string) (transport.AuthMe
 	}}
 	err := r.Client.Get(context.Background(), client.ObjectKeyFromObject(&secret), &secret)
 	if err != nil {
-		return nil, err
+		return apiv1.Secret{}, err
 	}
 
+	return secret, nil
+}
+
+func (r *ModuleReconciler) getAuthMethodBySecret(secret apiv1.Secret) (transport.AuthMethod, error) {
 	if len(secret.Data["sshPrivateKey"]) > 0 {
 		return ssh.NewPublicKeys("git", secret.Data["sshPrivateKey"], "")
 	}
@@ -107,9 +107,9 @@ func (r *ModuleReconciler) getSecretByModule(secretRef string) (transport.AuthMe
 		return authMethod, nil
 	}
 
-	if len(secret.Data["accessToken"]) > 0 {
+	if len(secret.Data["username"]) > 0 && len(secret.Data["accessToken"]) > 0 {
 		authMethod := &http.BasicAuth{
-			Username: "git-user",
+			Username: string(secret.Data["username"]),
 			Password: string(secret.Data["accessToken"]),
 		}
 
@@ -130,15 +130,19 @@ func (r *ModuleReconciler) modulesPredicate() predicate.Predicate {
 				Auth: nil,
 			}
 			if module.Spec.SecretRef != nil {
-				authMethod, err := r.getSecretByModule(*module.Spec.SecretRef)
+				secret, err := r.getSecretByModule(*module.Spec.SecretRef)
 				if err != nil {
 					logger.Error(err, "FAILED_GET_SECRET_BY_MODULE")
+				}
+				authMethod, err := r.getAuthMethodBySecret(secret)
+				if err != nil {
+					logger.Error(err, "FAILED_GET_AUTH_METHOD")
 				}
 				gitCloneConfig.Auth = authMethod
 			}
 
 			_, err := git.PlainClone(fmt.Sprintf("./tmp/repositories/%s", module.GetName()), false, gitCloneConfig)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "repository already exists") {
 				logger.Error(err, "FAILED_CLONE_REPO")
 			}
 
