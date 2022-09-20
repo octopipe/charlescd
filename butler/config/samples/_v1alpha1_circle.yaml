@@ -3,4 +3,12 @@ kind: Circle
 metadata:
   name: circle-sample
 spec:
+  author: Maycon Pacheco
+  environments:
+    - key: API_PATH
+      value: http://api.default.io
+  modules:
+    - moduleRef: charlescd-guestbook-simple
+      revision: "aaaa"
+  
   # TODO(user): Add fields here

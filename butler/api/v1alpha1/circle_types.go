@@ -24,8 +24,9 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 type CircleModule struct {
-	ModuleRef string `json:"moduleRef,omitempty"`
-	Revision  string `json:"revision,omitempty"`
+	ModuleRef string            `json:"moduleRef,omitempty"`
+	Revision  string            `json:"revision,omitempty"`
+	Overrides map[string]string `json:"Overrides,omitempty"`
 }
 
 type CircleEnvironments struct {
@@ -38,7 +39,6 @@ type CircleSpec struct {
 	Author       string               `json:"author,omitempty"`
 	Modules      []CircleModule       `json:"modules,omitempty"`
 	Environments []CircleEnvironments `json:"environments,omitempty"`
-	Overrides    map[string]string    `json:"Overrides,omitempty"`
 }
 
 // CircleStatus defines the observed state of Circle

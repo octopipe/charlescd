@@ -20,10 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	apiv1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -73,19 +73,9 @@ func (r *ModuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 }
 
 func (r *ModuleReconciler) getSecretByModule(secretRef string) (apiv1.Secret, error) {
-	path := strings.Split(secretRef, "/")
-	name := ""
-	namespace := "default"
-	if len(path) > 1 && path[0] != "" {
-		namespace = path[0]
-		name = path[1]
-	}
-
-	secret := apiv1.Secret{ObjectMeta: metav1.ObjectMeta{
-		Name:      name,
-		Namespace: namespace,
-	}}
-	err := r.Client.Get(context.Background(), client.ObjectKeyFromObject(&secret), &secret)
+	secretObjectKey := getObjectKeyByPath(secretRef)
+	secret := apiv1.Secret{}
+	err := r.Client.Get(context.Background(), secretObjectKey, &secret)
 	if err != nil {
 		return apiv1.Secret{}, err
 	}
@@ -114,7 +104,6 @@ func (r *ModuleReconciler) getAuthMethodBySecret(secret apiv1.Secret) (transport
 		}
 
 		return authMethod, nil
-
 	}
 
 	return nil, errors.New("repository auth method is not valid")
@@ -133,15 +122,18 @@ func (r *ModuleReconciler) modulesPredicate() predicate.Predicate {
 				secret, err := r.getSecretByModule(*module.Spec.SecretRef)
 				if err != nil {
 					logger.Error(err, "FAILED_GET_SECRET_BY_MODULE")
+					return false
 				}
 				authMethod, err := r.getAuthMethodBySecret(secret)
 				if err != nil {
 					logger.Error(err, "FAILED_GET_AUTH_METHOD")
+					return false
 				}
 				gitCloneConfig.Auth = authMethod
 			}
 
-			_, err := git.PlainClone(fmt.Sprintf("./tmp/repositories/%s", module.GetName()), false, gitCloneConfig)
+			// TODO: Parametize repo tmp path
+			_, err := git.PlainClone(fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), module.GetName()), false, gitCloneConfig)
 			if err != nil && !strings.Contains(err.Error(), "repository already exists") {
 				logger.Error(err, "FAILED_CLONE_REPO")
 			}
@@ -154,7 +146,6 @@ func (r *ModuleReconciler) modulesPredicate() predicate.Predicate {
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			// Evaluates to false if the object has been confirmed deleted.
-			fmt.Println("DELETE MODULE")
 			return !e.DeleteStateUnknown
 		},
 	}

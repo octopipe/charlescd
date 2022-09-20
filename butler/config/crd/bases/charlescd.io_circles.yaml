@@ -35,10 +35,6 @@ spec:
           spec:
             description: CircleSpec defines the desired state of Circle
             properties:
-              Overrides:
-                additionalProperties:
-                  type: string
-                type: object
               author:
                 type: string
               environments:
@@ -53,6 +49,10 @@ spec:
               modules:
                 items:
                   properties:
+                    Overrides:
+                      additionalProperties:
+                        type: string
+                      type: object
                     moduleRef:
                       type: string
                     revision:

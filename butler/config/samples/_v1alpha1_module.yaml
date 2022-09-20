@@ -8,4 +8,3 @@ spec:
   deploymentPath: guestbook
   secretRef: default/mysecret
   templateType: simple
-  # TODO(user): Add fields here

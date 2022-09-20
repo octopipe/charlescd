@@ -34,6 +34,7 @@ import (
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/engine"
+	"github.com/joho/godotenv"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/controllers"
 	//+kubebuilder:scaffold:imports
@@ -60,6 +61,7 @@ func init() {
 }
 
 func main() {
+
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
@@ -74,6 +76,7 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
+	_ = godotenv.Load()
 	config := ctrl.GetConfigOrDie()
 	logger := zap.New(zap.UseFlagOptions(&opts))
 
