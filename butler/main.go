@@ -17,8 +17,11 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
+	"strconv"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -37,6 +40,7 @@ import (
 	"github.com/joho/godotenv"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/controllers"
+	butlerEngine "github.com/octopipe/charlescd/butler/engine"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -144,6 +148,21 @@ func main() {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
+
+	butlerEngine := butlerEngine.NewEngine(mgr.GetClient(), logger, gitOpsEngine)
+	go func() {
+		resyncSeconds, _ := strconv.Atoi(os.Getenv("RESYNC_SECONDS"))
+
+		ticker := time.NewTicker(time.Second * time.Duration(resyncSeconds))
+		for {
+			<-ticker.C
+			logger.Info("Synchronization triggered by timer")
+			err = butlerEngine.Sync(context.Background())
+			if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+				setupLog.Error(err, "FAILED_SYNC_CLUESTER")
+			}
+		}
+	}()
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
