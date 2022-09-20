@@ -6,6 +6,7 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
@@ -37,27 +38,28 @@ func (e Engine) Sync(ctx context.Context) error {
 		return err
 	}
 
+	manifests := []*unstructured.Unstructured{}
 	for _, circle := range circles.Items {
-		manifests, err := e.parseManifests(ctx, circle, circle.Spec.Modules)
+		manifests, err = e.parseManifests(ctx, circle, circle.Spec.Modules)
 		if err != nil {
 			e.logger.Error(err, "FAILED_PARSE_MANIFESTS")
 			return err
 		}
-
-		res, err := e.GitOpsEngine.Sync(context.Background(), manifests, func(r *cache.Resource) bool {
-			return true
-		}, "", "default", sync.WithPrune(true), sync.WithLogr(e.logger))
-		if err != nil {
-			e.logger.Error(err, "FAILED_ENGINE_SYNC")
-			return err
-		}
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		_, _ = fmt.Fprintf(w, "RESOURCE\tRESULT\n")
-		for _, res := range res {
-			_, _ = fmt.Fprintf(w, "%s\t%s\n", res.ResourceKey.String(), res.Message)
-		}
-		_ = w.Flush()
 	}
+
+	res, err := e.GitOpsEngine.Sync(context.Background(), manifests, func(r *cache.Resource) bool {
+		return true
+	}, "", "default", sync.WithPrune(true), sync.WithLogr(e.logger))
+	if err != nil {
+		e.logger.Error(err, "FAILED_ENGINE_SYNC")
+		return err
+	}
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	_, _ = fmt.Fprintf(w, "RESOURCE\tRESULT\n")
+	for _, res := range res {
+		_, _ = fmt.Fprintf(w, "%s\t%s\n", res.ResourceKey.String(), res.Message)
+	}
+	_ = w.Flush()
 
 	return nil
 }
