@@ -87,7 +87,7 @@ func main() {
 				ManagedBy: un.GetAnnotations()[utils.AnnotationManagedBy],
 				GCMark:    un.GetAnnotations()[utils.AnnotationGCMark],
 			}
-			cacheManifest := managedBy != utils.ManagedBy
+			cacheManifest := managedBy == utils.ManagedBy
 			return info, cacheManifest
 		}),
 	)

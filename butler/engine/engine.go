@@ -51,7 +51,7 @@ func (e Engine) Sync(ctx context.Context) error {
 	}
 	deletePropagationPolicy := v1.DeletePropagationBackground
 	res, err := e.GitOpsEngine.Sync(context.Background(), manifests, func(r *cache.Resource) bool {
-		return r.Info.(*utils.ResourceInfo).ManagedBy == utils.AnnotationManagedBy
+		return r.Info.(*utils.ResourceInfo).ManagedBy == utils.ManagedBy
 	}, time.Now().String(), "default", sync.WithPrune(true), sync.WithPruneLast(true), sync.WithPrunePropagationPolicy(&deletePropagationPolicy))
 	if err != nil {
 		e.logger.Error(err, "FAILED_ENGINE_SYNC")
