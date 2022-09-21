@@ -25,7 +25,7 @@ func (e Engine) parseManifests(ctx context.Context, circle charlescdiov1alpha1.C
 		}
 
 		deploymentPath := module.Spec.DeploymentPath
-		repositoryPath := fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), module.GetName())
+		repositoryPath := fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), module.Spec.RepositoryPath)
 		if err := filepath.Walk(filepath.Join(repositoryPath, deploymentPath), func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -57,7 +57,8 @@ func (e Engine) parseManifests(ctx context.Context, circle charlescdiov1alpha1.C
 			annotations = make(map[string]string)
 		}
 
-		annotations["charlecd.io/circle-controller"] = fmt.Sprintf("%s/%s", circle.GetNamespace(), circle.GetName())
+		annotations[utils.AnnotationGCMark] = fmt.Sprintf("%s/%s", circle.GetNamespace(), circle.GetName())
+		annotations[utils.AnnotationManagedBy] = utils.ManagedBy
 		manifests[i].SetName(fmt.Sprintf("%s-%s", circle.GetName(), manifests[i].GetName()))
 		manifests[i].SetAnnotations(annotations)
 	}

@@ -10,5 +10,7 @@ spec:
   modules:
     - moduleRef: charlescd-guestbook-simple
       revision: "aaaa"
+    - moduleRef: charlescd-guestbook-simple-server
+      revision: bbb
   
   # TODO(user): Add fields here

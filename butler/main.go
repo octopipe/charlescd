@@ -41,21 +41,15 @@ import (
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/controllers"
 	butlerEngine "github.com/octopipe/charlescd/butler/engine"
+	httpServer "github.com/octopipe/charlescd/butler/server"
+	"github.com/octopipe/charlescd/butler/utils"
 	//+kubebuilder:scaffold:imports
-)
-
-const (
-	annotationMark = "octopipe.io/mark"
 )
 
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 )
-
-type ResourceInfo struct {
-	annotationMark string
-}
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -69,8 +63,8 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8000", "The address the metric endpoint binds to.")
+	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8001", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -86,15 +80,24 @@ func main() {
 
 	clusterCache := cache.NewClusterCache(config,
 		cache.SetNamespaces([]string{}),
-		cache.SetLogr(logger),
-		cache.SetPopulateResourceInfoHandler(func(un *unstructured.Unstructured, isRoot bool) (info interface{}, cacheManifest bool) {
-			gcMark := un.GetAnnotations()[annotationMark]
-			info = &ResourceInfo{annotationMark: un.GetAnnotations()[annotationMark]}
-			cacheManifest = gcMark != ""
-			return
+		// cache.SetLogr(logger),
+		cache.SetPopulateResourceInfoHandler(func(un *unstructured.Unstructured, isRoot bool) (interface{}, bool) {
+			managedBy := un.GetAnnotations()[utils.AnnotationManagedBy]
+			info := &utils.ResourceInfo{
+				ManagedBy: un.GetAnnotations()[utils.AnnotationManagedBy],
+				GCMark:    un.GetAnnotations()[utils.AnnotationGCMark],
+			}
+			cacheManifest := managedBy != utils.ManagedBy
+			return info, cacheManifest
 		}),
 	)
 	gitOpsEngine := engine.NewEngine(config, clusterCache, engine.WithLogr(logger))
+	cleanup, err := gitOpsEngine.Run()
+	if err != nil {
+		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
+	}
+	defer cleanup()
 
 	ctrl.SetLogger(logger)
 
@@ -122,6 +125,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	server := httpServer.NewServer(mgr.GetClient(), clusterCache)
 	if err = (&controllers.ModuleReconciler{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
@@ -163,6 +167,8 @@ func main() {
 			}
 		}
 	}()
+
+	go server.Start()
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

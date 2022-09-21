@@ -133,7 +133,7 @@ func (r *ModuleReconciler) modulesPredicate() predicate.Predicate {
 			}
 
 			// TODO: Parametize repo tmp path
-			_, err := git.PlainClone(fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), module.GetName()), false, gitCloneConfig)
+			_, err := git.PlainClone(fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), module.Spec.RepositoryPath), false, gitCloneConfig)
 			if err != nil && !strings.Contains(err.Error(), "repository already exists") {
 				logger.Error(err, "FAILED_CLONE_REPO")
 			}

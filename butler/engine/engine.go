@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"text/tabwriter"
+	"time"
 
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/argoproj/gitops-engine/pkg/sync"
 	"github.com/go-logr/logr"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
+	"github.com/octopipe/charlescd/butler/utils"
 )
 
 type Engine struct {
@@ -46,10 +49,10 @@ func (e Engine) Sync(ctx context.Context) error {
 			return err
 		}
 	}
-
+	deletePropagationPolicy := v1.DeletePropagationBackground
 	res, err := e.GitOpsEngine.Sync(context.Background(), manifests, func(r *cache.Resource) bool {
-		return true
-	}, "", "default", sync.WithPrune(true), sync.WithLogr(e.logger))
+		return r.Info.(*utils.ResourceInfo).ManagedBy == utils.AnnotationManagedBy
+	}, time.Now().String(), "default", sync.WithPrune(true), sync.WithPruneLast(true), sync.WithPrunePropagationPolicy(&deletePropagationPolicy))
 	if err != nil {
 		e.logger.Error(err, "FAILED_ENGINE_SYNC")
 		return err
