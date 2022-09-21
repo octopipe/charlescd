@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
+	"github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/labstack/echo/v4"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/utils"
@@ -51,10 +52,19 @@ func NewServer(client client.Client, clusterCache cache.ClusterCache) server {
 					continue
 				}
 
+				healthStatus := ""
+				if value.Resource != nil {
+					resourceHealth, _ := health.GetResourceHealth(value.Resource, nil)
+					if resourceHealth != nil {
+						healthStatus = string(resourceHealth.Status)
+					}
+				}
+
 				newResource := Resource{
 					Name:      key.Name,
 					Namespace: key.Namespace,
 					Kind:      key.Kind,
+					Health:    healthStatus,
 					OwnerRefs: []ResourceOwner{},
 				}
 
