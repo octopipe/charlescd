@@ -84,8 +84,9 @@ func main() {
 		cache.SetPopulateResourceInfoHandler(func(un *unstructured.Unstructured, isRoot bool) (interface{}, bool) {
 			managedBy := un.GetAnnotations()[utils.AnnotationManagedBy]
 			info := &utils.ResourceInfo{
-				ManagedBy: un.GetAnnotations()[utils.AnnotationManagedBy],
-				GCMark:    un.GetAnnotations()[utils.AnnotationGCMark],
+				ManagedBy:  un.GetAnnotations()[utils.AnnotationManagedBy],
+				ModuleMark: un.GetAnnotations()[utils.AnnotationModuleMark],
+				CircleMark: un.GetAnnotations()[utils.AnnotationCircleMark],
 			}
 			cacheManifest := managedBy == utils.ManagedBy
 			return info, cacheManifest
@@ -148,19 +149,20 @@ func main() {
 		}
 	}()
 
-	s := sync.NewSync(client, gitOpsEngine)
-	go func() {
-		setupLog.Info("starting sync engine")
-		err = s.StartSyncAll(context.Background())
-		if err != nil {
-			setupLog.Error(err, "problem running sync engine")
-			os.Exit(1)
-		}
-	}()
+	if autoSync {
+		s := sync.NewSync(client, gitOpsEngine)
+		go func() {
+			setupLog.Info("starting sync engine")
+			err = s.StartSyncAll(context.Background())
+			if err != nil {
+				setupLog.Error(err, "problem running sync engine")
+				os.Exit(1)
+			}
+		}()
+	}
 
 	if err := server.Start(); err != http.ErrServerClosed {
 		setupLog.Error(err, "problem running http server")
 		os.Exit(1)
 	}
-
 }

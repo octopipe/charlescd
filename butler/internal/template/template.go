@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	SimpleTemplate = "SIMPLE"
-	HelmTemplate   = "HELM"
+	SimpleTemplate = "simple"
+	HelmTemplate   = "helm"
 )
 
 type Template interface {
@@ -37,8 +37,10 @@ func (t template) addDefaultAnnotations(manifests []*unstructured.Unstructured) 
 			annotations = make(map[string]string)
 		}
 
-		annotations[utils.AnnotationGCMark] = fmt.Sprintf("%s/%s", t.circle.GetNamespace(), t.circle.GetName())
+		annotations[utils.AnnotationModuleMark] = string(t.module.GetUID())
+		annotations[utils.AnnotationCircleMark] = string(t.circle.GetUID())
 		annotations[utils.AnnotationManagedBy] = utils.ManagedBy
+
 		manifests[i].SetName(fmt.Sprintf("%s-%s", t.circle.GetName(), manifests[i].GetName()))
 		manifests[i].SetAnnotations(annotations)
 	}

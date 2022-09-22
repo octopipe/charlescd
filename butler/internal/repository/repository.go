@@ -28,6 +28,7 @@ type repository struct {
 
 func NewRepository(client client.Client, module charlescdiov1alpha1.Module) Reposytory {
 	return repository{
+		Client: client,
 		module: module,
 	}
 }

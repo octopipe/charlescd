@@ -1,13 +1,15 @@
 package utils
 
 const (
-	AnnotationGCMark    = "charlecd.io/gc-mark"
-	AnnotationManagedBy = "app.kubernetes.io/managed-by"
+	AnnotationModuleMark = "charlecd.io/module-mark"
+	AnnotationCircleMark = "charlecd.io/circle-mark"
+	AnnotationManagedBy  = "app.kubernetes.io/managed-by"
 
 	ManagedBy = "charlescd"
 )
 
 type ResourceInfo struct {
-	GCMark    string
-	ManagedBy string
+	ModuleMark string
+	CircleMark string
+	ManagedBy  string
 }
