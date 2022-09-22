@@ -54,7 +54,8 @@ func (t template) GetManifests() ([]*unstructured.Unstructured, error) {
 		manifests, err := t.GetSimpleManifests()
 		return t.addDefaultAnnotations(manifests), err
 	case HelmTemplate:
-		return t.GetHelmManifests()
+		manifests, err := t.GetHelmManifests()
+		return t.addDefaultAnnotations(manifests), err
 	default:
 		return nil, errors.New("invald template type")
 	}
