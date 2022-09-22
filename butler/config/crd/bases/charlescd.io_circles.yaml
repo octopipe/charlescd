@@ -59,6 +59,8 @@ spec:
                       type: string
                   type: object
                 type: array
+              namespace:
+                type: string
             type: object
           status:
             description: CircleStatus defines the observed state of Circle

@@ -24,15 +24,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/argoproj/gitops-engine/pkg/engine"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 )
 
 // CircleReconciler reconciles a Circle object
 type CircleReconciler struct {
 	client.Client
-	Scheme       *runtime.Scheme
-	GitOpsEngine engine.GitOpsEngine
+	Scheme *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=charlescd.io,resources=circles,verbs=get;list;watch;create;update;patch;delete

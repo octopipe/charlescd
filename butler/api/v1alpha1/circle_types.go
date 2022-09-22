@@ -37,6 +37,7 @@ type CircleEnvironments struct {
 // CircleSpec defines the desired state of Circle
 type CircleSpec struct {
 	Author       string               `json:"author,omitempty"`
+	Namespace    string               `json:"namespace,omitempty"`
 	Modules      []CircleModule       `json:"modules,omitempty"`
 	Environments []CircleEnvironments `json:"environments,omitempty"`
 }

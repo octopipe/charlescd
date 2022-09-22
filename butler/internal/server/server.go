@@ -3,15 +3,13 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
-	"net/http"
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
-	"github.com/octopipe/charlescd/butler/utils"
+	"github.com/octopipe/charlescd/butler/internal/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -45,11 +43,12 @@ func getResourcesByCircle(clusterCache cache.ClusterCache, circle charlescdiov1a
 			continue
 		}
 
-		healthStatus := ""
+		healthStatus, healthError := "", ""
 		if value.Resource != nil {
 			resourceHealth, _ := health.GetResourceHealth(value.Resource, nil)
 			if resourceHealth != nil {
 				healthStatus = string(resourceHealth.Status)
+				healthError = resourceHealth.Message
 			}
 		}
 
@@ -58,6 +57,7 @@ func getResourcesByCircle(clusterCache cache.ClusterCache, circle charlescdiov1a
 			Namespace:  key.Namespace,
 			Kind:       key.Kind,
 			Health:     healthStatus,
+			Error:      healthError,
 			Controlled: false,
 		}
 
@@ -91,6 +91,15 @@ func getResourcesByCircle(clusterCache cache.ClusterCache, circle charlescdiov1a
 func NewServer(client client.Client, clusterCache cache.ClusterCache) server {
 	e := echo.New()
 	e.Use(middleware.CORS())
+	e.GET("/circles", func(c echo.Context) error {
+		circles := &charlescdiov1alpha1.CircleList{}
+		err := client.List(c.Request().Context(), circles)
+		if err != nil {
+			return c.JSON(500, err)
+		}
+
+		return c.JSON(200, circles)
+	})
 	e.GET("/circles/:name", func(c echo.Context) error {
 		circle := &charlescdiov1alpha1.Circle{}
 		err := client.Get(context.Background(), utils.GetObjectKeyByPath(fmt.Sprintf("default/%s", c.Param("name"))), circle)
@@ -121,8 +130,6 @@ func NewServer(client client.Client, clusterCache cache.ClusterCache) server {
 	}
 }
 
-func (s server) Start() {
-	if err := s.handler.Start(":8080"); err != http.ErrServerClosed {
-		log.Fatal(err)
-	}
+func (s server) Start() error {
+	return s.handler.Start(":8080")
 }
