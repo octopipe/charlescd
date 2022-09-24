@@ -37,9 +37,25 @@ type CircleEnvironments struct {
 // CircleSpec defines the desired state of Circle
 type CircleSpec struct {
 	Author       string               `json:"author,omitempty"`
+	Description  string               `json:"description,omitempty"`
 	Namespace    string               `json:"namespace,omitempty"`
 	Modules      []CircleModule       `json:"modules,omitempty"`
 	Environments []CircleEnvironments `json:"environments,omitempty"`
+}
+
+type CircleModuleResource struct {
+	Group     string `json:"group,omitempty"`
+	Kind      string `json:"kind,omitempty"`
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	Health    string `json:"status,omitempty"`
+	Error     string `json:"error,omitempty"`
+}
+
+type CircleModuleStatus struct {
+	Status    string                 `json:"status,omitempty"`
+	Error     string                 `json:"error,omitempty"`
+	Resources []CircleModuleResource `json:"resources,omitempty"`
 }
 
 // CircleStatus defines the observed state of Circle
@@ -47,8 +63,8 @@ type CircleStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Status string   `json:"status,omitempty"`
-	Errors []string `json:"errors,omitempty"`
+	Status  string                        `json:"status,omitempty"`
+	Modules map[string]CircleModuleStatus `json:"modules,omitempty"`
 }
 
 //+kubebuilder:object:root=true

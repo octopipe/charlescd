@@ -1,0 +1,10 @@
+.main__sidebar {
+  display: flex;
+  height: 100vh;
+  flex-wrap: nowrap;
+  background-color: #2c2c2e;
+}
+
+.main__sidebar .nav-link {
+  color: #fff;
+}

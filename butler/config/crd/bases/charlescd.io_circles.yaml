@@ -37,6 +37,8 @@ spec:
             properties:
               author:
                 type: string
+              description:
+                type: string
               environments:
                 items:
                   properties:
@@ -65,10 +67,32 @@ spec:
           status:
             description: CircleStatus defines the observed state of Circle
             properties:
-              errors:
-                items:
-                  type: string
-                type: array
+              modules:
+                additionalProperties:
+                  properties:
+                    error:
+                      type: string
+                    resources:
+                      items:
+                        properties:
+                          error:
+                            type: string
+                          group:
+                            type: string
+                          kind:
+                            type: string
+                          name:
+                            type: string
+                          namespace:
+                            type: string
+                          status:
+                            type: string
+                        type: object
+                      type: array
+                    status:
+                      type: string
+                  type: object
+                type: object
               status:
                 type: string
             type: object

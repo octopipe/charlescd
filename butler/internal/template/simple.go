@@ -6,13 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/argoproj/gitops-engine/pkg/utils/kube"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func (t template) GetSimpleManifests() ([]*unstructured.Unstructured, error) {
-	manifests := []*unstructured.Unstructured{}
+func (t template) GetSimpleManifests() ([][]byte, error) {
+	manifests := [][]byte{}
 	deploymentPath := t.module.Spec.DeploymentPath
 	repositoryPath := fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), t.module.Spec.RepositoryPath)
 	if err := filepath.Walk(filepath.Join(repositoryPath, deploymentPath), func(path string, info os.FileInfo, err error) error {
@@ -29,11 +26,7 @@ func (t template) GetSimpleManifests() ([]*unstructured.Unstructured, error) {
 		if err != nil {
 			return err
 		}
-		items, err := kube.SplitYAML(data)
-		if err != nil {
-			return fmt.Errorf("failed to parse %s: %v", path, err)
-		}
-		manifests = append(manifests, items...)
+		manifests = append(manifests, data)
 		return nil
 	}); err != nil {
 		return nil, err

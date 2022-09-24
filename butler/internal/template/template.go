@@ -2,10 +2,8 @@ package template
 
 import (
 	"errors"
-	"fmt"
 
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
-	"github.com/octopipe/charlescd/butler/internal/utils"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -30,33 +28,22 @@ func NewTemplate(module charlescdiov1alpha1.Module, circle charlescdiov1alpha1.C
 	}
 }
 
-func (t template) addDefaultAnnotations(manifests []*unstructured.Unstructured) []*unstructured.Unstructured {
-	for i := range manifests {
-		annotations := manifests[i].GetAnnotations()
-		if annotations == nil {
-			annotations = make(map[string]string)
-		}
-
-		annotations[utils.AnnotationModuleMark] = string(t.module.GetUID())
-		annotations[utils.AnnotationCircleMark] = string(t.circle.GetUID())
-		annotations[utils.AnnotationManagedBy] = utils.ManagedBy
-
-		manifests[i].SetName(fmt.Sprintf("%s-%s", t.circle.GetName(), manifests[i].GetName()))
-		manifests[i].SetAnnotations(annotations)
-	}
-
-	return manifests
-}
-
-func (t template) GetManifests() ([]*unstructured.Unstructured, error) {
+func (t template) getManifests() ([][]byte, error) {
 	switch t.module.Spec.TemplateType {
 	case SimpleTemplate:
-		manifests, err := t.GetSimpleManifests()
-		return t.addDefaultAnnotations(manifests), err
+		return t.GetSimpleManifests()
 	case HelmTemplate:
-		manifests, err := t.GetHelmManifests()
-		return t.addDefaultAnnotations(manifests), err
+		return t.GetHelmManifests()
 	default:
 		return nil, errors.New("invald template type")
 	}
+}
+
+func (t template) GetManifests() ([]*unstructured.Unstructured, error) {
+	manifests, err := t.getManifests()
+	if err != nil {
+		return nil, err
+	}
+
+	return t.parseManifests(manifests)
 }

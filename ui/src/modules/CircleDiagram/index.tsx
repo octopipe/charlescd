@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useState, memo } from 'react';
+import Card from 'react-bootstrap/Card';
+import Button from 'react-bootstrap/Button';
 import ReactFlow, { useNodesState, useEdgesState, addEdge, Handle, Position, CoordinateExtent } from 'react-flow-renderer';
 import dagre from 'dagre'
 import "./style.css"
@@ -8,8 +10,6 @@ import { Outlet, useNavigate } from 'react-router-dom';
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-const nodeWidth = 172;
-const nodeHeight = 50;
 
 const nodeExtent: CoordinateExtent = [
   [0, 0],
@@ -18,9 +18,10 @@ const nodeExtent: CoordinateExtent = [
 
 const CustomNode = memo(({ data, isConnectable }: any) => {
   const colors = {
-    "": "gray",
-    'Healthy': 'green',
-    'Progressing': 'blue'
+    "": "secondary",
+    'Healthy': 'success',
+    'Progressing': 'primary',
+    'Degraded': 'danger'
   } as any
 
   return (
@@ -28,15 +29,24 @@ const CustomNode = memo(({ data, isConnectable }: any) => {
       <Handle
         type="target"
         position={Position.Left}
+        
         style={{ background: '#555' }}
         onConnect={(params) => console.log('handle onConnect', params)}
         isConnectable={isConnectable}
       />
-      <div>
-        <div style={{background: colors[data?.health || ''], padding: "5px"}}>{data?.kind}</div>
-        <div style={{padding: "10px"}}>{data?.name}</div>
-        
-      </div>
+      <Card 
+        border={colors[data.health]}
+        text={colors[data.health] === 'light' ? 'dark' : 'white'}
+        bg={colors[data.health]}
+        className="text-center"
+      >
+        <Card.Header>{data.kind}</Card.Header>
+        <Card.Body style={{background: '#fff', color: '#000'}}>
+          <Card.Text>
+            {data.name}
+          </Card.Text>
+        </Card.Body>
+      </Card>
       <Handle
         type="source"
         position={Position.Right}
@@ -61,7 +71,7 @@ const CircleDiagram = () => {
     dagreGraph.setGraph({ rankdir: direction });
 
     newNodes.forEach((node: any) => {
-      dagreGraph.setNode(node.id, { width: 150, height: 80 });
+      dagreGraph.setNode(node.id, { width: 220, height: 130 });
     });
 
     newEdges.forEach((edge: any) => {
@@ -85,12 +95,12 @@ const CircleDiagram = () => {
   };
 
   useEffect(() => {
-    fetch("http://localhost:8080/circles/circle-sample")
+    fetch("http://localhost:8080/circles/circle-sample/diagram")
       .then(res => res.json())
       .then(res => setResources(res))
     
     const interval = setInterval(() => {
-      fetch("http://localhost:8080/circles/circle-sample")
+      fetch("http://localhost:8080/circles/circle-sample/diagram")
         .then(res => res.json())
         .then(res => setResources(res))
     }, 3000)

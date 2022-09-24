@@ -6,39 +6,22 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/argoproj/gitops-engine/pkg/utils/kube"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func (t template) GetHelmManifests() ([]*unstructured.Unstructured, error) {
+func (t template) GetHelmManifests() ([][]byte, error) {
 	settings := cli.New()
 
 	actionConfig := new(action.Configuration)
-	// You can pass an empty string instead of settings.Namespace() to list
-	// all namespaces
 	if err := actionConfig.Init(settings.RESTClientGetter(), t.circle.Namespace,
 		os.Getenv("HELM_DRIVER"), log.Printf); err != nil {
 		log.Printf("%+v", err)
 		os.Exit(1)
 	}
 
-	// define values
-	vals := map[string]interface{}{
-		"redis": map[string]interface{}{
-			"sentinel": map[string]interface{}{
-				"masterName": "BigMaster",
-				"pass":       "random",
-				"addr":       "localhost",
-				"port":       "26379",
-			},
-		},
-	}
-
-	// load chart from the path
-
+	vals := map[string]interface{}{}
 	repositoryPath := fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), t.module.Spec.RepositoryPath)
 	chart, err := loader.Load(filepath.Join(repositoryPath, t.module.Spec.DeploymentPath))
 	if err != nil {
@@ -58,10 +41,8 @@ func (t template) GetHelmManifests() ([]*unstructured.Unstructured, error) {
 		panic(err)
 	}
 
-	items, err := kube.SplitYAML([]byte(values.Manifest))
-	if err != nil {
-		panic(err)
-	}
+	manifest := []byte(values.Manifest)
+	manifests := [][]byte{manifest}
 
-	return items, nil
+	return manifests, nil
 }

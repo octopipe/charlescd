@@ -7,6 +7,10 @@ import Circles from './modules/Circles';
 import Dashboard from './modules/Dashboard/ index';
 import Modules from './modules/Modules';
 import reportWebVitals from './reportWebVitals';
+import Main from './modules/Main';
+import './core/components/icons/library'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './index.css'
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -15,12 +19,14 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route index element={<Dashboard />} />
-        <Route path='circles' element={<Circles />} />
+        <Route path='/' element={<Main />}>
+          <Route index element={<Dashboard />} />
+          <Route path='circles' element={<Circles />} />
+          <Route path='modules' element={<Modules />} />
+        </Route>
         <Route path="circles/:id/diagram" element={<CircleDiagram />}>
           <Route path=":object" element={<CircleDiagramSidebar />} />
         </Route>
-        <Route path='modules' element={<Modules />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

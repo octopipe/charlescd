@@ -37,9 +37,11 @@ import (
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/engine"
 	"github.com/joho/godotenv"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/controllers"
-	httpServer "github.com/octopipe/charlescd/butler/internal/server"
+	"github.com/octopipe/charlescd/butler/internal/handler"
 	"github.com/octopipe/charlescd/butler/internal/sync"
 	"github.com/octopipe/charlescd/butler/internal/utils"
 	//+kubebuilder:scaffold:imports
@@ -115,7 +117,6 @@ func main() {
 	}
 
 	client := mgr.GetClient()
-	server := httpServer.NewServer(client, clusterCache)
 	if err = (&controllers.ModuleReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -150,7 +151,7 @@ func main() {
 	}()
 
 	if autoSync {
-		s := sync.NewSync(client, gitOpsEngine)
+		s := sync.NewSync(client, gitOpsEngine, clusterCache)
 		go func() {
 			setupLog.Info("starting sync engine")
 			err = s.StartSyncAll(context.Background())
@@ -161,7 +162,10 @@ func main() {
 		}()
 	}
 
-	if err := server.Start(); err != http.ErrServerClosed {
+	e := echo.New()
+	e.Use(middleware.CORS())
+	e = handler.NewCircleHandler(e)(client, clusterCache)
+	if err := e.Start(":8080"); err != http.ErrServerClosed {
 		setupLog.Error(err, "problem running http server")
 		os.Exit(1)
 	}

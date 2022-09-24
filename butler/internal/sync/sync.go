@@ -9,7 +9,10 @@ import (
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/engine"
+	"github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/argoproj/gitops-engine/pkg/sync"
+	"github.com/argoproj/gitops-engine/pkg/sync/common"
+	"github.com/argoproj/gitops-engine/pkg/utils/kube"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/internal/repository"
 	"github.com/octopipe/charlescd/butler/internal/template"
@@ -21,17 +24,21 @@ import (
 type Sync struct {
 	client.Client
 	gitopsEngine engine.GitOpsEngine
+	clusterCache cache.ClusterCache
 }
 
-func NewSync(client client.Client, gitopsEngine engine.GitOpsEngine) Sync {
+func NewSync(client client.Client, gitopsEngine engine.GitOpsEngine, clusterCache cache.ClusterCache) Sync {
 	return Sync{
 		Client:       client,
 		gitopsEngine: gitopsEngine,
+		clusterCache: clusterCache,
 	}
 }
 
 func (s Sync) sync(circle charlescdiov1alpha1.Circle) error {
 	targets := []*unstructured.Unstructured{}
+	circleModules := map[string]charlescdiov1alpha1.CircleModuleStatus{}
+	modules := map[string]string{}
 	for _, m := range circle.Spec.Modules {
 		module := &charlescdiov1alpha1.Module{}
 		err := s.Get(context.Background(), utils.GetObjectKeyByPath(m.ModuleRef), module)
@@ -51,6 +58,12 @@ func (s Sync) sync(circle charlescdiov1alpha1.Circle) error {
 			return err
 		}
 
+		circleModules[m.ModuleRef] = charlescdiov1alpha1.CircleModuleStatus{
+			Status:    "",
+			Error:     "",
+			Resources: []charlescdiov1alpha1.CircleModuleResource{},
+		}
+		modules[string(module.GetUID())] = m.ModuleRef
 		targets = append(targets, newTargets...)
 	}
 
@@ -59,7 +72,7 @@ func (s Sync) sync(circle charlescdiov1alpha1.Circle) error {
 		namespace = circle.Spec.Namespace
 	}
 
-	_, err := s.gitopsEngine.Sync(
+	res, err := s.gitopsEngine.Sync(
 		context.Background(),
 		targets,
 		func(r *cache.Resource) bool {
@@ -74,7 +87,55 @@ func (s Sync) sync(circle charlescdiov1alpha1.Circle) error {
 		return err
 	}
 
-	return nil
+	err = s.updateCircleStatus(circleModules, modules, res, &circle)
+
+	return err
+}
+
+func (s Sync) updateCircleStatus(
+	circleModules map[string]charlescdiov1alpha1.CircleModuleStatus,
+	modules map[string]string,
+	res []common.ResourceSyncResult,
+	circle *charlescdiov1alpha1.Circle,
+) error {
+	for _, r := range res {
+		s.clusterCache.IterateHierarchy(r.ResourceKey, func(resource *cache.Resource, namespaceResources map[kube.ResourceKey]*cache.Resource) bool {
+			moduleRef := modules[resource.Info.(*utils.ResourceInfo).ModuleMark]
+			if circleModule, ok := circleModules[moduleRef]; ok {
+				healthStatus, healthError := "", ""
+				if resource.Resource != nil {
+					resourceHealth, _ := health.GetResourceHealth(resource.Resource, nil)
+					if resourceHealth != nil {
+
+						if circleModule.Status == "" {
+							circleModule.Status = string(resourceHealth.Status)
+						} else if circleModule.Status == "Healthy" && resourceHealth.Status != "Healthy" {
+							circleModule.Status = string(resourceHealth.Status)
+						}
+
+						healthStatus = string(resourceHealth.Status)
+						healthError = resourceHealth.Message
+					}
+				}
+				newCircleModuleResource := charlescdiov1alpha1.CircleModuleResource{
+					Group:     r.ResourceKey.Group,
+					Kind:      r.ResourceKey.Kind,
+					Namespace: r.ResourceKey.Namespace,
+					Name:      r.ResourceKey.Name,
+					Health:    healthStatus,
+					Error:     healthError,
+				}
+				circleModule.Resources = append(circleModule.Resources, newCircleModuleResource)
+				circleModules[moduleRef] = circleModule
+			}
+			return false
+		})
+	}
+
+	circle.Status = charlescdiov1alpha1.CircleStatus{}
+	circle.Status.Modules = circleModules
+	err := s.Status().Update(context.Background(), circle)
+	return err
 }
 
 func (s Sync) Resync(circle charlescdiov1alpha1.Circle) error {
