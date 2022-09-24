@@ -51,12 +51,17 @@ spec:
               modules:
                 items:
                   properties:
-                    Overrides:
-                      additionalProperties:
-                        type: string
-                      type: object
                     moduleRef:
                       type: string
+                    overrides:
+                      items:
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                        type: object
+                      type: array
                     revision:
                       type: string
                   type: object

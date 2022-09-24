@@ -10,6 +10,9 @@ spec:
   modules:
     - moduleRef: charlescd-guestbook-simple
       revision: "aaaa"
+      overrides:
+        - key: '$.spec.template.spec.containers[0].image'
+          value: 'failed-image:latest'
     - moduleRef: charlescd-guestbook-simple-server
       revision: bbb
   
