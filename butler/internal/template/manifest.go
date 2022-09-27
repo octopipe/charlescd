@@ -3,7 +3,6 @@ package template
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/argoproj/gitops-engine/pkg/utils/kube"
 	"github.com/goccy/go-yaml"
@@ -71,8 +70,6 @@ func (t template) parseManifests(manifests [][]byte) ([]*unstructured.Unstructur
 				return nil, err
 			}
 
-			log.Println(i)
-
 			newManifest = t.addDefaultAnnotations(newManifest)
 			newManifests = append(newManifests, newManifest)
 		}
@@ -82,7 +79,7 @@ func (t template) parseManifests(manifests [][]byte) ([]*unstructured.Unstructur
 }
 
 func (t template) overrideValues(manifest string, circleModule charlescdiov1alpha1.CircleModule) (string, error) {
-	file, err := parser.ParseBytes([]byte(manifest), 0)
+	file, err := parser.ParseBytes([]byte(manifest), 1)
 	if err != nil {
 		return "", err
 	}
@@ -93,7 +90,7 @@ func (t template) overrideValues(manifest string, circleModule charlescdiov1alph
 			return "", err
 		}
 
-		node, err := yaml.NewEncoder(nil).EncodeToNode(override.Value)
+		node, err := yaml.NewEncoder(nil, yaml.JSON()).EncodeToNode(override.Value)
 		if err != nil {
 			return "", err
 		}

@@ -39,12 +39,20 @@ type CircleEnvironments struct {
 	Value string `json:"value,omitempty"`
 }
 
+type CircleSegment struct {
+	Key       string `json:"key,omitempty"`
+	Value     string `json:"value,omitempty"`
+	Condition string `json:"condition,omitempty"`
+}
+
 // CircleSpec defines the desired state of Circle
 type CircleSpec struct {
 	Author       string               `json:"author,omitempty"`
 	Description  string               `json:"description,omitempty"`
 	Namespace    string               `json:"namespace,omitempty"`
+	IsDefault    bool                 `json:"isDefault,omitempty"`
 	Modules      []CircleModule       `json:"modules,omitempty"`
+	Segments     []CircleSegment      `json:"segments,omitempty"`
 	Environments []CircleEnvironments `json:"environments,omitempty"`
 }
 

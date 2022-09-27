@@ -6,9 +6,14 @@ import (
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/health"
+	"github.com/argoproj/gitops-engine/pkg/utils/kube"
 	"github.com/labstack/echo/v4"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/internal/utils"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -17,14 +22,21 @@ type ResourceOwner struct {
 	Name string `json:"name"`
 }
 
-type Resource struct {
+type ResourceItem struct {
 	Kind       string         `json:"kind"`
 	Name       string         `json:"name"`
+	Ref        string         `json:"ref"`
+	Group      string         `json:"group"`
 	Namespace  string         `json:"namespace"`
 	OwnerRef   *ResourceOwner `json:"ownerRef"`
 	Health     string         `json:"health"`
 	Error      string         `json:"error"`
 	Controlled bool           `json:"-"`
+}
+
+type Resource struct {
+	ResourceItem
+	Resource *unstructured.Unstructured `json:"resource"`
 }
 
 type Circle struct {
@@ -39,19 +51,22 @@ type CircleItem struct {
 
 type circleHandler struct {
 	client.Client
-	clusterCache cache.ClusterCache
+	clusterCache  cache.ClusterCache
+	dynamicClinet dynamic.Interface
 }
 
-func NewCircleHandler(e *echo.Echo) func(client client.Client, clusterCache cache.ClusterCache) *echo.Echo {
-	return func(client client.Client, clusterCache cache.ClusterCache) *echo.Echo {
+func NewCircleHandler(e *echo.Echo) func(dynamicClinet dynamic.Interface, client client.Client, clusterCache cache.ClusterCache) *echo.Echo {
+	return func(dynamicClinet dynamic.Interface, client client.Client, clusterCache cache.ClusterCache) *echo.Echo {
 		h := circleHandler{
-			Client:       client,
-			clusterCache: clusterCache,
+			Client:        client,
+			clusterCache:  clusterCache,
+			dynamicClinet: dynamicClinet,
 		}
 
 		s := e.Group("/circles")
 		s.GET("", h.listCircles)
 		s.GET("/:name", h.getCircle)
+		s.GET("/:name/resources/:resource", h.getResource)
 		s.GET("/:name/diagram", h.getCircleDiagram)
 		return e
 	}
@@ -84,8 +99,8 @@ func (h circleHandler) getCircle(c echo.Context) error {
 
 }
 
-func (h circleHandler) getResourcesByCircle(circle charlescdiov1alpha1.Circle) ([]Resource, map[string]string) {
-	resources := []Resource{}
+func (h circleHandler) getResourcesByCircle(circle charlescdiov1alpha1.Circle) ([]ResourceItem, map[string]string) {
+	resources := []ResourceItem{}
 	controlledResources := map[string]string{}
 	namespaceResources := h.clusterCache.FindResources(circle.Spec.Namespace)
 
@@ -103,12 +118,14 @@ func (h circleHandler) getResourcesByCircle(circle charlescdiov1alpha1.Circle) (
 			}
 		}
 
-		newResource := Resource{
+		newResource := ResourceItem{
 			Name:       key.Name,
 			Namespace:  key.Namespace,
 			Kind:       key.Kind,
 			Health:     healthStatus,
 			Error:      healthError,
+			Ref:        value.Ref.APIVersion,
+			Group:      key.Group,
 			Controlled: false,
 		}
 
@@ -150,7 +167,7 @@ func (h circleHandler) getCircleDiagram(c echo.Context) error {
 		return c.JSON(500, err)
 	}
 
-	filteredResources := []Resource{}
+	filteredResources := []ResourceItem{}
 	resources, controlledResources := h.getResourcesByCircle(*circle)
 	for _, res := range resources {
 		if res.Controlled {
@@ -165,4 +182,60 @@ func (h circleHandler) getCircleDiagram(c echo.Context) error {
 	}
 
 	return c.JSON(200, filteredResources)
+}
+
+func (h circleHandler) getResource(c echo.Context) error {
+	group := c.QueryParam("group")
+	// version := c.QueryParam("version")
+	kind := c.QueryParam("kind")
+	name := c.Param("resource")
+
+	namespace := "default"
+	if c.QueryParam("namespace") != "" {
+		namespace = c.QueryParam("namespace")
+	}
+
+	resourceKey := kube.ResourceKey{
+		Group:     group,
+		Kind:      kind,
+		Namespace: namespace,
+		Name:      name,
+	}
+
+	manifest := &unstructured.Unstructured{}
+	resources := h.clusterCache.FindResources(namespace)
+	res, ok := resources[resourceKey]
+	if !ok || res.Resource == nil {
+		groupVersionResource := schema.GroupVersionResource{}
+		resource, err := h.dynamicClinet.Resource(groupVersionResource).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
+		if err != nil {
+			return c.JSON(500, err)
+		}
+
+		manifest = resource
+	} else {
+		manifest = res.Resource
+	}
+
+	healthStatus, healthError := "", ""
+	if manifest != nil {
+		resourceHealth, _ := health.GetResourceHealth(manifest, nil)
+		if resourceHealth != nil {
+			healthStatus = string(resourceHealth.Status)
+			healthError = resourceHealth.Message
+		}
+	}
+
+	newResource := Resource{
+		ResourceItem: ResourceItem{
+			Name:      manifest.GetName(),
+			Namespace: manifest.GetNamespace(),
+			Kind:      manifest.GetKind(),
+			Health:    healthStatus,
+			Error:     healthError,
+		},
+		Resource: manifest,
+	}
+
+	return c.JSON(200, newResource)
 }

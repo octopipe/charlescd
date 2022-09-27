@@ -24,6 +24,7 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"k8s.io/client-go/dynamic"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -162,9 +163,11 @@ func main() {
 		}()
 	}
 
+	dynamicClient := dynamic.NewForConfigOrDie(config)
+
 	e := echo.New()
 	e.Use(middleware.CORS())
-	e = handler.NewCircleHandler(e)(client, clusterCache)
+	e = handler.NewCircleHandler(e)(dynamicClient, client, clusterCache)
 	if err := e.Start(":8080"); err != http.ErrServerClosed {
 		setupLog.Error(err, "problem running http server")
 		os.Exit(1)

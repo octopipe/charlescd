@@ -48,6 +48,8 @@ spec:
                       type: string
                   type: object
                 type: array
+              isDefault:
+                type: boolean
               modules:
                 items:
                   properties:
@@ -68,6 +70,17 @@ spec:
                 type: array
               namespace:
                 type: string
+              segments:
+                items:
+                  properties:
+                    condition:
+                      type: string
+                    key:
+                      type: string
+                    value:
+                      type: string
+                  type: object
+                type: array
             type: object
           status:
             description: CircleStatus defines the observed state of Circle
