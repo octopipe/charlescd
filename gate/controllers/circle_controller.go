@@ -25,14 +25,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
-	"github.com/octopipe/charlescd/butler/internal/sync"
+	"github.com/octopipe/charlescd/gate/internal/envoy/server"
 )
 
 // CircleReconciler reconciles a Circle object
 type CircleReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
-	Sync   sync.Sync
+	xdsServer server.XdsServer
+	Scheme    *runtime.Scheme
 }
 
 //+kubebuilder:rbac:groups=charlescd.io,resources=circles,verbs=get;list;watch;create;update;patch;delete
@@ -50,18 +50,7 @@ type CircleReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 
 func (r *CircleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-
-	circle := &charlescdiov1alpha1.Circle{}
-	err := r.Get(ctx, req.NamespacedName, circle)
-	if err != nil {
-		logger.Error(err, "circle not found on reconcile")
-	}
-
-	err = r.Sync.Resync(*circle)
-	if err != nil {
-		logger.Error(err, "cannot resync circle")
-	}
+	_ = log.FromContext(ctx)
 
 	return ctrl.Result{}, nil
 }

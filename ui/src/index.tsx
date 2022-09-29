@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import CircleDiagram from './modules/CircleDiagram';
-import CircleDiagramSidebar from './modules/CircleDiagram/Sidebar';
+import CircleDiagramResourceSidebar from './modules/CircleDiagram/ResourceSidebar';
 import Circles from './modules/Circles';
 import Dashboard from './modules/Dashboard/ index';
 import Modules from './modules/Modules';
@@ -22,11 +22,12 @@ root.render(
         <Route path='/' element={<Main />}>
           <Route index element={<Dashboard />} />
           <Route path='circles' element={<Circles />} />
+          <Route path="circles/:circle" element={<CircleDiagram />}>
+            <Route path="namespaces/:namespace/ref/:ref/kind/:kind/resource/:resource" element={<CircleDiagramResourceSidebar />} />
+          </Route>
           <Route path='modules' element={<Modules />} />
         </Route>
-        <Route path="circles/:id/diagram" element={<CircleDiagram />}>
-          <Route path=":object" element={<CircleDiagramSidebar />} />
-        </Route>
+        
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

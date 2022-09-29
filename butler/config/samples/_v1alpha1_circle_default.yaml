@@ -1,0 +1,20 @@
+apiVersion: charlescd.io/v1alpha1
+kind: Circle
+metadata:
+  name: circle-default
+spec:
+  author: Maycon Pacheco
+  isDefault: true
+  environments:
+    - key: API_PATH
+      value: http://api.default.io
+  modules:
+    - moduleRef: charlescd-guestbook-simple
+      revision: "aaaa"
+      overrides:
+        - key: '$.spec.template.spec.containers[0].image'
+          value: 'gcr.io/heptio-images/ks-guestbook-demo@sha256:fe18e00a6aeece16b5b2f77a32ee60929e8a60e27c71df8df66bf804f5677f47'
+    - moduleRef: charlescd-guestbook-simple-server
+      revision: bbb
+  
+  # TODO(user): Add fields here

@@ -40,6 +40,10 @@ type Resource struct {
 }
 
 type Circle struct {
+	charlescdiov1alpha1.CircleSpec
+	Name      string                           `json:"name"`
+	Namespace string                           `json:"namespace"`
+	Status    charlescdiov1alpha1.CircleStatus `json:"status"`
 }
 
 type CircleItem struct {
@@ -64,8 +68,10 @@ func NewCircleHandler(e *echo.Echo) func(dynamicClinet dynamic.Interface, client
 		}
 
 		s := e.Group("/circles")
+		s.POST("", h.listCircles)
 		s.GET("", h.listCircles)
 		s.GET("/:name", h.getCircle)
+		s.PUT("/:name", h.updateCircle)
 		s.GET("/:name/resources/:resource", h.getResource)
 		s.GET("/:name/diagram", h.getCircleDiagram)
 		return e
@@ -79,13 +85,13 @@ func (h circleHandler) listCircles(c echo.Context) error {
 		return c.JSON(500, err)
 	}
 
-	list := []CircleItem{}
+	list := []Circle{}
 	for _, circle := range circles.Items {
-		newList := CircleItem{
-			Name:        circle.GetName(),
-			Description: circle.Spec.Description,
-			Namespace:   circle.Spec.Namespace,
-			Modules:     circle.Status.Modules,
+		newList := Circle{
+			Name:       circle.GetName(),
+			Namespace:  circle.Spec.Namespace,
+			Status:     circle.Status,
+			CircleSpec: circle.Spec,
 		}
 
 		list = append(list, newList)
@@ -94,9 +100,86 @@ func (h circleHandler) listCircles(c echo.Context) error {
 	return c.JSON(200, list)
 }
 
-func (h circleHandler) getCircle(c echo.Context) error {
-	return nil
+func (h circleHandler) getNamespace(c echo.Context) string {
+	namespace := "default"
+	if c.QueryParam("namespace") != "" {
+		namespace = c.QueryParam("namespace")
+	}
 
+	return namespace
+}
+
+func (h circleHandler) getClusterCircle(c echo.Context) (charlescdiov1alpha1.Circle, error) {
+	namespace := h.getNamespace(c)
+	circle := &charlescdiov1alpha1.Circle{}
+	err := h.Get(context.Background(), utils.GetObjectKeyByPath(fmt.Sprintf("%s/%s", namespace, c.Param("name"))), circle)
+	if err != nil {
+		return charlescdiov1alpha1.Circle{}, err
+	}
+
+	return *circle, nil
+}
+
+func (h circleHandler) updateCircle(c echo.Context) error {
+	namespace := h.getNamespace(c)
+	updatedCircle := &Circle{}
+	err := c.Bind(updatedCircle)
+	if err != nil {
+		return c.JSON(500, err)
+	}
+
+	circle, err := h.getClusterCircle(c)
+	if err != nil {
+		return c.JSON(500, err)
+	}
+
+	circle.SetNamespace(namespace)
+	circle.Spec = updatedCircle.CircleSpec
+
+	err = h.Update(c.Request().Context(), &circle)
+	if err != nil {
+		return c.JSON(500, err)
+	}
+
+	return c.JSON(200, updatedCircle)
+}
+
+func (h circleHandler) getCircle(c echo.Context) error {
+	circle, err := h.getClusterCircle(c)
+	if err != nil {
+		return c.JSON(500, err)
+	}
+
+	currentCircle := Circle{
+		Name:       circle.GetName(),
+		Namespace:  circle.GetNamespace(),
+		Status:     circle.Status,
+		CircleSpec: circle.Spec,
+	}
+
+	return c.JSON(200, currentCircle)
+}
+
+func (h circleHandler) newResourceItemByKeyAndValue(key kube.ResourceKey, value *cache.Resource) ResourceItem {
+	healthStatus, healthError := "", ""
+	if value.Resource != nil {
+		resourceHealth, _ := health.GetResourceHealth(value.Resource, nil)
+		if resourceHealth != nil {
+			healthStatus = string(resourceHealth.Status)
+			healthError = resourceHealth.Message
+		}
+	}
+
+	return ResourceItem{
+		Name:       key.Name,
+		Namespace:  key.Namespace,
+		Kind:       key.Kind,
+		Health:     healthStatus,
+		Error:      healthError,
+		Ref:        value.Ref.APIVersion,
+		Group:      key.Group,
+		Controlled: false,
+	}
 }
 
 func (h circleHandler) getResourcesByCircle(circle charlescdiov1alpha1.Circle) ([]ResourceItem, map[string]string) {
@@ -109,26 +192,17 @@ func (h circleHandler) getResourcesByCircle(circle charlescdiov1alpha1.Circle) (
 			continue
 		}
 
-		healthStatus, healthError := "", ""
-		if value.Resource != nil {
-			resourceHealth, _ := health.GetResourceHealth(value.Resource, nil)
-			if resourceHealth != nil {
-				healthStatus = string(resourceHealth.Status)
-				healthError = resourceHealth.Message
-			}
+		circleResourceKey := kube.ResourceKey{
+			Group:     circle.GroupVersionKind().Group,
+			Kind:      circle.Kind,
+			Name:      circle.Name,
+			Namespace: circle.Namespace,
+		}
+		if value.Info.(*utils.ResourceInfo).CircleMark != string(circle.GetUID()) && key.String() != circleResourceKey.String() {
+			continue
 		}
 
-		newResource := ResourceItem{
-			Name:       key.Name,
-			Namespace:  key.Namespace,
-			Kind:       key.Kind,
-			Health:     healthStatus,
-			Error:      healthError,
-			Ref:        value.Ref.APIVersion,
-			Group:      key.Group,
-			Controlled: false,
-		}
-
+		newResource := h.newResourceItemByKeyAndValue(key, value)
 		if value.Info.(*utils.ResourceInfo).ManagedBy == utils.ManagedBy || newResource.Kind == "Circle" {
 			newResource.Controlled = true
 			controlledResources[fmt.Sprintf("%s-%s", newResource.Kind, newResource.Name)] = ""

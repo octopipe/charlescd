@@ -1,9 +1,13 @@
 apiVersion: charlescd.io/v1alpha1
 kind: Circle
 metadata:
-  name: circle-sample
+  name: circle-new
 spec:
   author: Maycon Pacheco
+  segments:
+    - key: email
+      value: mayconjrpacheco@gmail.com
+      condition: EQUAL
   environments:
     - key: API_PATH
       value: http://api.default.io
@@ -12,7 +16,7 @@ spec:
       revision: "aaaa"
       overrides:
         - key: '$.spec.template.spec.containers[0].image'
-          value: 'failed-image:latest'
+          value: 'gcr.io/heptio-images/ks-guestbook-demo@sha256:e6fbd640820c32c847a53b93eb7b404f25ffb56df1cc16d0711eec3a405d6509'
     - moduleRef: charlescd-guestbook-simple-server
       revision: bbb
   

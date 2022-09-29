@@ -125,7 +125,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Module")
 		os.Exit(1)
 	}
+
+	s := sync.NewSync(client, gitOpsEngine, clusterCache)
 	if err = (&controllers.CircleReconciler{
+		Sync:   s,
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -152,7 +155,6 @@ func main() {
 	}()
 
 	if autoSync {
-		s := sync.NewSync(client, gitOpsEngine, clusterCache)
 		go func() {
 			setupLog.Info("starting sync engine")
 			err = s.StartSyncAll(context.Background())

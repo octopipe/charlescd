@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState, memo } from 'react';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
-import ReactFlow, { useNodesState, useEdgesState, addEdge, Handle, Position, CoordinateExtent } from 'react-flow-renderer';
+import ReactFlow, { useNodesState, useEdgesState, addEdge, Handle, Position, CoordinateExtent, Background } from 'react-flow-renderer';
 import dagre from 'dagre'
 import "./style.css"
+import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { Outlet, useNavigate } from 'react-router-dom';
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -60,6 +60,7 @@ const CustomNode = memo(({ data, isConnectable }: any) => {
 const nodeTypes = {default: CustomNode}
 
 const CircleDiagram = () => {
+  const { circle } = useParams()
   const [resources, setResources] = useState([])
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -95,12 +96,13 @@ const CircleDiagram = () => {
   };
 
   useEffect(() => {
-    fetch("http://localhost:8080/circles/circle-sample/diagram")
+
+    fetch(`http://localhost:8080/circles/${circle}/diagram`)
       .then(res => res.json())
       .then(res => setResources(res))
     
     const interval = setInterval(() => {
-      fetch("http://localhost:8080/circles/circle-sample/diagram")
+      fetch(`http://localhost:8080/circles/${circle}/diagram`)
         .then(res => res.json())
         .then(res => setResources(res))
     }, 3000)
@@ -142,15 +144,15 @@ const CircleDiagram = () => {
   }, [resources])
 
   const handleNodeClick = (ev: any, node: any) => {
-    console.log(node.data)
-    const { name } = node.data
-    navigate(`./${name}`)
+    const { name, ref, namespace, kind } = node.data
+    navigate(`./namespaces/${namespace}/ref/${encodeURIComponent(ref)}/kind/${kind}/resource/${name}`)
   }
 
 
   return (
     <>
-      <div style={{position: "absolute", top: 0, bottom: 0, left: 0, right: 0}}>
+      <Sidebar />
+      <div style={{position: "absolute", top: 0, bottom: 0, left: "80px", right: 0, background: "#1c1c1e"}}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -161,7 +163,9 @@ const CircleDiagram = () => {
           onConnect={onConnect}
           onNodeClick={handleNodeClick}
           fitView
-        ></ReactFlow>
+        >
+          <Background color="#aaa" gap={16} />
+        </ReactFlow>
       </div>
       <Outlet />
     </>

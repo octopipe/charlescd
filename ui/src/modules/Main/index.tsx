@@ -7,7 +7,7 @@ const Main = () => {
   return (
     <div className='main'>
       <Sidebar />
-      <div className='col-md-9 ms-sm-auto col-lg-10 px-md-4'>
+      <div className='col-md-11'>
         <Outlet />
       </div>
     </div>

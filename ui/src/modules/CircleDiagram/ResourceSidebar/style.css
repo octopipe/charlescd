@@ -1,0 +1,13 @@
+.resource_sidebar {
+  background-color: black;
+  position: absolute;
+  top: 30px;
+  bottom: 30px;
+  right: 30px;
+  width: 600px;
+  z-index: 99;
+  border-radius: 10px;
+  background: #2c2c2e;
+  color: #fff;
+  padding: 20px;
+}

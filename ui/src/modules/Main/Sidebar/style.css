@@ -2,7 +2,7 @@
   display: flex;
   height: 100vh;
   flex-wrap: nowrap;
-  background-color: #2c2c2e;
+  background-color: #1c1c1e;
 }
 
 .main__sidebar .nav-link {

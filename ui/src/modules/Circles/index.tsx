@@ -6,61 +6,7 @@ import './style.css'
 import { Alert, Badge, Button, Container } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
-
-const fakeCircles = [
-  {
-    name: 'circle-default',
-    isDefault: true,
-    description: '',
-    status: 'Healthy',
-    modules: [
-      {
-        name: 'guestbook-ui',
-        status: 'Healthy',
-        error: ""
-      },
-      {
-        name: 'guestbook-nginx',
-        status: 'Healthy',
-        error: ""
-      },
-      {
-        name: 'guestbook-server',
-        status: 'Healthy',
-        error: ""
-      },
-    ]
-  },
-  {
-    name: 'circle-2',
-    description: '',
-    status: 'Degraded',
-    modules: [
-      {
-        name: 'guestbook-server',
-        status: 'Degraded',
-        error: 'Back-off pulling image \"naaaaginx:1.16.1\"'
-      },
-    ]
-  },
-  {
-    name: 'circle-sample',
-    description: '',
-    status: 'Healthy',
-    modules: [
-      {
-        name: 'guestbook-ui',
-        status: 'Healthy',
-        error: ""
-      },
-      {
-        name: 'guestbook-nginx',
-        status: 'Healthy',
-        error: ""
-      }
-    ]
-  },
-]
+import Module from '../CircleDiagram/Module';
 
 const colors = {
   "": "secondary",
@@ -72,6 +18,13 @@ const colors = {
 const Circles = () => {
   const [circles, setCircles] = useState<any>([])
 
+  const getCircleStatusByModules = (modules: any) => {
+    const dangerModules = Object.keys(modules)
+      .filter(module => modules[module].health !== "Healthy")
+    
+    return dangerModules.length <= 0 ? "Healthy" : modules[dangerModules[0]]["health"]
+  }
+
   useEffect(() => {
     fetch("http://localhost:8080/circles")
       .then(res => res.json())
@@ -80,7 +33,7 @@ const Circles = () => {
   }, [])
 
   return (
-    <div className='my-4'>
+    <div className='m-4'>
       <div style={{display: 'flex', justifyContent: 'space-between'}}>
         <h1 className='text-white'>Circles</h1>
         <Button variant='secondary' style={{background: '#373739'}}>
@@ -89,21 +42,21 @@ const Circles = () => {
 
       </div>
       <hr style={{color: '#fff'}} />
-      <Row xs={3} md={3} className="g-4">
+      <Row xs={3} md={3} xl={4} lg={3} className="g-4">
         {circles.map((circle: any) => (
           <Col key={circle.name}>
-            <Card style={{background: '#2c2c2e', color: '#fff'}}>
+            <Card style={{background: '#1c1c1e', color: '#fff'}}>
               <Card.Body>
                 <p>
                   <div className='mb-2' style={{display: 'flex', justifyContent: 'space-between'}}>
-                    <Link to={`./${circle.name}/diagram`}>{circle.name}</Link>
+                    <h4><FontAwesomeIcon icon={["far", 'circle']} /> <Link className='text-decoration-none text-white' to={`./${circle.name}`}>{circle.name}</Link></h4>
                     <div style={{display: 'flex'}}>
                       {circle?.isDefault && (
                         <Badge bg="primary">Default</Badge>
                       )}
 
-                      {circle.status !== 'Healthy' && (
-                        <Badge bg="danger">Danger</Badge>
+                      {getCircleStatusByModules(circle?.modules || {}) !== 'Healthy' && (
+                        <Badge bg="danger">{getCircleStatusByModules(circle?.modules)}</Badge>
                       )}
                     </div>
                   </div>
@@ -111,16 +64,8 @@ const Circles = () => {
                     {circle?.description}
                   </p>
                 </p>
-                {Object.keys(circle.modules).map((name: any) => (
-                  <Card
-                    bg={colors[circle.modules[name].status]}
-                    className='mb-2' 
-                    style={{background: 'transparent'}}
-                  >
-                    <Card.Body>
-                      {name}
-                    </Card.Body>
-                  </Card>
+                {Object.keys(circle?.status?.modules || {}).map((name: any) => (
+                  <Module {...circle?.status?.modules[name]} name={name} circle={circle} />
                 ))}
                 <div className="d-grid gap-2">
                   <Button className='mt-2' variant='secondary' style={{background: '#373739'}}>
