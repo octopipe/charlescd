@@ -148,11 +148,13 @@ const CircleDiagram = () => {
     navigate(`./namespaces/${namespace}/ref/${encodeURIComponent(ref)}/kind/${kind}/resource/${name}`)
   }
 
+  
+
 
   return (
     <>
       <Sidebar />
-      <div style={{position: "absolute", top: 0, bottom: 0, left: "80px", right: 0, background: "#1c1c1e"}}>
+      <div style={{position: "absolute", top: 0, bottom: 0, left: "380px", right: 0, background: "#1c1c1e"}}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -168,6 +170,7 @@ const CircleDiagram = () => {
         </ReactFlow>
       </div>
       <Outlet />
+      
     </>
   );
 };

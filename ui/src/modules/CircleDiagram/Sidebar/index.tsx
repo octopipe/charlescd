@@ -5,7 +5,7 @@ import { useLocation, useMatch, useNavigate, useParams } from "react-router-dom"
 import './style.css'
 import { Alert, Badge, Button, Card, Dropdown } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Module from "../Module";
+import CircleModules from "../../CircleModules";
 
 const colors = {
   "": "secondary",
@@ -39,8 +39,9 @@ const Sidebar = () => {
     toggleEdit(isEdit => !isEdit)
   }
 
+
   return (
-    <div className="circle_sidebar col-md-2">
+    <div className="circle_sidebar">
       <div className="mb-3" style={{display: "flex", justifyContent: "space-between"}}>
         <FontAwesomeIcon icon="arrow-left" onClick={handleBack} />
         <FontAwesomeIcon icon={isEdit ? "eye" : "pen-to-square"} onClick={handleToggleEdit}/>
@@ -65,17 +66,7 @@ const Sidebar = () => {
             readOnly={!isEdit}
           />
         </Form.Group>
-        <div>
-          <Form.Label>Modules</Form.Label>
-          {circle?.status && Object.keys(circle?.status?.modules || {}).map((name: any) => (
-            <Module {...circle?.status?.modules[name]} name={name} circle={circle} />
-          ))}
-          <div className="d-grid gap-2">
-            <Button className='mt-2' variant='secondary' style={{background: '#373739'}}>
-              <FontAwesomeIcon icon='plus' />{' '}Add module
-            </Button>
-          </div>
-        </div>
+        <CircleModules circle={circle} />
         <div className="mt-4">
           <Form.Label>Environments</Form.Label>
           <ReactAce

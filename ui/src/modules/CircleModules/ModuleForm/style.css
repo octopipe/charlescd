@@ -1,0 +1,12 @@
+.circle_module_toggle {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.circle_module_toggle:hover {
+  border: none !important;
+}
+
+.circle_module_toggle::after {
+  display: none !important;
+}
