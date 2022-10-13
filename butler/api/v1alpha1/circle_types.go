@@ -39,21 +39,40 @@ type CircleEnvironments struct {
 	Value string `json:"value,omitempty"`
 }
 
+type CircleMatch struct {
+	Headers map[string]string `json:"headers,omitempty"`
+}
+
 type CircleSegment struct {
 	Key       string `json:"key,omitempty"`
 	Value     string `json:"value,omitempty"`
 	Condition string `json:"condition,omitempty"`
 }
 
+type CanaryDeployStrategy struct {
+	Weight int `json:"weight"`
+}
+
+type DefaultDeployStartegy struct {
+	CustomMatch CircleMatch     `json:"customMatch,omitempty"`
+	Segments    []CircleSegment `json:"segments,omitempty"`
+}
+
+type CircleDeployStrategy struct {
+	Strategy string                `json:"key,omitempty"`
+	Canary   CanaryDeployStrategy  `json:"canary,omitempty"`
+	Default  DefaultDeployStartegy `json:"default,omitempty"`
+}
+
 // CircleSpec defines the desired state of Circle
 type CircleSpec struct {
-	Author       string               `json:"author,omitempty"`
-	Description  string               `json:"description,omitempty"`
-	Namespace    string               `json:"namespace,omitempty"`
-	IsDefault    bool                 `json:"isDefault,omitempty"`
-	Modules      []CircleModule       `json:"modules,omitempty"`
-	Segments     []CircleSegment      `json:"segments,omitempty"`
-	Environments []CircleEnvironments `json:"environments,omitempty"`
+	Author         string               `json:"author,omitempty"`
+	Description    string               `json:"description,omitempty"`
+	Namespace      string               `json:"namespace,omitempty"`
+	IsDefault      bool                 `json:"isDefault,omitempty"`
+	DeployStrategy CircleDeployStrategy `json:"deployStrategy,omitempty"`
+	Modules        []CircleModule       `json:"modules,omitempty"`
+	Environments   []CircleEnvironments `json:"environments,omitempty"`
 }
 
 type CircleModuleResource struct {

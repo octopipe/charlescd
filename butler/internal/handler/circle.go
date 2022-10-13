@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/health"
@@ -10,10 +12,13 @@ import (
 	"github.com/labstack/echo/v4"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/internal/utils"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/api/core/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -55,22 +60,26 @@ type CircleItem struct {
 
 type circleHandler struct {
 	client.Client
-	clusterCache  cache.ClusterCache
-	dynamicClinet dynamic.Interface
+	clusterCache     cache.ClusterCache
+	kubernetesClient *kubernetes.Clientset
+	dynamicClinet    dynamic.Interface
 }
 
-func NewCircleHandler(e *echo.Echo) func(dynamicClinet dynamic.Interface, client client.Client, clusterCache cache.ClusterCache) *echo.Echo {
-	return func(dynamicClinet dynamic.Interface, client client.Client, clusterCache cache.ClusterCache) *echo.Echo {
+func NewCircleHandler(e *echo.Echo) func(dynamicClinet dynamic.Interface, kubernetesClient *kubernetes.Clientset, client client.Client, clusterCache cache.ClusterCache) *echo.Echo {
+	return func(dynamicClinet dynamic.Interface, kubernetesClient *kubernetes.Clientset, client client.Client, clusterCache cache.ClusterCache) *echo.Echo {
 		h := circleHandler{
-			Client:        client,
-			clusterCache:  clusterCache,
-			dynamicClinet: dynamicClinet,
+			Client:           client,
+			clusterCache:     clusterCache,
+			kubernetesClient: kubernetesClient,
+			dynamicClinet:    dynamicClinet,
 		}
 
 		s := e.Group("/circles")
 		s.POST("", h.listCircles)
 		s.GET("", h.listCircles)
 		s.GET("/:name", h.getCircle)
+		s.GET("/:name/events/:resource", h.getEvents)
+		s.GET("/:name/logs/:resource", h.getLogs)
 		s.PUT("/:name", h.updateCircle)
 		s.GET("/:name/resources/:resource", h.getResource)
 		s.GET("/:name/diagram", h.getCircleDiagram)
@@ -158,6 +167,45 @@ func (h circleHandler) getCircle(c echo.Context) error {
 	}
 
 	return c.JSON(200, currentCircle)
+}
+
+func (h circleHandler) getEvents(c echo.Context) error {
+	kind := c.QueryParam("kind")
+	name := c.Param("resource")
+	namespace := h.getNamespace(c)
+
+	fieldSelector := fields.Set{
+		"involvedObject.name":      name,
+		"involvedObject.namespace": namespace,
+		"involvedObject.kind":      kind,
+	}
+	events, err := h.kubernetesClient.CoreV1().Events(namespace).List(context.Background(), metaV1.ListOptions{
+		FieldSelector: fieldSelector.String(),
+	})
+	if err != nil {
+		return c.JSON(500, err)
+	}
+
+	return c.JSON(200, events.Items)
+}
+
+func (h circleHandler) getLogs(c echo.Context) error {
+	name := c.Param("resource")
+	namespace := h.getNamespace(c)
+
+	req := h.kubernetesClient.CoreV1().Pods(namespace).GetLogs(name, &v1.PodLogOptions{})
+	logs, err := req.Stream(context.Background())
+	if err != nil {
+		return c.JSON(500, err)
+	}
+	defer logs.Close()
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, logs)
+	if err != nil {
+		return c.JSON(500, err)
+	}
+
+	return c.JSON(200, map[string]string{"logs": buf.String()})
 }
 
 func (h circleHandler) newResourceItemByKeyAndValue(key kube.ResourceKey, value *cache.Resource) ResourceItem {
@@ -281,7 +329,7 @@ func (h circleHandler) getResource(c echo.Context) error {
 	res, ok := resources[resourceKey]
 	if !ok || res.Resource == nil {
 		groupVersionResource := schema.GroupVersionResource{}
-		resource, err := h.dynamicClinet.Resource(groupVersionResource).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
+		resource, err := h.dynamicClinet.Resource(groupVersionResource).Namespace(namespace).Get(context.Background(), name, metaV1.GetOptions{})
 		if err != nil {
 			return c.JSON(500, err)
 		}

@@ -24,7 +24,9 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"istio.io/client-go/pkg/clientset/versioned"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -43,6 +45,7 @@ import (
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/controllers"
 	"github.com/octopipe/charlescd/butler/internal/handler"
+	"github.com/octopipe/charlescd/butler/internal/networking"
 	"github.com/octopipe/charlescd/butler/internal/sync"
 	"github.com/octopipe/charlescd/butler/internal/utils"
 	//+kubebuilder:scaffold:imports
@@ -66,8 +69,10 @@ func main() {
 	var enableLeaderElection bool
 	var probeAddr string
 	var autoSync bool
+	var networkingType string
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8000", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8001", "The address the probe endpoint binds to.")
+	flag.StringVar(&networkingType, "networking", "", "The networking is type of network layer")
 	flag.BoolVar(&autoSync, "auto-sync", false, "Enable auto sync of all circles")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
@@ -81,6 +86,10 @@ func main() {
 	_ = godotenv.Load()
 	config := ctrl.GetConfigOrDie()
 	logger := zap.New(zap.UseFlagOptions(&opts))
+
+	dynamicClient := dynamic.NewForConfigOrDie(config)
+	clientset := kubernetes.NewForConfigOrDie(config)
+	istioClient := versioned.NewForConfigOrDie(config)
 
 	clusterCache := cache.NewClusterCache(config,
 		cache.SetNamespaces([]string{}),
@@ -117,6 +126,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	var networkingLayer networking.NetworkingLayer
+	if networkingType != "" {
+		networkingLayer = networking.NewNetworkingLayer(networkingType, istioClient)
+	}
+
 	client := mgr.GetClient()
 	if err = (&controllers.ModuleReconciler{
 		Client: mgr.GetClient(),
@@ -128,9 +142,10 @@ func main() {
 
 	s := sync.NewSync(client, gitOpsEngine, clusterCache)
 	if err = (&controllers.CircleReconciler{
-		Sync:   s,
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Sync:          s,
+		NetworkClient: networkingLayer,
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Circle")
 		os.Exit(1)
@@ -165,11 +180,9 @@ func main() {
 		}()
 	}
 
-	dynamicClient := dynamic.NewForConfigOrDie(config)
-
 	e := echo.New()
 	e.Use(middleware.CORS())
-	e = handler.NewCircleHandler(e)(dynamicClient, client, clusterCache)
+	e = handler.NewCircleHandler(e)(dynamicClient, clientset, client, clusterCache)
 	e = handler.NewModuleHandler(e)(dynamicClient, client, clusterCache)
 	if err := e.Start(":8080"); err != http.ErrServerClosed {
 		setupLog.Error(err, "problem running http server")

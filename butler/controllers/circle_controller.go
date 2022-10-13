@@ -19,20 +19,23 @@ package controllers
 import (
 	"context"
 
+	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
+	"github.com/octopipe/charlescd/butler/internal/networking"
 	"github.com/octopipe/charlescd/butler/internal/sync"
 )
 
 // CircleReconciler reconciles a Circle object
 type CircleReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
-	Sync   sync.Sync
+	NetworkClient networking.NetworkingLayer
+	Scheme        *runtime.Scheme
+	Sync          sync.Sync
 }
 
 //+kubebuilder:rbac:groups=charlescd.io,resources=circles,verbs=get;list;watch;create;update;patch;delete
@@ -63,6 +66,13 @@ func (r *CircleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		logger.Error(err, "cannot resync circle")
 	}
 
+	if r.NetworkClient != nil {
+		err = r.NetworkClient.Sync(*circle)
+		if err != nil {
+			logger.Error(err, "cannot resync network layer")
+		}
+	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -70,5 +80,7 @@ func (r *CircleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 func (r *CircleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&charlescdiov1alpha1.Circle{}).
+		Owns(&v1.Deployment{}).
+		Owns(&v1.ReplicaSet{}).
 		Complete(r)
 }
