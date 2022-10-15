@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, Dropdown, Modal, Form } from "react-bootstrap";
 import ReactAce from "react-ace/lib/ace";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import './style.css'
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Modal, Select } from "@mui/material";
 
 import "ace-builds/src-noconflict/mode-yaml";
 import "ace-builds/src-noconflict/theme-monokai";
@@ -48,6 +46,8 @@ const AddModule = ({ show, circle, isEdit, onSave, onClose }: any) => {
         modules: [newModule]
       }
     }
+
+    onSave(circle.modules)
   }
 
   const handleOnClick = () => {
@@ -58,30 +58,33 @@ const AddModule = ({ show, circle, isEdit, onSave, onClose }: any) => {
   }
 
   return (
-    <Modal
-      size="lg"
+    <Dialog
       aria-labelledby="contained-modal-title-vcenter"
-      show={show}
-      onHide={onClose}
-      centered
+      fullWidth={true}
+      maxWidth="sm"
+      open={show}
+      onClose={onClose}
     >
-      <Modal.Header closeButton>
-        <Modal.Title id="contained-modal-title-vcenter">
-          Add module to circle
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <h4>Centered Modal</h4>
+      <DialogTitle id="contained-modal-title-vcenter">
+        Add module to circle
+      </DialogTitle>
+      <DialogContent>
         <p>
-          <Form.Label>Module</Form.Label>
-          <Form.Select aria-label="Default select example" value={moduleRef} onChange={value => setModuleRef(value.target.value)}>
-            <option value='' disabled>Open this select menu</option>
-            {modules.map((module: any) => (
-              <option value={module.name}>{module.name}</option>
-            ))}
-          </Form.Select>
+          <FormControl sx={{ m: 1, minWidth: 300 }}>
+            <InputLabel id="select-module">Select a module</InputLabel>
+            <Select
+              labelId="select-module"
+              label="Select a module"
+              value={moduleRef}
+              onChange={value => setModuleRef(value.target.value)}
+            >
+              {modules.map((module: any) => (
+                <MenuItem value={module.name}>{module.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <div className="mt-3">
-            <Form.Label>Override</Form.Label>
+            <label>Override</label>
             <ReactAce
               width="100%"
               height="200px"
@@ -94,12 +97,12 @@ const AddModule = ({ show, circle, isEdit, onSave, onClose }: any) => {
             />
           </div>
         </p>
-      </Modal.Body>
-      <Modal.Footer>
+      </DialogContent>
+      <DialogActions>
         <Button onClick={handleOnClick}>Close</Button>
         <Button onClick={AddModuleToCircle}>Save</Button>
-      </Modal.Footer>
-    </Modal>
+      </DialogActions>
+    </Dialog>
   )
 }
 

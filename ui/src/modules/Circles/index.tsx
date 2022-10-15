@@ -1,24 +1,25 @@
 import React, { useEffect, useState } from 'react'
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Card from 'react-bootstrap/Card'
 import './style.css'
-import { Alert, Badge, Button, Container } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import CircleModules from '../CircleModules';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Card, CardActions, CardContent, CardHeader, Chip, CircularProgress, Container, Divider, Grid, IconButton, Typography } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
 
 const colors = {
   "": "secondary",
-  'Healthy': 'success',
-  'Progressing': 'primary',
-  'Degraded': 'danger'
+  'Healthy': '#43a047',
+  'Progressing': '#039be5',
+  'Degraded': '#e53935'
 } as any
 
 const Circles = () => {
+  const [expanded, setExpanded] = useState<string | false>(false);
   const [circles, setCircles] = useState<any>([])
   const [currentCircle, setCurrentCircle] = useState<any>({})
   const [showAddModule, setShowAddModule] = useState(false)
+  const navigate = useNavigate()
 
   const getCircleStatusByModules = (modules: any) => {
     const dangerModules = Object.keys(modules)
@@ -27,6 +28,11 @@ const Circles = () => {
     return dangerModules.length <= 0 ? "Healthy" : modules[dangerModules[0]]["health"]
   }
 
+  const handleChange =
+    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+      setExpanded(isExpanded ? panel : false);
+    };
+
   useEffect(() => {
     fetch("http://localhost:8080/circles")
       .then(res => res.json())
@@ -34,45 +40,49 @@ const Circles = () => {
 
   }, [])
 
+  const CircleStatus = ({ modules }: any) => {
+    const progressing = Object.keys(modules).filter((name: any) => modules[name].status === 'Progressing')
+    if (progressing.length > 0) {
+      return <CircularProgress size={20} sx={{marginRight: "10px"}} />
+    }
+
+    const notHealthy = Object.keys(modules).filter((name: any) => modules[name].status !== 'Healthy')
+    const currentColor = notHealthy.length > 0 ? colors['Degraded'] : colors['Healthy']
+
+    return <FontAwesomeIcon icon="circle" size='sm' color={currentColor} style={{marginRight: "10px" }}/>
+
+  }
+
   return (
-    <div className='container mt-4'>
-      <div style={{display: 'flex', justifyContent: 'space-between', }}>
+    <Container>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 6, pb: 1 }}>
         <h1 className='text-white'>Circles</h1>
-        <Button variant='secondary' style={{background: '#373739'}}>
-          <FontAwesomeIcon icon='plus' />{' '}New circle
+        <Button variant='contained'>
+          <FontAwesomeIcon icon='plus' /> New circle
         </Button>
-
-      </div>
-      <hr style={{color: '#fff'}} />
-      <Row xs={3} md={3} className="g-4">
+      </Box>
+      <Divider />
+      <Grid container mt={2} spacing={2}>
         {circles.map((circle: any) => (
-          <Col key={circle.name}>
-            <Card style={{background: '#1c1c1e', color: '#fff'}}>
-              <Card.Body>
-                <p>
-                  <div className='mb-2' style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                    <h4><FontAwesomeIcon icon={["far", 'circle']} /> <Link className='text-decoration-none text-white' to={`./${circle.name}`}>{circle.name}</Link></h4>
-                    <div style={{display: 'flex'}}>
-                      {circle?.isDefault && (
-                        <Badge bg="primary">Default</Badge>
-                      )}
-
-                      {getCircleStatusByModules(circle?.modules || {}) !== 'Healthy' && (
-                        <Badge bg="danger">{getCircleStatusByModules(circle?.modules)}</Badge>
-                      )}
-                    </div>
-                  </div>
-                  <p>
-                    {circle?.description}
-                  </p>
-                </p>
+          <Grid item xs={4}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Typography variant="h5" component="div">
+                    <CircleStatus modules={circle?.status?.modules || []} /> {circle?.name}
+                  </Typography>
+                  <IconButton onClick={() => navigate('/circles/' + circle.name)}><AccountTreeIcon /></IconButton>
+                </Box>
+                <Typography sx={{ mb: 1.5 }} color="text.secondary">
+                  {circle?.description}
+                </Typography>
                 <CircleModules circle={circle} />
-              </Card.Body>
+              </CardContent>
             </Card>
-          </Col>
+          </Grid>
         ))}
-      </Row>
-    </div>
+      </Grid>
+    </Container>
   )
 }
 

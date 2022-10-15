@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import ReactAce from "react-ace/lib/ace";
-import Form from 'react-bootstrap/Form'
 import { useLocation, useMatch, useNavigate, useParams } from "react-router-dom";
 import './style.css'
-import { Alert, Badge, Button, Card, Dropdown } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import CircleModules from "../../CircleModules";
+import { Box, Button, FormControl, TextField } from "@mui/material";
 
 const colors = {
   "": "secondary",
@@ -41,34 +40,43 @@ const Sidebar = () => {
 
 
   return (
-    <div className="circle_sidebar">
+    <Box sx={{mt: 7, position: "absolute", zIndex: 99, width: "350px", top: 0, bottom: 0, p: 2, background: "#121212"}}>
       <div className="mb-3" style={{display: "flex", justifyContent: "space-between"}}>
         <FontAwesomeIcon icon="arrow-left" onClick={handleBack} />
         <FontAwesomeIcon icon={isEdit ? "eye" : "pen-to-square"} onClick={handleToggleEdit}/>
       </div>
       <div>
-        <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
-          <Form.Label>Name</Form.Label>
-          <Form.Control
-            className={isEdit ? 'circle_sidebar_input_edit' : 'circle_sidebar_input_readonly'}
-            type="text"
+        <Box sx={{mt: 2}}>
+          <TextField
+            id="outlined-basic"
+            label="Name"
+            variant="outlined"
             value={circle?.name}
-            readOnly={!isEdit}
+            InputProps={{
+              readOnly: !isEdit
+            }}
+            sx={{width: "100%"}}
           />
-        </Form.Group>
-        <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
-          <Form.Label>Description</Form.Label>
-          <Form.Control
-            className={isEdit ? 'circle_sidebar_input_edit' : 'circle_sidebar_input_readonly'}
-            as="textarea"
-            rows={3}
+        </Box>
+        <Box sx={{mt: 2}}>
+          <TextField
+            id="outlined-basic"
+            label="Description"
+            multiline
+            rows={4}
+            variant="outlined"
             value={circle?.description}
-            readOnly={!isEdit}
+            InputProps={{
+              readOnly: !isEdit
+            }}
+            sx={{width: "100%"}}
           />
-        </Form.Group>
-        <CircleModules circle={circle} />
-        <div className="mt-4">
-          <Form.Label>Environments</Form.Label>
+        </Box>
+        <Box sx={{mt: 2}}>
+          <CircleModules circle={circle} />
+        </Box>
+        <Box sx={{mt: 2}}>
+          <label>Environments</label>
           <ReactAce
             width="100%"
             height="200px"
@@ -78,17 +86,17 @@ const Sidebar = () => {
             name="UNIQUE_ID_OF_DIV"
             editorProps={{ $blockScrolling: true }}
           />
-        </div>
+        </Box>
         { isEdit && (
           <div className="d-grid gap-2 mt-4">
-            <Button className='mt-2' variant='primary'>
+            <Button className='mt-2' variant='outlined'>
               Save changes
             </Button>
           </div>
         )}
         
       </div>
-    </div>
+    </Box>
   )
 }
 

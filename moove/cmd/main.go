@@ -4,6 +4,9 @@ import (
 	"log"
 
 	"github.com/labstack/echo/v4"
+	"github.com/octopipe/charlescd/moove/internal/circle"
+	circleHandler "github.com/octopipe/charlescd/moove/internal/circle/handler"
+	"github.com/octopipe/charlescd/moove/internal/core/httpclient"
 	"github.com/octopipe/charlescd/moove/internal/workspace"
 	workspaceHandler "github.com/octopipe/charlescd/moove/internal/workspace/handler"
 	"go.uber.org/zap"
@@ -23,10 +26,16 @@ func main() {
 
 	db.Table("workspaces").AutoMigrate(&workspace.WorkspaceModel{})
 
+	httpClient := httpclient.NewHttpClient()
+
 	workspaceRepository := workspace.NewRepository(db)
 	workspaceUseCase := workspace.NewUseCase(workspaceRepository)
 
+	circleRepository := circle.NewRepository(httpClient)
+	circleUseCase := circle.NewUseCase(circleRepository)
+
 	e := echo.New()
 	workspaceHandler.NewEchohandler(e, workspaceUseCase)
-	e.Logger.Fatal(e.Start(":8080"))
+	circleHandler.NewEchohandler(e, circleUseCase)
+	e.Logger.Fatal(e.Start(":3000"))
 }

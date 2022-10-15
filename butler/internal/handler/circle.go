@@ -1,10 +1,8 @@
 package handler
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/health"
@@ -12,37 +10,10 @@ import (
 	"github.com/labstack/echo/v4"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/internal/utils"
-	v1 "k8s.io/api/core/v1"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-type ResourceOwner struct {
-	Kind string `json:"kind"`
-	Name string `json:"name"`
-}
-
-type ResourceItem struct {
-	Kind       string         `json:"kind"`
-	Name       string         `json:"name"`
-	Ref        string         `json:"ref"`
-	Group      string         `json:"group"`
-	Namespace  string         `json:"namespace"`
-	OwnerRef   *ResourceOwner `json:"ownerRef"`
-	Health     string         `json:"health"`
-	Error      string         `json:"error"`
-	Controlled bool           `json:"-"`
-}
-
-type Resource struct {
-	ResourceItem
-	Resource *unstructured.Unstructured `json:"resource"`
-}
 
 type Circle struct {
 	charlescdiov1alpha1.CircleSpec
@@ -78,10 +49,7 @@ func NewCircleHandler(e *echo.Echo) func(dynamicClinet dynamic.Interface, kubern
 		s.POST("", h.listCircles)
 		s.GET("", h.listCircles)
 		s.GET("/:name", h.getCircle)
-		s.GET("/:name/events/:resource", h.getEvents)
-		s.GET("/:name/logs/:resource", h.getLogs)
 		s.PUT("/:name", h.updateCircle)
-		s.GET("/:name/resources/:resource", h.getResource)
 		s.GET("/:name/diagram", h.getCircleDiagram)
 		return e
 	}
@@ -109,17 +77,8 @@ func (h circleHandler) listCircles(c echo.Context) error {
 	return c.JSON(200, list)
 }
 
-func (h circleHandler) getNamespace(c echo.Context) string {
-	namespace := "default"
-	if c.QueryParam("namespace") != "" {
-		namespace = c.QueryParam("namespace")
-	}
-
-	return namespace
-}
-
 func (h circleHandler) getClusterCircle(c echo.Context) (charlescdiov1alpha1.Circle, error) {
-	namespace := h.getNamespace(c)
+	namespace := getNamespace(c)
 	circle := &charlescdiov1alpha1.Circle{}
 	err := h.Get(context.Background(), utils.GetObjectKeyByPath(fmt.Sprintf("%s/%s", namespace, c.Param("name"))), circle)
 	if err != nil {
@@ -130,7 +89,7 @@ func (h circleHandler) getClusterCircle(c echo.Context) (charlescdiov1alpha1.Cir
 }
 
 func (h circleHandler) updateCircle(c echo.Context) error {
-	namespace := h.getNamespace(c)
+	namespace := getNamespace(c)
 	updatedCircle := &Circle{}
 	err := c.Bind(updatedCircle)
 	if err != nil {
@@ -167,45 +126,6 @@ func (h circleHandler) getCircle(c echo.Context) error {
 	}
 
 	return c.JSON(200, currentCircle)
-}
-
-func (h circleHandler) getEvents(c echo.Context) error {
-	kind := c.QueryParam("kind")
-	name := c.Param("resource")
-	namespace := h.getNamespace(c)
-
-	fieldSelector := fields.Set{
-		"involvedObject.name":      name,
-		"involvedObject.namespace": namespace,
-		"involvedObject.kind":      kind,
-	}
-	events, err := h.kubernetesClient.CoreV1().Events(namespace).List(context.Background(), metaV1.ListOptions{
-		FieldSelector: fieldSelector.String(),
-	})
-	if err != nil {
-		return c.JSON(500, err)
-	}
-
-	return c.JSON(200, events.Items)
-}
-
-func (h circleHandler) getLogs(c echo.Context) error {
-	name := c.Param("resource")
-	namespace := h.getNamespace(c)
-
-	req := h.kubernetesClient.CoreV1().Pods(namespace).GetLogs(name, &v1.PodLogOptions{})
-	logs, err := req.Stream(context.Background())
-	if err != nil {
-		return c.JSON(500, err)
-	}
-	defer logs.Close()
-	buf := new(bytes.Buffer)
-	_, err = io.Copy(buf, logs)
-	if err != nil {
-		return c.JSON(500, err)
-	}
-
-	return c.JSON(200, map[string]string{"logs": buf.String()})
 }
 
 func (h circleHandler) newResourceItemByKeyAndValue(key kube.ResourceKey, value *cache.Resource) ResourceItem {
@@ -304,60 +224,4 @@ func (h circleHandler) getCircleDiagram(c echo.Context) error {
 	}
 
 	return c.JSON(200, filteredResources)
-}
-
-func (h circleHandler) getResource(c echo.Context) error {
-	group := c.QueryParam("group")
-	// version := c.QueryParam("version")
-	kind := c.QueryParam("kind")
-	name := c.Param("resource")
-
-	namespace := "default"
-	if c.QueryParam("namespace") != "" {
-		namespace = c.QueryParam("namespace")
-	}
-
-	resourceKey := kube.ResourceKey{
-		Group:     group,
-		Kind:      kind,
-		Namespace: namespace,
-		Name:      name,
-	}
-
-	manifest := &unstructured.Unstructured{}
-	resources := h.clusterCache.FindResources(namespace)
-	res, ok := resources[resourceKey]
-	if !ok || res.Resource == nil {
-		groupVersionResource := schema.GroupVersionResource{}
-		resource, err := h.dynamicClinet.Resource(groupVersionResource).Namespace(namespace).Get(context.Background(), name, metaV1.GetOptions{})
-		if err != nil {
-			return c.JSON(500, err)
-		}
-
-		manifest = resource
-	} else {
-		manifest = res.Resource
-	}
-
-	healthStatus, healthError := "", ""
-	if manifest != nil {
-		resourceHealth, _ := health.GetResourceHealth(manifest, nil)
-		if resourceHealth != nil {
-			healthStatus = string(resourceHealth.Status)
-			healthError = resourceHealth.Message
-		}
-	}
-
-	newResource := Resource{
-		ResourceItem: ResourceItem{
-			Name:      manifest.GetName(),
-			Namespace: manifest.GetNamespace(),
-			Kind:      manifest.GetKind(),
-			Health:    healthStatus,
-			Error:     healthError,
-		},
-		Resource: manifest,
-	}
-
-	return c.JSON(200, newResource)
 }

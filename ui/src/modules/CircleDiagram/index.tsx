@@ -1,14 +1,20 @@
 import React, { useCallback, useEffect, useState, memo } from 'react';
-import Card from 'react-bootstrap/Card';
-import Button from 'react-bootstrap/Button';
 import ReactFlow, { useNodesState, useEdgesState, addEdge, Handle, Position, CoordinateExtent, Background } from 'react-flow-renderer';
 import dagre from 'dagre'
 import "./style.css"
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { Box, Card, CardContent, Typography } from '@mui/material';
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+const colors = {
+  "": "secondary",
+  'Healthy': '#43a047',
+  'Progressing': '#039be5',
+  'Degraded': '#e53935'
+} as any
 
 
 const nodeExtent: CoordinateExtent = [
@@ -17,36 +23,24 @@ const nodeExtent: CoordinateExtent = [
 ];
 
 const CustomNode = memo(({ data, isConnectable }: any) => {
-  const colors = {
-    "": "secondary",
-    'Healthy': 'success',
-    'Progressing': 'primary',
-    'Degraded': 'danger'
-  } as any
 
   return (
     <>
       <Handle
         type="target"
         position={Position.Left}
-        
         style={{ background: '#555' }}
         onConnect={(params) => console.log('handle onConnect', params)}
         isConnectable={isConnectable}
       />
-      <Card 
-        border={colors[data.health]}
-        text={colors[data.health] === 'light' ? 'dark' : 'white'}
-        bg={colors[data.health]}
-        className="text-center"
-      >
-        <Card.Header>{data.kind}</Card.Header>
-        <Card.Body style={{background: '#fff', color: '#000'}}>
-          <Card.Text>
-            {data.name}
-          </Card.Text>
-        </Card.Body>
-      </Card>
+      <Box>
+        <Box sx={{color: '#fff', p: .5, background: data.health !== "" ? colors[data.health] : '#212121'}}>
+          {data.kind}
+        </Box>
+        <Box sx={{ p: 1 }}>
+          {data.name}
+        </Box>
+      </Box>
       <Handle
         type="source"
         position={Position.Right}
@@ -148,13 +142,10 @@ const CircleDiagram = () => {
     navigate(`./namespaces/${namespace}/ref/${encodeURIComponent(ref)}/kind/${kind}/resource/${name}`)
   }
 
-  
-
-
   return (
     <>
       <Sidebar />
-      <div style={{position: "absolute", top: 0, bottom: 0, left: "380px", right: 0, background: "#1c1c1e"}}>
+      <div style={{position: "absolute", top: 0, bottom: 0, left: "400px", right: 0, background: "#1c1c1e"}}>
         <ReactFlow
           nodes={nodes}
           edges={edges}

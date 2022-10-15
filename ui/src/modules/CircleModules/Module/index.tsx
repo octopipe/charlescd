@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Card, Dropdown } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import './style.css'
+import { Card, CardHeader, IconButton, Menu, MenuItem } from "@mui/material";
 
 const colors = {
   "": "secondary",
@@ -10,26 +10,59 @@ const colors = {
   'Degraded': 'danger'
 } as any
 
+const ITEM_HEIGHT = 48;
+
 const Module = ({ module, name, onRemove, onEdit }: any) => {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl)
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleRemove = (name: string) => {
+    handleClose()
+    onRemove(name)
+  }
+
+  const handleEdit = (name: string) => {
+    handleClose()
+    onEdit(name)
+  }
+
   return (
     <Card
-      bg={colors[module?.status]}
-      className='mb-2 circle_module' 
-      style={{background: 'transparent'}}
+      variant='outlined'
+      className="text-center"
     >
-      <Card.Body style={{display: 'flex', justifyContent: 'space-between'}}>
-        {name}
-        <Dropdown>
-          <Dropdown.Toggle className="circle_module_toggle" id="dropdown-basic">
-            <FontAwesomeIcon icon="ellipsis-vertical" />
-          </Dropdown.Toggle>
-          <Dropdown.Menu>
-            <Dropdown.Item onClick={() => onRemove(name)}>Remove</Dropdown.Item>
-            <Dropdown.Item>Move To</Dropdown.Item>
-            <Dropdown.Item onClick={() => onEdit(name)}>Edit</Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
-      </Card.Body>
+      <CardHeader
+        subheader={name}
+        action={
+          <>
+            <IconButton onClick={handleClick}>
+              <FontAwesomeIcon icon="ellipsis-vertical" />
+            </IconButton>
+            <Menu
+              open={open}
+              anchorEl={anchorEl}
+              onClose={handleClose}
+              PaperProps={{
+                style: {
+                  maxHeight: ITEM_HEIGHT * 4.5,
+                  width: '20ch',
+                },
+              }}
+            >
+              <MenuItem onClick={() => handleRemove(name)}>Remove</MenuItem>
+              <MenuItem>Move To</MenuItem>
+              <MenuItem onClick={() => handleEdit(name)}>Edit</MenuItem>
+            </Menu>
+          </>
+        }
+      />
     </Card>
   )
 }
