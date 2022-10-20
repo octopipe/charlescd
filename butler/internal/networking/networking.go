@@ -10,6 +10,9 @@ import (
 const (
 	IstioLayer = "istio"
 	GateLayer  = "gate"
+
+	DefaultRouting = "default"
+	CanaryRouting  = "canary"
 )
 
 type NetworkingLayer interface {

@@ -54,25 +54,25 @@ type CanaryDeployStrategy struct {
 }
 
 type DefaultDeployStartegy struct {
-	CustomMatch CircleMatch     `json:"customMatch,omitempty"`
+	CustomMatch []CircleMatch   `json:"customMatch,omitempty"`
 	Segments    []CircleSegment `json:"segments,omitempty"`
 }
 
-type CircleDeployStrategy struct {
-	Strategy string                `json:"key,omitempty"`
+type CircleRouting struct {
+	Strategy string                `json:"strategy,omitempty"`
 	Canary   CanaryDeployStrategy  `json:"canary,omitempty"`
 	Default  DefaultDeployStartegy `json:"default,omitempty"`
 }
 
 // CircleSpec defines the desired state of Circle
 type CircleSpec struct {
-	Author         string               `json:"author,omitempty"`
-	Description    string               `json:"description,omitempty"`
-	Namespace      string               `json:"namespace,omitempty"`
-	IsDefault      bool                 `json:"isDefault,omitempty"`
-	DeployStrategy CircleDeployStrategy `json:"deployStrategy,omitempty"`
-	Modules        []CircleModule       `json:"modules,omitempty"`
-	Environments   []CircleEnvironments `json:"environments,omitempty"`
+	Author       string               `json:"author,omitempty"`
+	Description  string               `json:"description,omitempty"`
+	Namespace    string               `json:"namespace,omitempty"`
+	IsDefault    bool                 `json:"isDefault,omitempty"`
+	Routing      CircleRouting        `json:"routing,omitempty"`
+	Modules      []CircleModule       `json:"modules,omitempty"`
+	Environments []CircleEnvironments `json:"environments,omitempty"`
 }
 
 type CircleModuleResource struct {

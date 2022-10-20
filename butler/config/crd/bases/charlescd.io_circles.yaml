@@ -37,39 +37,6 @@ spec:
             properties:
               author:
                 type: string
-              deployStrategy:
-                properties:
-                  canary:
-                    properties:
-                      weight:
-                        type: integer
-                    required:
-                    - weight
-                    type: object
-                  default:
-                    properties:
-                      customMatch:
-                        properties:
-                          headers:
-                            additionalProperties:
-                              type: string
-                            type: object
-                        type: object
-                      segments:
-                        items:
-                          properties:
-                            condition:
-                              type: string
-                            key:
-                              type: string
-                            value:
-                              type: string
-                          type: object
-                        type: array
-                    type: object
-                  key:
-                    type: string
-                type: object
               description:
                 type: string
               environments:
@@ -103,6 +70,41 @@ spec:
                 type: array
               namespace:
                 type: string
+              routing:
+                properties:
+                  canary:
+                    properties:
+                      weight:
+                        type: integer
+                    required:
+                    - weight
+                    type: object
+                  default:
+                    properties:
+                      customMatch:
+                        items:
+                          properties:
+                            headers:
+                              additionalProperties:
+                                type: string
+                              type: object
+                          type: object
+                        type: array
+                      segments:
+                        items:
+                          properties:
+                            condition:
+                              type: string
+                            key:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                    type: object
+                  strategy:
+                    type: string
+                type: object
             type: object
           status:
             description: CircleStatus defines the observed state of Circle

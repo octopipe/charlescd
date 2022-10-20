@@ -5,6 +5,13 @@ metadata:
 spec:
   author: Maycon Pacheco
   isDefault: true
+  namespace: myapp
+  routing: 
+    strategy: default
+    default:
+      customMatch:
+        - headers:
+            tenantId: "1111"
   environments:
     - key: API_PATH
       value: http://api.default.io
