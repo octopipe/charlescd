@@ -1,9 +1,10 @@
 package utils
 
 const (
-	AnnotationModuleMark = "charlecd.io/module-mark"
-	AnnotationCircleMark = "charlecd.io/circle-mark"
+	AnnotationModuleMark = "charlecd.io/module"
+	AnnotationCircleMark = "charlecd.io/circle"
 	AnnotationManagedBy  = "app.kubernetes.io/managed-by"
+	AnnotationCircles    = "charlescd.io/circles"
 
 	ManagedBy = "charlescd"
 )

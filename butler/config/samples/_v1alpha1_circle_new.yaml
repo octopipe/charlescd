@@ -4,20 +4,20 @@ metadata:
   name: circle-new
 spec:
   author: Maycon Pacheco
-  segments:
-    - key: email
-      value: mayconjrpacheco@gmail.com
-      condition: EQUAL
+  routing: 
+    strategy: default
+    default:
+      customMatch:
+        - headers:
+            tenantId: "2222"
   environments:
     - key: API_PATH
       value: http://api.default.io
   modules:
-    - moduleRef: charlescd-guestbook-simple
+    - moduleRef: charlescd-guestbook
       revision: "aaaa"
       overrides:
         - key: '$.spec.template.spec.containers[0].image'
-          value: 'gcr.io/heptio-images/ks-guestbook-demo@sha256:e6fbd640820c32c847a53b93eb7b404f25ffb56df1cc16d0711eec3a405d6509'
-    - moduleRef: charlescd-guestbook-simple-server
-      revision: bbb
+          value: 'gcr.io/heptio-images/ks-guestbook-demo@sha256:fe18e00a6aeece16b5b2f77a32ee60929e8a60e27c71df8df66bf804f5677f47'
   
   # TODO(user): Add fields here

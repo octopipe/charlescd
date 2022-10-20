@@ -1,10 +1,10 @@
 apiVersion: charlescd.io/v1alpha1
 kind: Module
 metadata:
-  name: charlescd-guestbook-simple-server
+  name: charlescd-guestbook
 spec:
   author: Mayco Pacheco
-  repositoryPath: git@github.com:octopipe/charlescd-samples-server.git
-  deploymentPath: guestbook-server
+  repositoryPath: git@github.com:octopipe/charlescd-samples.git
+  deploymentPath: guestbook
   secretRef: default/mysecret
   templateType: simple

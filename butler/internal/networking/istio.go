@@ -3,6 +3,7 @@ package networking
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/argoproj/gitops-engine/pkg/health"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
@@ -29,7 +30,6 @@ func getMatchForDefaultRouting(circle charlescdiov1alpha1.Circle) []*networkingv
 			}
 
 			newMatch := &networkingv1alpha3.HTTPMatchRequest{
-				Name:    circle.GetName(),
 				Headers: headers,
 			}
 
@@ -42,19 +42,11 @@ func getMatchForDefaultRouting(circle charlescdiov1alpha1.Circle) []*networkingv
 }
 
 func getMatch(circle charlescdiov1alpha1.Circle) []*networkingv1alpha3.HTTPMatchRequest {
-	match := []*networkingv1alpha3.HTTPMatchRequest{
-		{
-			Uri: &networkingv1alpha3.StringMatch{
-				MatchType: &networkingv1alpha3.StringMatch_Exact{
-					Exact: "/",
-				},
-			},
-		},
-	}
+	match := []*networkingv1alpha3.HTTPMatchRequest{}
 
-	// if circle.Spec.Routing.Strategy == DefaultRouting {
-	// 	return getMatchForDefaultRouting(circle)
-	// }
+	if circle.Spec.Routing.Strategy == DefaultRouting {
+		return getMatchForDefaultRouting(circle)
+	}
 
 	return match
 }
@@ -69,36 +61,23 @@ func getModuleService(module charlescdiov1alpha1.CircleModuleStatus) *charlescdi
 	return nil
 }
 
-func getRoutes(circle charlescdiov1alpha1.Circle) []*networkingv1alpha3.HTTPRoute {
-	routes := []*networkingv1alpha3.HTTPRoute{}
-
-	for name, module := range circle.Status.Modules {
-		if module.Status != string(health.HealthStatusHealthy) {
-			continue
-		}
-
-		service := getModuleService(module)
-		if service == nil {
-			continue
-		}
-
-		newRoute := &networkingv1alpha3.HTTPRoute{
-			Name:  name,
-			Match: getMatch(circle),
-			Route: []*networkingv1alpha3.HTTPRouteDestination{
-				{
-					Destination: &networkingv1alpha3.Destination{
-						Host:   fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace),
-						Subset: fmt.Sprintf("%s-%s", circle.GetName(), name),
-					},
+func getRoute(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.CircleModule) *networkingv1alpha3.HTTPRoute {
+	currentModule := circle.Status.Modules[module.ModuleRef]
+	service := getModuleService(currentModule)
+	newRoute := &networkingv1alpha3.HTTPRoute{
+		Name:  circle.GetName(),
+		Match: getMatch(circle),
+		Route: []*networkingv1alpha3.HTTPRouteDestination{
+			{
+				Destination: &networkingv1alpha3.Destination{
+					Host: fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace),
+					// Subset: fmt.Sprintf("%s-%s", circle.GetName(), name),
 				},
 			},
-		}
-
-		routes = append(routes, newRoute)
+		},
 	}
 
-	return routes
+	return newRoute
 }
 
 func newVirtualService(module charlescdiov1alpha1.CircleModule, circle charlescdiov1alpha1.Circle) *v1alpha3.VirtualService {
@@ -108,6 +87,7 @@ func newVirtualService(module charlescdiov1alpha1.CircleModule, circle charlescd
 			Namespace: circle.Spec.Namespace,
 			Annotations: map[string]string{
 				utils.AnnotationManagedBy: utils.ManagedBy,
+				utils.AnnotationCircles:   strings.Join([]string{circle.GetName()}, " "),
 			},
 		},
 		Spec: networkingv1alpha3.VirtualService{
@@ -115,15 +95,66 @@ func newVirtualService(module charlescdiov1alpha1.CircleModule, circle charlescd
 				"*",
 			},
 			Gateways: []string{
-				"myapp/charlescd-guestbook-simple-gateway",
+				"guestbook-gateway",
 			},
-			Http: getRoutes(circle),
+			Http: []*networkingv1alpha3.HTTPRoute{getRoute(circle, module)},
 		},
 	}
 
 	newVirtualService.SetName(module.ModuleRef)
 
 	return newVirtualService
+}
+
+func mergeVirtualServices(module charlescdiov1alpha1.CircleModule, circle charlescdiov1alpha1.Circle, virtualService *v1alpha3.VirtualService) *v1alpha3.VirtualService {
+	currentRoutes := []*networkingv1alpha3.HTTPRoute{getRoute(circle, module)}
+	for _, r := range virtualService.Spec.Http {
+		if r.Name != circle.GetName() {
+			currentRoutes = append(currentRoutes, r)
+		}
+	}
+
+	annotations := virtualService.GetAnnotations()
+	newCircleAnnotations := []string{circle.GetName()}
+	circleAnnotations := strings.Split(annotations[utils.AnnotationCircles], " ")
+	for _, a := range circleAnnotations {
+		if a != circle.GetName() {
+			newCircleAnnotations = append(newCircleAnnotations, a)
+		}
+	}
+	annotations[utils.AnnotationCircles] = strings.Join(newCircleAnnotations, " ")
+
+	virtualService.SetAnnotations(annotations)
+	virtualService.Spec.Http = currentRoutes
+
+	return virtualService
+}
+
+func (n networkingLayer) createOrUpdateVirtualService(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.CircleModule, namespace string) error {
+	currVirtualService, err := n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Get(context.TODO(), module.ModuleRef, metav1.GetOptions{})
+
+	if errors.IsNotFound(err) {
+		newVirtualService := newVirtualService(module, circle)
+
+		_, err = n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Create(context.TODO(), newVirtualService, metav1.CreateOptions{})
+	}
+
+	if err != nil && !errors.IsNotFound(err) {
+		return err
+	}
+
+	currVirtualService = mergeVirtualServices(module, circle, currVirtualService)
+	fmt.Println(currVirtualService)
+
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		_, err = n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Update(context.TODO(), currVirtualService, metav1.UpdateOptions{})
+		return err
+	})
+	if retryErr != nil {
+		return retryErr
+	}
+
+	return nil
 }
 
 func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlescdiov1alpha1.Circle) *v1alpha3.DestinationRule {
@@ -134,6 +165,7 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 			Namespace: circle.Spec.Namespace,
 			Annotations: map[string]string{
 				utils.AnnotationManagedBy: utils.ManagedBy,
+				utils.AnnotationCircles:   "",
 			},
 		},
 		Spec: networkingv1alpha3.DestinationRule{
@@ -152,29 +184,6 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 	destinationRule.SetName(module.ModuleRef)
 
 	return destinationRule
-}
-
-func (n networkingLayer) createOrUpdateVirtualService(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.CircleModule, namespace string) error {
-	currVirtualService, err := n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Get(context.TODO(), module.ModuleRef, metav1.GetOptions{})
-	if errors.IsNotFound(err) {
-		newVirtualService := newVirtualService(module, circle)
-
-		_, err = n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Create(context.TODO(), newVirtualService, metav1.CreateOptions{})
-	}
-
-	if !errors.IsNotFound(err) {
-		return err
-	}
-
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		_, err = n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Update(context.TODO(), currVirtualService, metav1.UpdateOptions{})
-		return err
-	})
-	if retryErr != nil {
-		return retryErr
-	}
-
-	return nil
 }
 
 func (n networkingLayer) createOrUpdateDestinationRules(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.CircleModule, namespace string) error {
@@ -219,11 +228,7 @@ func (n networkingLayer) SyncIstio(circle charlescdiov1alpha1.Circle) error {
 
 		err := n.createOrUpdateVirtualService(circle, module, namespace)
 		if err != nil {
-			return err
-		}
-
-		err = n.createOrUpdateDestinationRules(circle, module, namespace)
-		if err != nil {
+			fmt.Println(err)
 			return err
 		}
 	}
