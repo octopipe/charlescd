@@ -1,0 +1,92 @@
+syntax = "proto3";
+package v1;
+
+option go_package = "./v1";
+
+service Circle {
+  rpc Circles (CirclesRequest) returns (CirclesResponse) {}
+}
+
+message CirclesRequest {
+  int32 limit = 1;
+  bool continue = 2;
+}
+
+message CirclesResponse {
+  repeated Circle items = 1; 
+}
+
+message CanaryRouting {
+  int32 weight = 1;
+}
+
+message CircleMatch {
+  map<string, string> headers = 1;
+}
+
+message CircleSegment {
+  string key = 1;
+  string value = 2;
+  string condition = 3; 
+}
+
+message DefaultRouting {
+  repeated CircleMatch customMatch = 1;
+  repeated CircleSegment segments = 2;
+}
+
+message CircleRouting {
+  string strategy = 1;
+  CanaryRouting canary = 2;
+  DefaultRouting default = 3;
+}
+
+message CircleModuleOverride {
+  string key = 1;
+  string value = 2;
+}
+
+message CircleModule {
+  string moduleRef = 1;
+  string revision = 2;
+  repeated CircleModule overrides = 3;
+}
+
+message CircleEnvironment {
+  string key = 1;
+  string value = 2;
+}
+
+message CircleStatusResource {
+  string group = 1;
+  string kind = 2;
+  string name = 3;
+  string namespace = 4;
+  string health = 5;
+  string error = 6;
+}
+
+message CircleStatusModule {
+  string status = 1;
+  string error = 2;
+  repeated CircleStatusResource resources = 3;
+}
+
+message CircleStatus {
+  repeated CircleStatusModule modules = 1;
+}
+
+message CircleItem {
+  string name = 1;
+  string description = 2;
+  string namespace = 3;
+  bool isDefault = 4;
+}
+
+message Circle {
+  CircleItem metadata = 1;
+  CircleRouting routing = 2;
+  repeated CircleModule modules = 3;
+  repeated CircleEnvironment environments = 4;
+  CircleStatus status = 5;
+}

@@ -11,6 +11,7 @@ import Main from './modules/Main';
 import './core/components/icons/library'
 import './index.css'
 import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
+import Login from './modules/Login';
 
 const darkTheme = createTheme({
   palette: {
@@ -27,6 +28,7 @@ root.render(
       <CssBaseline />
       <BrowserRouter>
         <Routes>
+          <Route path='/login' element={<Login />} />
           <Route path='/' element={<Main />}>
             <Route index element={<Dashboard />} />
             <Route path='circles' element={<Circles />} />
@@ -35,7 +37,6 @@ root.render(
             </Route>
             <Route path='modules' element={<Modules />} />
           </Route>
-          
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
