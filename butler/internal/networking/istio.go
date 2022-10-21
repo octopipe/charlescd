@@ -70,8 +70,8 @@ func getRoute(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.Circ
 		Route: []*networkingv1alpha3.HTTPRouteDestination{
 			{
 				Destination: &networkingv1alpha3.Destination{
-					Host: fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace),
-					// Subset: fmt.Sprintf("%s-%s", circle.GetName(), name),
+					Host:   fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace),
+					Subset: circle.GetName(),
 				},
 			},
 		},
@@ -122,6 +122,9 @@ func mergeVirtualServices(module charlescdiov1alpha1.CircleModule, circle charle
 			newCircleAnnotations = append(newCircleAnnotations, a)
 		}
 	}
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
 	annotations[utils.AnnotationCircles] = strings.Join(newCircleAnnotations, " ")
 
 	virtualService.SetAnnotations(annotations)
@@ -144,8 +147,6 @@ func (n networkingLayer) createOrUpdateVirtualService(circle charlescdiov1alpha1
 	}
 
 	currVirtualService = mergeVirtualServices(module, circle, currVirtualService)
-	fmt.Println(currVirtualService)
-
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		_, err = n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Update(context.TODO(), currVirtualService, metav1.UpdateOptions{})
 		return err
@@ -165,16 +166,16 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 			Namespace: circle.Spec.Namespace,
 			Annotations: map[string]string{
 				utils.AnnotationManagedBy: utils.ManagedBy,
-				utils.AnnotationCircles:   "",
+				utils.AnnotationCircles:   strings.Join([]string{circle.GetName()}, " "),
 			},
 		},
 		Spec: networkingv1alpha3.DestinationRule{
 			Host: fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace),
 			Subsets: []*networkingv1alpha3.Subset{
 				{
-					Name: fmt.Sprintf("%s-%s", circle.GetName(), module.ModuleRef),
+					Name: circle.GetName(),
 					Labels: map[string]string{
-						"version": fmt.Sprintf("%s-%s", circle.GetName(), module.ModuleRef),
+						utils.AnnotationCircleMark: string(circle.GetUID()),
 					},
 				},
 			},
@@ -182,6 +183,40 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 	}
 
 	destinationRule.SetName(module.ModuleRef)
+
+	return destinationRule
+}
+
+func mergeDestionRules(module charlescdiov1alpha1.CircleModule, circle charlescdiov1alpha1.Circle, destinationRule *v1alpha3.DestinationRule) *v1alpha3.DestinationRule {
+	newSubset := &networkingv1alpha3.Subset{
+		Name: circle.GetName(),
+		Labels: map[string]string{
+			utils.AnnotationCircleMark: string(circle.GetUID()),
+		},
+	}
+
+	subsets := []*networkingv1alpha3.Subset{newSubset}
+	for _, s := range destinationRule.Spec.Subsets {
+		if s.Name != circle.GetName() {
+			subsets = append(subsets, s)
+		}
+	}
+
+	annotations := destinationRule.GetAnnotations()
+	newCircleAnnotations := []string{circle.GetName()}
+	circleAnnotations := strings.Split(annotations[utils.AnnotationCircles], " ")
+	for _, a := range circleAnnotations {
+		if a != circle.GetName() {
+			newCircleAnnotations = append(newCircleAnnotations, a)
+		}
+	}
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	annotations[utils.AnnotationCircles] = strings.Join(newCircleAnnotations, " ")
+
+	destinationRule.SetAnnotations(annotations)
+	destinationRule.Spec.Subsets = subsets
 
 	return destinationRule
 }
@@ -194,10 +229,11 @@ func (n networkingLayer) createOrUpdateDestinationRules(circle charlescdiov1alph
 		_, err = n.istioClient.NetworkingV1alpha3().DestinationRules(namespace).Create(context.TODO(), newDestinationRule, metav1.CreateOptions{})
 	}
 
-	if !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
+	currDestinationRules = mergeDestionRules(module, circle, currDestinationRules)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		_, err = n.istioClient.NetworkingV1alpha3().DestinationRules(namespace).Update(context.TODO(), currDestinationRules, metav1.UpdateOptions{})
 		return err
@@ -227,6 +263,12 @@ func (n networkingLayer) SyncIstio(circle charlescdiov1alpha1.Circle) error {
 		}
 
 		err := n.createOrUpdateVirtualService(circle, module, namespace)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		err = n.createOrUpdateDestinationRules(circle, module, namespace)
 		if err != nil {
 			fmt.Println(err)
 			return err

@@ -19,11 +19,20 @@ func (t template) addDefaultAnnotations(manifest *unstructured.Unstructured) *un
 		annotations = make(map[string]string)
 	}
 
+	labels := manifest.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+
+	labels[utils.AnnotationModuleMark] = string(t.module.GetUID())
+	labels[utils.AnnotationCircleMark] = string(t.circle.GetUID())
+	labels[utils.AnnotationManagedBy] = utils.ManagedBy
+
 	annotations[utils.AnnotationModuleMark] = string(t.module.GetUID())
 	annotations[utils.AnnotationCircleMark] = string(t.circle.GetUID())
 	annotations[utils.AnnotationManagedBy] = utils.ManagedBy
 
-	manifest.SetName(fmt.Sprintf("%s-%s", t.circle.GetName(), manifest.GetName()))
+	manifest.SetLabels(labels)
 	manifest.SetAnnotations(annotations)
 
 	_, ok, _ := unstructured.NestedInt64(manifest.Object, "spec", "replicas")
@@ -37,6 +46,18 @@ func (t template) addDefaultAnnotations(manifest *unstructured.Unstructured) *un
 		templateAnnotations[utils.AnnotationCircleMark] = string(t.circle.GetUID())
 		templateAnnotations[utils.AnnotationManagedBy] = utils.ManagedBy
 		unstructured.SetNestedStringMap(manifest.Object, templateAnnotations, "spec", "template", "metadata", "annotations")
+
+		templateLabels := map[string]string{}
+		currentLabels, ok, _ := unstructured.NestedStringMap(manifest.Object, "spec", "template", "metadata", "labels")
+		if ok {
+			templateLabels = currentLabels
+		}
+
+		templateLabels[utils.AnnotationModuleMark] = string(t.module.GetUID())
+		templateLabels[utils.AnnotationCircleMark] = string(t.circle.GetUID())
+		templateLabels[utils.AnnotationManagedBy] = utils.ManagedBy
+		unstructured.SetNestedStringMap(manifest.Object, templateLabels, "spec", "template", "metadata", "labels")
+
 	}
 
 	return manifest
@@ -68,6 +89,10 @@ func (t template) parseManifests(manifests [][]byte) ([]*unstructured.Unstructur
 			newManifest := &unstructured.Unstructured{}
 			if err := json.Unmarshal([]byte(i), newManifest); err != nil {
 				return nil, err
+			}
+
+			if newManifest.GetKind() != "Service" {
+				newManifest.SetName(fmt.Sprintf("%s-%s", t.circle.GetName(), newManifest.GetName()))
 			}
 
 			newManifest = t.addDefaultAnnotations(newManifest)

@@ -20,6 +20,6 @@ spec:
       revision: "aaaa"
       overrides:
         - key: '$.spec.template.spec.containers[0].image'
-          value: 'gcr.io/heptio-images/ks-guestbook-demo@sha256:fe18e00a6aeece16b5b2f77a32ee60929e8a60e27c71df8df66bf804f5677f47'
+          value: 'mayconjrpacheco/dragonboarding:goku'
   
   # TODO(user): Add fields here
