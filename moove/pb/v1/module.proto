@@ -1,0 +1,11 @@
+syntax = "proto3";
+package v1;
+
+
+option go_package = "./v1";
+
+import "google/protobuf/any.proto";
+
+service ModuleService {
+  rpc List (google.protobuf.Any) returns (google.protobuf.Any) {}
+}
