@@ -54,14 +54,14 @@ type CanaryDeployStrategy struct {
 }
 
 type DefaultDeployStartegy struct {
-	CustomMatch []CircleMatch   `json:"customMatch,omitempty"`
-	Segments    []CircleSegment `json:"segments,omitempty"`
+	CustomMatch *CircleMatch     `json:"customMatch,omitempty"`
+	Segments    []*CircleSegment `json:"segments,omitempty"`
 }
 
 type CircleRouting struct {
-	Strategy string                `json:"strategy,omitempty"`
-	Canary   CanaryDeployStrategy  `json:"canary,omitempty"`
-	Default  DefaultDeployStartegy `json:"default,omitempty"`
+	Strategy string                 `json:"strategy,omitempty"`
+	Canary   *CanaryDeployStrategy  `json:"canary,omitempty"`
+	Default  *DefaultDeployStartegy `json:"default,omitempty"`
 }
 
 // CircleSpec defines the desired state of Circle
@@ -97,6 +97,7 @@ type CircleStatus struct {
 
 	Status  string                        `json:"status,omitempty"`
 	Modules map[string]CircleModuleStatus `json:"modules,omitempty"`
+	Error   string                        `json:"error,omitempty"`
 }
 
 //+kubebuilder:object:root=true

@@ -2,7 +2,6 @@ package sync
 
 import (
 	"context"
-	"log"
 	"os"
 	"strconv"
 	"time"
@@ -35,7 +34,7 @@ func NewSync(client client.Client, gitopsEngine engine.GitOpsEngine, clusterCach
 	}
 }
 
-func (s Sync) sync(circle charlescdiov1alpha1.Circle) error {
+func (s Sync) sync(circle charlescdiov1alpha1.Circle) {
 	targets := []*unstructured.Unstructured{}
 	circleModules := map[string]charlescdiov1alpha1.CircleModuleStatus{}
 	modules := map[string]string{}
@@ -43,19 +42,22 @@ func (s Sync) sync(circle charlescdiov1alpha1.Circle) error {
 		module := &charlescdiov1alpha1.Module{}
 		err := s.Get(context.Background(), utils.GetObjectKeyByPath(m.ModuleRef), module)
 		if err != nil {
-			return err
+			s.updateCircleStatusError(circle, err)
+			return
 		}
 
 		r := repository.NewRepository(s.Client, *module)
 		err = r.Clone()
 		if err != nil {
-			return err
+			s.updateCircleStatusError(circle, err)
+			return
 		}
 
 		t := template.NewTemplate(*module, circle)
 		newTargets, err := t.GetManifests()
 		if err != nil {
-			return err
+			s.updateCircleStatusError(circle, err)
+			return
 		}
 
 		circleModules[m.ModuleRef] = charlescdiov1alpha1.CircleModuleStatus{
@@ -84,15 +86,18 @@ func (s Sync) sync(circle charlescdiov1alpha1.Circle) error {
 		sync.WithPrune(true),
 	)
 	if err != nil {
-		return err
+		s.updateCircleStatusError(circle, err)
+		return
 	}
 
-	err = s.updateCircleStatus(circleModules, modules, res, &circle)
-
-	return err
+	err = s.updateCircleStatusSynced(circleModules, modules, res, &circle)
+	if err != nil {
+		s.updateCircleStatusError(circle, err)
+		return
+	}
 }
 
-func (s Sync) updateCircleStatus(
+func (s Sync) updateCircleStatusSynced(
 	circleModules map[string]charlescdiov1alpha1.CircleModuleStatus,
 	modules map[string]string,
 	res []common.ResourceSyncResult,
@@ -138,8 +143,17 @@ func (s Sync) updateCircleStatus(
 	return err
 }
 
-func (s Sync) Resync(circle charlescdiov1alpha1.Circle) error {
-	return s.sync(circle)
+func (s Sync) updateCircleStatusError(circle charlescdiov1alpha1.Circle, syncError error) error {
+	circle.Status = charlescdiov1alpha1.CircleStatus{
+		Status: "FAILED",
+		Error:  syncError.Error(),
+	}
+	err := s.Status().Update(context.Background(), &circle)
+	return err
+}
+
+func (s Sync) Resync(circle charlescdiov1alpha1.Circle) {
+	s.sync(circle)
 }
 
 func (s Sync) StartSyncAll(ctx context.Context) error {
@@ -154,12 +168,7 @@ func (s Sync) StartSyncAll(ctx context.Context) error {
 			return err
 		}
 		for _, circle := range circles.Items {
-			err = s.sync(circle)
-			if err != nil {
-				log.Fatalln(err)
-				return err
-				// TODO: ADD LOG
-			}
+			s.sync(circle)
 		}
 	}
 

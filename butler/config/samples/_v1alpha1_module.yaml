@@ -4,7 +4,6 @@ metadata:
   name: charlescd-guestbook
 spec:
   author: Mayco Pacheco
-  repositoryPath: git@github.com:octopipe/charlescd-samples.git
+  repositoryPath: https://github.com/argoproj/argocd-example-apps.git
   deploymentPath: guestbook
-  secretRef: default/mysecret
   templateType: simple

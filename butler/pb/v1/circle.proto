@@ -1,23 +1,41 @@
 syntax = "proto3";
 package v1;
 
+
 option go_package = "./v1";
 
-service Circle {
-  rpc Circles (CirclesRequest) returns (CirclesResponse) {}
+import "google/protobuf/any.proto";
+
+service CircleService {
+  rpc List (ListRequest) returns (ListResponse) {}
+  rpc Get (GetRequest) returns (Circle) {}
+  rpc SyncAll (SyncAllRequest) returns (google.protobuf.Any) {}
+  rpc Sync (GetRequest) returns (google.protobuf.Any) {}
 }
 
-message CirclesRequest {
-  int32 limit = 1;
-  bool continue = 2;
+message ListRequest {
+  optional int64 limit = 1;
+  optional string continue = 2;
+  optional string label = 3;
+  string namespace = 4;
 }
 
-message CirclesResponse {
-  repeated Circle items = 1; 
+message ListResponse {
+  repeated CircleMetadata items = 1; 
+}
+
+message GetRequest {
+  string name = 1;
+  string namespace = 2;
+}
+
+message SyncAllRequest {
+  optional string label = 1;
+  optional string namespace = 2;
 }
 
 message CanaryRouting {
-  int32 weight = 1;
+  int64 weight = 1;
 }
 
 message CircleMatch {
@@ -31,7 +49,7 @@ message CircleSegment {
 }
 
 message DefaultRouting {
-  repeated CircleMatch customMatch = 1;
+  CircleMatch customMatch = 1;
   repeated CircleSegment segments = 2;
 }
 
@@ -76,17 +94,27 @@ message CircleStatus {
   repeated CircleStatusModule modules = 1;
 }
 
-message CircleItem {
-  string name = 1;
-  string description = 2;
-  string namespace = 3;
-  bool isDefault = 4;
-}
-
 message Circle {
-  CircleItem metadata = 1;
+  CircleMetadata metadata = 1;
   CircleRouting routing = 2;
   repeated CircleModule modules = 3;
   repeated CircleEnvironment environments = 4;
   CircleStatus status = 5;
 }
+
+message CircleMetadataModule {
+  string name = 1;
+  string status = 2;
+  optional string error = 3;
+}
+
+message CircleMetadata {
+  string name = 1;
+  string description = 2;
+  string namespace = 3;
+  bool isDefault = 4;
+  string status = 5;
+  string error = 6;
+  repeated CircleMetadataModule modules = 7;
+}
+

@@ -19,22 +19,20 @@ func getMatchForDefaultRouting(circle charlescdiov1alpha1.Circle) []*networkingv
 	match := []*networkingv1alpha3.HTTPMatchRequest{}
 	defaultRouting := circle.Spec.Routing.Default
 
-	if len(defaultRouting.CustomMatch) > 0 {
-		for _, customMatch := range defaultRouting.CustomMatch {
+	if defaultRouting.CustomMatch != nil {
 
-			headers := map[string]*networkingv1alpha3.StringMatch{}
-			for key, value := range customMatch.Headers {
-				headers[key] = &networkingv1alpha3.StringMatch{
-					MatchType: &networkingv1alpha3.StringMatch_Regex{Regex: value},
-				}
+		headers := map[string]*networkingv1alpha3.StringMatch{}
+		for key, value := range defaultRouting.CustomMatch.Headers {
+			headers[key] = &networkingv1alpha3.StringMatch{
+				MatchType: &networkingv1alpha3.StringMatch_Regex{Regex: value},
 			}
-
-			newMatch := &networkingv1alpha3.HTTPMatchRequest{
-				Headers: headers,
-			}
-
-			match = append(match, newMatch)
 		}
+
+		newMatch := &networkingv1alpha3.HTTPMatchRequest{
+			Headers: headers,
+		}
+
+		match = append(match, newMatch)
 
 	}
 

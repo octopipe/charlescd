@@ -19,11 +19,12 @@ package main
 import (
 	"context"
 	"flag"
-	"net/http"
+	"log"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+
 	"istio.io/client-go/pkg/clientset/versioned"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -40,12 +41,10 @@ import (
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/engine"
 	"github.com/joho/godotenv"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/controllers"
-	"github.com/octopipe/charlescd/butler/internal/handler"
 	"github.com/octopipe/charlescd/butler/internal/networking"
+	"github.com/octopipe/charlescd/butler/internal/server"
 	"github.com/octopipe/charlescd/butler/internal/sync"
 	"github.com/octopipe/charlescd/butler/internal/utils"
 	//+kubebuilder:scaffold:imports
@@ -180,13 +179,11 @@ func main() {
 		}()
 	}
 
-	e := echo.New()
-	e.Use(middleware.CORS())
-	e = handler.NewCircleHandler(e)(dynamicClient, clientset, client, clusterCache)
-	e = handler.NewResourceHandler(e)(dynamicClient, clientset, client, clusterCache)
-	e = handler.NewModuleHandler(e)(dynamicClient, client, clusterCache)
-	if err := e.Start(":8080"); err != http.ErrServerClosed {
-		setupLog.Error(err, "problem running http server")
-		os.Exit(1)
+	circleServer := server.NewCircleServer(client, clusterCache, clientset, dynamicClient, s)
+	server := server.NewServer(circleServer)
+	setupLog.Info("starting grpc server")
+	if err := server.Start(); err != nil {
+		log.Fatalln(err)
 	}
+
 }

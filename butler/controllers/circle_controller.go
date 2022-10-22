@@ -61,11 +61,7 @@ func (r *CircleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		logger.Error(err, "circle not found on reconcile")
 	}
 
-	err = r.Sync.Resync(*circle)
-	if err != nil {
-		logger.Error(err, "cannot resync circle")
-	}
-
+	r.Sync.Resync(*circle)
 	if r.NetworkClient != nil {
 		err = r.NetworkClient.Sync(*circle)
 		if err != nil {

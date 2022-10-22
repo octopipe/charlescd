@@ -10,8 +10,8 @@ spec:
     strategy: default
     default:
       customMatch:
-        - headers:
-            tenantId: "1111"
+        headers:
+          tenantId: "1111"
   environments:
     - key: API_PATH
       value: http://api.default.io

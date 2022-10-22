@@ -82,14 +82,12 @@ spec:
                   default:
                     properties:
                       customMatch:
-                        items:
-                          properties:
-                            headers:
-                              additionalProperties:
-                                type: string
-                              type: object
-                          type: object
-                        type: array
+                        properties:
+                          headers:
+                            additionalProperties:
+                              type: string
+                            type: object
+                        type: object
                       segments:
                         items:
                           properties:
@@ -109,6 +107,8 @@ spec:
           status:
             description: CircleStatus defines the observed state of Circle
             properties:
+              error:
+                type: string
               modules:
                 additionalProperties:
                   properties:
