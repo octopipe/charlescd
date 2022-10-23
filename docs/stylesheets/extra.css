@@ -1,0 +1,13 @@
+:root > * {
+  --md-primary-fg-color:        rgb(28, 28, 30);
+  --md-primary-fg-color--light: #ECB7B7;
+  --md-primary-fg-color--dark:  #90030C;
+}
+
+.md-logo img {
+  width: 100% !important;
+}
+
+.md-header__topic span {
+  display: none;
+}
