@@ -1,0 +1,10 @@
+site_name: CharlesCD
+repo_url: https://github.com/octopipe/charlescd
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.tracking
+    - navigation.tabs.sticky
+    - navigation.top
