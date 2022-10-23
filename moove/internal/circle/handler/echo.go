@@ -18,20 +18,21 @@ func NewEchohandler(e *echo.Echo, circleUseCase circle.CircleUseCase) {
 		circleUseCase: circleUseCase,
 		validator:     customvalidator.NewCustomValidator(),
 	}
-	s := e.Group("/circles")
+	s := e.Group("/workspaces/:workspaceId/circles")
 	s.GET("", handler.FindAll)
 	s.POST("", handler.Create)
-	s.GET("/:name", handler.FindById)
-	s.PUT("/:name", handler.Update)
-	s.DELETE("/:name", handler.Delete)
-	s.GET("/:name/diagram", handler.Diagram)
-	s.GET("/:name/resources/:resource", handler.Resource)
-	s.GET("/:name/resources/:resource/logs", handler.ResourceLogs)
-	s.GET("/:name/resources/:resource/events", handler.ResourceEvents)
+	s.GET("/:circleName", handler.FindById)
+	s.PUT("/:circleName", handler.Update)
+	s.DELETE("/:circleName", handler.Delete)
+	s.GET("/:circleName/diagram", handler.Diagram)
+	s.GET("/:circleName/resources/:resource", handler.Resource)
+	s.GET("/:circleName/resources/:resource/logs", handler.ResourceLogs)
+	s.GET("/:circleName/resources/:resource/events", handler.ResourceEvents)
 }
 
 func (h EchoHandler) FindAll(c echo.Context) error {
-	circles, err := h.circleUseCase.FindAll()
+	workspaceId := c.Param("workspaceId")
+	circles, err := h.circleUseCase.FindAll(workspaceId)
 	if err != nil {
 		return c.JSON(500, err)
 	}
@@ -57,7 +58,13 @@ func (h EchoHandler) Create(c echo.Context) error {
 }
 
 func (h EchoHandler) FindById(c echo.Context) error {
-	return c.JSON(200, circle.Circle{})
+	workspaceId := c.Param("workspaceId")
+	circleName := c.Param("circleName")
+	circle, err := h.circleUseCase.FindByName(workspaceId, circleName)
+	if err != nil {
+		return c.JSON(500, err)
+	}
+	return c.JSON(200, circle)
 }
 
 func (h EchoHandler) Update(c echo.Context) error {

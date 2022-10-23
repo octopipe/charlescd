@@ -47,7 +47,7 @@ func (r GormRepository) FindAll() ([]WorkspaceModel, error) {
 // FindById implements WorkspaceRepository
 func (r GormRepository) FindById(id string) (WorkspaceModel, error) {
 	workspaceModel := new(WorkspaceModel)
-	res := r.db.First(&workspaceModel, map[string]string{"id": id})
+	res := r.db.Table("workspaces").First(&workspaceModel, map[string]string{"id": id})
 	if res.Error != nil {
 		return WorkspaceModel{}, res.Error
 	}

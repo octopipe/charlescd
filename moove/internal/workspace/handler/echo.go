@@ -21,9 +21,9 @@ func NewEchohandler(e *echo.Echo, workspaceUseCase workspace.WorkspaceUseCase) {
 	s := e.Group("/workspaces")
 	s.GET("", handler.FindAll)
 	s.POST("", handler.Create)
-	s.GET("/:id", handler.FindById)
-	s.PUT("/:id", handler.Update)
-	s.DELETE("/:id", handler.Delete)
+	s.GET("/:workspaceId", handler.FindById)
+	s.PUT("/:workspaceId", handler.Update)
+	s.DELETE("/:workspaceId", handler.Delete)
 }
 
 func (h EchoHandler) FindAll(c echo.Context) error {
@@ -53,7 +53,12 @@ func (h EchoHandler) Create(c echo.Context) error {
 }
 
 func (h EchoHandler) FindById(c echo.Context) error {
-	return c.JSON(200, workspace.Workspace{})
+	workspaceId := c.Param("workspaceId")
+	workspace, err := h.workspaceUseCase.FindById(workspaceId)
+	if err != nil {
+		return c.JSON(500, err)
+	}
+	return c.JSON(200, workspace)
 }
 
 func (h EchoHandler) Update(c echo.Context) error {

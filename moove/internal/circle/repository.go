@@ -1,146 +1,76 @@
 package circle
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
 
-	"github.com/imroc/req/v3"
+	"github.com/octopipe/charlescd/moove/internal/core/grpcclient"
+	pbv1 "github.com/octopipe/charlescd/moove/pb/v1"
 )
 
-type HttpRepository struct {
-	httpClient *req.Client
+type GrpcRepository struct {
+	grpcClient grpcclient.Client
 }
 
-func NewRepository(httpClient *req.Client) CircleRepository {
-	return HttpRepository{httpClient: httpClient}
+func NewRepository(grpcClient grpcclient.Client) CircleRepository {
+	return GrpcRepository{grpcClient: grpcClient}
 }
 
 // Create implements WorkspaceRepository
-func (r HttpRepository) Create(circle Circle) (CircleProvider, error) {
-	res, err := r.httpClient.R().
-		SetBody(circle).
-		Post("/circles")
+func (r GrpcRepository) Create(circle Circle) (*pbv1.Circle, error) {
+	return nil, nil
 
-	if err != nil {
-		fmt.Errorf(err.Error())
-		return CircleProvider{}, err
-	}
-
-	circleProvider := new(CircleProvider)
-	err = json.Unmarshal(res.Bytes(), &circleProvider)
-	if err != nil {
-		return CircleProvider{}, err
-	}
-
-	return *circleProvider, err
 }
 
 // Delete implements WorkspaceRepository
-func (r HttpRepository) Delete(id string) error {
+func (r GrpcRepository) Delete(id string) error {
 
 	return nil
 }
 
 // FindAll implements WorkspaceRepository
-func (r HttpRepository) FindAll() ([]CircleProvider, error) {
-	res, err := r.httpClient.R().
-		Get("/circles")
-
-	if err != nil {
-		fmt.Errorf("fail to find all circles", err.Error())
-		return nil, err
-	}
-
-	circleProviders := new([]CircleProvider)
-	err = json.Unmarshal(res.Bytes(), &circleProviders)
+func (r GrpcRepository) FindAll(filter *pbv1.ListRequest) ([]*pbv1.CircleMetadata, error) {
+	res, err := r.grpcClient.CircleClient.List(context.Background(), filter)
 	if err != nil {
 		return nil, err
 	}
 
-	return *circleProviders, err
+	return res.Items, err
 }
 
 // FindById implements WorkspaceRepository
-func (r HttpRepository) FindById(id string) (CircleProvider, error) {
-	return CircleProvider{}, nil
+func (r GrpcRepository) FindByName(namespace string, name string) (*pbv1.Circle, error) {
+	circle, err := r.grpcClient.CircleClient.Get(context.Background(), &pbv1.GetRequest{
+		Namespace: namespace,
+		Name:      name,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return circle, nil
 }
 
 // Update implements WorkspaceRepository
-func (r HttpRepository) Update(id string, workspace Circle) (CircleProvider, error) {
+func (r GrpcRepository) Update(id string, workspace Circle) (CircleProvider, error) {
 	return CircleProvider{}, nil
 }
 
-func (r HttpRepository) GetDiagram(circleName string) (interface{}, error) {
-	res, err := r.httpClient.R().
-		Get(fmt.Sprintf("/circles/%s/diagram", circleName))
+func (r GrpcRepository) GetDiagram(circleName string) (interface{}, error) {
 
-	if err != nil {
-		fmt.Errorf("fail to find all circles", err.Error())
-		return nil, err
-	}
-
-	diagram := new(interface{})
-	err = json.Unmarshal(res.Bytes(), &diagram)
-	if err != nil {
-		return nil, err
-	}
-
-	return *diagram, err
+	return nil, nil
 }
 
 // GetEvents implements CircleRepository
-func (r HttpRepository) GetEvents(circleName string, resourceName string, group string, kind string) (interface{}, error) {
-	res, err := r.httpClient.R().
-		Get(fmt.Sprintf("/circles/%s/resources/%s/events?group=%s&kind=%s", circleName, resourceName, group, kind))
-
-	if err != nil {
-		fmt.Errorf("fail to find all circles", err.Error())
-		return nil, err
-	}
-
-	diagram := new(interface{})
-	err = json.Unmarshal(res.Bytes(), &diagram)
-	if err != nil {
-		return nil, err
-	}
-
-	return *diagram, err
+func (r GrpcRepository) GetEvents(circleName string, resourceName string, group string, kind string) (interface{}, error) {
+	return nil, nil
 }
 
 // GetLogs implements CircleRepository
-func (r HttpRepository) GetLogs(circleName string, resourceName string, group string, kind string) (interface{}, error) {
-	res, err := r.httpClient.R().
-		Get(fmt.Sprintf("/circles/%s/resources/%s/logs?group=%s&kind=%s", circleName, resourceName, group, kind))
-
-	if err != nil {
-		fmt.Errorf("fail to find all circles", err.Error())
-		return nil, err
-	}
-
-	diagram := new(interface{})
-	err = json.Unmarshal(res.Bytes(), &diagram)
-	if err != nil {
-		return nil, err
-	}
-
-	return *diagram, err
+func (r GrpcRepository) GetLogs(circleName string, resourceName string, group string, kind string) (interface{}, error) {
+	return nil, nil
 }
 
 // GetResource implements CircleRepository
-func (r HttpRepository) GetResource(circleName string, resourceName string, group string, kind string) (interface{}, error) {
-	res, err := r.httpClient.R().
-		Get(fmt.Sprintf("/circles/%s/resources/%s?group=%s&kind=%s", circleName, resourceName, group, kind))
-
-	if err != nil {
-		fmt.Errorf("fail to find all circles", err.Error())
-		return nil, err
-	}
-
-	diagram := new(interface{})
-	err = json.Unmarshal(res.Bytes(), &diagram)
-	if err != nil {
-		return nil, err
-	}
-
-	return *diagram, err
+func (r GrpcRepository) GetResource(circleName string, resourceName string, group string, kind string) (interface{}, error) {
+	return nil, nil
 }

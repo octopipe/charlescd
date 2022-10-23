@@ -2,6 +2,7 @@ package circle
 
 import (
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
+	pbv1 "github.com/octopipe/charlescd/moove/pb/v1"
 )
 
 type Circle struct {
@@ -14,9 +15,9 @@ type CircleProvider struct {
 }
 
 type CircleRepository interface {
-	FindAll() ([]CircleProvider, error)
-	FindById(id string) (CircleProvider, error)
-	Create(circle Circle) (CircleProvider, error)
+	FindAll(filter *pbv1.ListRequest) ([]*pbv1.CircleMetadata, error)
+	FindByName(namespace string, name string) (*pbv1.Circle, error)
+	Create(circle Circle) (*pbv1.Circle, error)
 	Update(id string, circle Circle) (CircleProvider, error)
 	Delete(id string) error
 	GetDiagram(circleName string) (interface{}, error)
@@ -26,9 +27,9 @@ type CircleRepository interface {
 }
 
 type CircleUseCase interface {
-	FindAll() ([]CircleProvider, error)
-	FindById(id string) (CircleProvider, error)
-	Create(circle Circle) (CircleProvider, error)
+	FindAll(workspaceId string) ([]*pbv1.CircleMetadata, error)
+	FindByName(workspaceId string, name string) (*pbv1.Circle, error)
+	Create(circle Circle) (*pbv1.Circle, error)
 	Update(id string, circle Circle) (CircleProvider, error)
 	Delete(id string) error
 	GetDiagram(circleName string) (interface{}, error)
