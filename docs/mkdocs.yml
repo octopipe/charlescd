@@ -1,0 +1,52 @@
+site_name: CharlesCD
+repo_url: https://github.com/octopipe/charlescd
+edit_uri: edit/main/docs
+
+
+extra_css:
+  - stylesheets/extra.css
+
+theme:
+  name: material
+  logo: assets/logo.png
+  favicon: assets/favicon-32x32.png
+  custom_dir: overrides
+  features:
+    - navigation.tabs
+    - navigation.tracking
+    - navigation.tabs.sticky
+    - navigation.top
+
+markdown_extensions:
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - attr_list
+  - meta
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.keys
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.escapeall
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - admonition
+  - toc:
+      permalink: true
+  - def_list
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+
+watch:
+  - overrides
+
+awesome-pages:
+    filename: ".index"
+    collapse_single_pages: true
+    strict: false
