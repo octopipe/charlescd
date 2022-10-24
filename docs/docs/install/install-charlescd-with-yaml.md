@@ -1,4 +1,4 @@
-# Getting Started
+# Install CharlesCD with YAML
 
 ## Requirements
 
