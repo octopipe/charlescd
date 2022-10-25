@@ -59,7 +59,7 @@ section.home-container h2{
 
 .home-container .md-button,
 .home-container .md-button--primary {
-  color: white;
+  color: white !important;
   width: 28%;
   font-size: large;
   padding: 0.525em 1em;

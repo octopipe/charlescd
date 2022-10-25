@@ -41,7 +41,9 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started.md
+  - Installing:
+      - Overview: install/README.md
+      - Install CharlesCD with YAML: install/install-charlescd-with-yaml.md
 
 watch:
   - overrides
