@@ -1,0 +1,9 @@
+name: CharlesCD release
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  prepare-release:
+  
