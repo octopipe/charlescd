@@ -1,6 +1,9 @@
 package circle
 
 import (
+	"fmt"
+
+	"github.com/iancoleman/strcase"
 	"github.com/octopipe/charlescd/moove/internal/workspace"
 	pbv1 "github.com/octopipe/charlescd/moove/pb/v1"
 )
@@ -35,8 +38,9 @@ func (u UseCase) FindAll(workspaceId string) ([]*pbv1.CircleMetadata, error) {
 	}
 	namespace := workspace.Name
 	filter := &pbv1.ListRequest{
-		Namespace: namespace,
+		Namespace: strcase.ToKebab(namespace),
 	}
+	fmt.Println(filter)
 	circles, err := u.circleRepository.FindAll(filter)
 	if err != nil {
 		return nil, err

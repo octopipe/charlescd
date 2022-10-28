@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/octopipe/charlescd/moove/internal/circle"
 	circleHandler "github.com/octopipe/charlescd/moove/internal/circle/handler"
 	"github.com/octopipe/charlescd/moove/internal/core/grpcclient"
@@ -56,9 +57,10 @@ func main() {
 	circleUseCase := circle.NewUseCase(workspaceRepository, circleRepository)
 
 	e := echo.New()
+	e.Use(middleware.CORS())
 	// authMiddleware := auth.NewAuthMiddleware(provider, oauth2Config, verifier)
 	// e.Use(authMiddleware.Handle)
 	workspaceHandler.NewEchohandler(e, workspaceUseCase)
 	circleHandler.NewEchohandler(e, circleUseCase)
-	e.Logger.Fatal(e.Start(":3000"))
+	e.Logger.Fatal(e.Start(":8080"))
 }
