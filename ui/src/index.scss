@@ -4,8 +4,53 @@ body {
 
 
 .form-select {
-  background-color: #212121;
+  background-color: transparent;
   color: #fff;
   outline: none !important;
   box-shadow: none !important;
+}
+
+.form-control {
+  background-color: transparent;
+
+  &:focus {
+    color: #fff;
+    background-color: transparent;
+  }
+}
+
+.modal {
+  &-content {
+    background-color: #424242;
+    color: #fff;
+  }
+
+  &-header {
+    border-bottom: 1px solid #757575;
+  }
+
+  &-footer {
+    border-top: 1px solid #757575;
+  }
+}
+
+.btn-close {
+  color: #fff;
+}
+
+.text-muted {
+  color: #bdbdbd !important;
+}
+
+
+.btn {
+  &-primary {
+    background-color: #f15c23;
+    border: 1px solid #f15c23;
+
+    &:hover {
+      background-color: rgba(241, 92, 35, .8);
+      border: 1px solid rgba(241, 92, 35, .8);
+    }
+  }
 }

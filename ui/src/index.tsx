@@ -1,13 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { Provider as ReduxProvider } from 'react-redux'
 import reportWebVitals from './reportWebVitals';
 import Main from './modules/Main';
-import { Provider } from 'use-http'
+import { Provider as FetchProvider } from 'use-http'
 import Login from './modules/Login';
 import './core/components/icons/library'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.scss'
+import Circles from './modules/Circles';
+import Modules from './modules/Modules';
+import Home from './modules/Home';
+import store from './store'
+import Circle from './modules/Circle';
 
 
 const root = ReactDOM.createRoot(
@@ -15,15 +21,23 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <Provider url='http://localhost:8080'>
-      <BrowserRouter>
-        <Routes>
-          <Route path='/login' element={<Login />} />
-          <Route path='/' element={<Main />}>
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </Provider>
+    <ReduxProvider store={store}>
+      <FetchProvider url='http://localhost:8080'>
+        <BrowserRouter>
+          <Routes>
+            <Route path='/login' element={<Login />} />
+            <Route path='' element={<Main />}>
+              <Route path='/' element={<Home />} />
+              <Route path='circles' element={<Circles />} />
+              <Route path='modules' element={<Modules />} />
+            </Route>
+            <Route path='/circles/:name' element={<Circle />}>
+
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </FetchProvider>
+    </ReduxProvider>
   </React.StrictMode>
 );
 

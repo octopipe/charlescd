@@ -56,7 +56,8 @@ func (u UseCase) FindByName(workspaceId string, name string) (*pbv1.Circle, erro
 		return nil, err
 	}
 
-	circle, err := u.circleRepository.FindByName(workspace.Name, name)
+	namespace := strcase.ToKebab(workspace.Name)
+	circle, err := u.circleRepository.FindByName(namespace, name)
 	if err != nil {
 		return nil, err
 	}

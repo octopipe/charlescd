@@ -1,7 +1,9 @@
 .main {
-  display: flex;
+  
 
   &__content {
     width: 100%;
+    display: flex;
+    margin-top: 80px;
   }
 }

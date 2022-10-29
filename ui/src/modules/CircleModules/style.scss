@@ -1,0 +1,33 @@
+.circle-modules {
+  padding-top: 5px;
+
+  &__item {
+    padding: .8rem;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &__menu {
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      padding: 5px;
+
+      &:hover {
+        color: #fff;
+      }
+    }
+
+    &--Progressing {
+      @extend .circle-modules__item;
+      background-color: #1e88e5;
+    }
+  }
+
+  &__btn-add {
+    margin-top: 15px;
+    background-color: transparent;
+  }
+}

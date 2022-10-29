@@ -1,13 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import useFetch from 'use-http'
+import { useAppDispatch } from '../../core/hooks/redux';
+import { setCurrentWorkspace } from './mainSlice';
 import MainNavbar from './Navbar';
 import MainSidebar from './Sidebar';
 import './style.scss'
 
 
 const Main = () => {
-  const [workspaces, setWorkspaces] = useState<any[]>()
+  const dispatch = useAppDispatch()
+  const [workspaces, setWorkspaces] = useState<any[]>([])
   const { response, get } = useFetch()
 
   const loadWorkspaces = useCallback(async () => {
@@ -19,11 +22,21 @@ const Main = () => {
     loadWorkspaces()
   }, [])
 
+  useEffect(() => {
+    if (workspaces?.length <= 0)
+      return
+
+    dispatch(setCurrentWorkspace(workspaces[0].id))
+  }, [workspaces])
+
   return (
     <div className='main'>
-      <MainSidebar />
+      <MainNavbar
+        workspaces={workspaces || []}
+        onSelectWorkspace={(workspaceId: any) => dispatch(setCurrentWorkspace(workspaceId))}
+      />
       <div className='main__content'>
-        <MainNavbar workspaces={workspaces} />
+        <MainSidebar />
         <Outlet />
       </div>
     </div>

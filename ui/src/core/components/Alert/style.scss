@@ -1,0 +1,21 @@
+.alert .modal {
+  &-content {
+    background-color: #424242;
+    color: #fff;
+  }
+
+  &-header {
+    border-bottom: none;
+  }
+
+  &-footer {
+    border-top: none;
+
+    .btn-primary {
+      background-color: red;
+      border: 1px solid red;
+    }
+  }
+
+  
+}
