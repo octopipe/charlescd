@@ -15,6 +15,7 @@ import Home from './modules/Home';
 import store from './store'
 import Circle from './modules/Circle';
 import Diagram from './modules/Circle/Diagram';
+import CreateCircle from './modules/CreateCircle';
 
 
 const root = ReactDOM.createRoot(
@@ -45,6 +46,7 @@ const App = () => {
               <Route path='' element={<Main />}>
                 <Route path='workspaces/:workspaceId' element={<Home />} />
                 <Route path='workspaces/:workspaceId/circles' element={<Circles />} />
+                <Route path='workspaces/:workspaceId/circles/create' element={<CreateCircle />} />
                 <Route path='workspaces/:workspaceId/modules' element={<Modules />} />
               </Route>
               <Route path='workspaces/:workspaceId/circles/:name' element={<Circle />}>

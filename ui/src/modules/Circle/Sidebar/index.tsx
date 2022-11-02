@@ -52,7 +52,6 @@ const CircleSidebar = ({ circle }: Props) => {
           <Form.Group className="mb-3" controlId="formBasicEmail">
             <Form.Label>Description</Form.Label>
             <Form.Control as="textarea" rows={3} />
-
           </Form.Group>
         </div>
         <CircleModules modules={getModuleItems(circle)} />

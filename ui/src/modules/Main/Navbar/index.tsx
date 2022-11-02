@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form } from 'react-bootstrap';
 import { ReactComponent as LogoLight } from '../../../core/assets/svg/logo-light.svg'
 import './style.scss'
@@ -10,6 +10,15 @@ export interface Props {
 }
 
 const MainNavbar = ({ workspaces, onSelectWorkspace }: Props) => {
+  const [defaultWorkspace, setDefaultWorkspace] = useState('')
+
+  useEffect(() => {
+    if (workspaces.length > 0)
+      setDefaultWorkspace(workspaces[0].id)
+  }, [workspaces])
+
+
+
   return (
     <div className='main__navbar'>
       <div className='d-flex'>
@@ -17,11 +26,15 @@ const MainNavbar = ({ workspaces, onSelectWorkspace }: Props) => {
           <LogoLight />
         </div>
         <div>
-          <Form.Select onChange={(e) => onSelectWorkspace(e.target.value)}>
-            {workspaces?.map((workspace: any) => (
-              <option value={workspace?.id}>{workspace?.name}</option>
-            ))}
-          </Form.Select>
+          {workspaces?.length > 0 && (
+            <Form.Select defaultValue={defaultWorkspace} onChange={(e) => onSelectWorkspace(e.target.value)}>
+              <option value="default" disabled>Select a workspace</option>
+              {workspaces?.map((workspace: any) => (
+                <option value={workspace?.id}>{workspace?.name}</option>
+              ))}
+            </Form.Select>
+          )}
+          
         </div>
       </div>
       <div className='d-flex'>

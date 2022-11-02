@@ -55,3 +55,14 @@ body {
     }
   }
 }
+
+.card {
+  border: none;
+
+  &-header {
+    background-color: #424242 ;
+  }
+  &-body {
+    background-color: #616161;
+  }
+}
