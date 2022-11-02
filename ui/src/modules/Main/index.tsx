@@ -1,15 +1,18 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { generatePath, matchRoutes, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import useFetch from 'use-http'
-import { useAppDispatch } from '../../core/hooks/redux';
-import { setCurrentWorkspace } from './mainSlice';
 import MainNavbar from './Navbar';
 import MainSidebar from './Sidebar';
 import './style.scss'
 
+const routes = [
+  { path: '/workspaces/:workspaceId' },
+  { path: '/workspaces/:workspaceId/circles' }
+]
 
 const Main = () => {
-  const dispatch = useAppDispatch()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [workspaces, setWorkspaces] = useState<any[]>([])
   const { response, get } = useFetch()
 
@@ -22,18 +25,23 @@ const Main = () => {
     loadWorkspaces()
   }, [])
 
+  const goToWorkspacePage = (workspaceId: string) => {
+    const [{ route }] = matchRoutes(routes, location) || []
+    navigate(generatePath(route?.path || '' , { workspaceId }))
+  }
+
   useEffect(() => {
     if (workspaces?.length <= 0)
       return
 
-    dispatch(setCurrentWorkspace(workspaces[0].id))
+    goToWorkspacePage(workspaces[0].id)
   }, [workspaces])
 
   return (
     <div className='main'>
       <MainNavbar
         workspaces={workspaces || []}
-        onSelectWorkspace={(workspaceId: any) => dispatch(setCurrentWorkspace(workspaceId))}
+        onSelectWorkspace={(workspaceId: any) => goToWorkspacePage(workspaceId)}
       />
       <div className='main__content'>
         <MainSidebar />

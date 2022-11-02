@@ -1,12 +1,30 @@
 .circle-modules {
   padding-top: 5px;
+  border: 1px solid #757575;
+  padding: 10px;
+  border-radius: 10px;
+
+  &__title {
+    padding: 5px;
+    font-size: 18px;
+    border-bottom: 1px solid #757575;
+    margin-bottom: 10px;
+  }
 
   &__item {
     padding: .8rem;
+    height: 50px;
     border-radius: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: #424242;
+
+      
+    &--Progressing {
+      @extend .circle-modules__item;
+      border-left: 15px solid #1e88e5;
+    }
 
     &__menu {
       background-color: transparent;
@@ -20,10 +38,7 @@
       }
     }
 
-    &--Progressing {
-      @extend .circle-modules__item;
-      background-color: #1e88e5;
-    }
+    
   }
 
   &__btn-add {

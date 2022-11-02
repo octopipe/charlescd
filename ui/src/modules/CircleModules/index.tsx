@@ -47,10 +47,12 @@ const CircleModules = ({ modules }: Props) => {
   const [remove, toggleRemove] = useState(false)
   const [form, toggleForm] = useState(false)
 
-
   return (
     <>
       <div className="circle-modules">
+        <div className="circle-modules__title">
+          Modules
+        </div>
         { modules.map(module => (
           <div className={`circle-modules__item--${module.status}`}>
             {module.name}

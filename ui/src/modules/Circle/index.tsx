@@ -6,35 +6,36 @@ import { useAppSelector } from '../../core/hooks/redux'
 import CircleModules from '../CircleModules'
 import { ReactComponent as EmptyCircles } from '../../core/assets/svg/empty-circles.svg'
 import './style.scss'
-import { CircleItem } from './types'
 import Placeholder from '../../core/components/Placeholder'
 import { Outlet, useParams } from 'react-router-dom'
+import CircleSidebar from './Sidebar'
+import { Circle, CircleModule } from './types'
+import { CircleItemModule } from '../CircleModules/types'
 
 
-const Circle = () => {
-  const currentWorkspace = useAppSelector(state => state.main.currentWorkspace)
+const CircleMain = () => {
+  const { workspaceId } = useParams()
   const { name: circleName } = useParams()
-  const [circle, setCircle] = useState<CircleItem[]>()
+  const [circle, setCircle] = useState<Circle>()
   const { response, get } = useFetch()
 
   const loadCircle = async () => {
-    const circle = await get(`/workspaces/${currentWorkspace}/circles/${circleName}`)
+    const circle = await get(`/workspaces/${workspaceId}/circles/${circleName}`)
     if (response.ok) setCircle(circle)
   }
 
   useEffect(() => {
-    if (currentWorkspace == "")
-      return
-
     loadCircle()
-  }, [currentWorkspace])
+  }, [workspaceId])  
 
   return (
     <div className='circle'>
-      Circle
-      <Outlet />
+      {circle && <CircleSidebar circle={circle} /> }
+      <div className='circle__content'>
+        <Outlet />
+      </div>
     </div>
   )
 }
 
-export default Circle
+export default CircleMain

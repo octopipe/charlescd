@@ -4,7 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Provider as ReduxProvider } from 'react-redux'
 import reportWebVitals from './reportWebVitals';
 import Main from './modules/Main';
-import { Provider as FetchProvider } from 'use-http'
+import { Provider as FetchProvider, IncomingOptions } from 'use-http'
 import Login from './modules/Login';
 import './core/components/icons/library'
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -14,32 +14,51 @@ import Modules from './modules/Modules';
 import Home from './modules/Home';
 import store from './store'
 import Circle from './modules/Circle';
+import Diagram from './modules/Circle/Diagram';
 
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
-root.render(
-  <React.StrictMode>
-    <ReduxProvider store={store}>
-      <FetchProvider url='http://localhost:8080'>
-        <BrowserRouter>
-          <Routes>
-            <Route path='/login' element={<Login />} />
-            <Route path='' element={<Main />}>
-              <Route path='/' element={<Home />} />
-              <Route path='circles' element={<Circles />} />
-              <Route path='modules' element={<Modules />} />
-            </Route>
-            <Route path='/circles/:name' element={<Circle />}>
 
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </FetchProvider>
-    </ReduxProvider>
-  </React.StrictMode>
-);
+const App = () => {
+  const options: IncomingOptions = {
+    interceptors: {
+      request: async ({ options, url, path, route }) => {
+        return options
+      },
+      response: async ({ response }) => {
+        const res = response
+        console.log(res)
+        return res
+      }
+    }
+  }
+
+  return (
+    <React.StrictMode>
+      <ReduxProvider store={store}>
+        <FetchProvider url='http://localhost:8080' options={options}>
+          <BrowserRouter>
+            <Routes>
+              <Route path='/login' element={<Login />} />
+              <Route path='' element={<Main />}>
+                <Route path='workspaces/:workspaceId' element={<Home />} />
+                <Route path='workspaces/:workspaceId/circles' element={<Circles />} />
+                <Route path='workspaces/:workspaceId/modules' element={<Modules />} />
+              </Route>
+              <Route path='workspaces/:workspaceId/circles/:name' element={<Circle />}>
+                <Route path='' element={<Diagram />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </FetchProvider>
+      </ReduxProvider>
+    </React.StrictMode>
+  )
+}
+
+root.render(<App />);
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
