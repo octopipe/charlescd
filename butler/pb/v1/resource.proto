@@ -1,0 +1,77 @@
+syntax = "proto3";
+package v1;
+
+option go_package = "./v1";
+
+import "google/protobuf/any.proto";
+
+
+service ResourceService {
+  rpc Hierarchy(HierarchyRequest) returns (HierarchyResponse) {}
+  rpc Get (GetResourceRequest) returns (GetResourceResponse) {}
+  rpc Logs (LogsRequest) returns (LogsResponse) {}
+  rpc Events (EventsRequest) returns (EventsResponse) {}
+}
+
+message HierarchyResponse {
+  repeated Resource items = 1;
+}
+
+message HierarchyRequest {
+  string name = 1;
+  string namespace = 2;
+}
+
+message ResourceOwner {
+  string name = 1;
+  string kind = 2;
+  bool controller = 3;
+}
+
+message Resource {
+  string name = 1;
+  string namespace = 2;
+  string kind = 3;
+  string group = 4;
+  ResourceOwner owner = 5;
+  string status = 6;
+  string error = 7;
+}
+
+message GetResourceRequest {
+  string group = 1;
+  string kind = 2;
+  string namespace = 3;
+  string name = 4;
+}
+
+message GetResourceResponse {
+  Resource metadata = 1;
+  bytes manifest = 2;
+}
+
+message LogsRequest {
+
+}
+
+message LogsResponse {
+
+}
+
+message EventsRequest {
+  string name = 1;
+  string namespace = 2;
+  string kind = 3;
+}
+
+message Event {
+  string reason = 1;
+  string message = 2;
+  int32 count = 3;
+  string type = 4;
+  string action = 5;
+}
+
+message EventsResponse {
+  repeated Event items = 1;
+}

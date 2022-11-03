@@ -66,3 +66,26 @@ body {
     background-color: #616161;
   }
 }
+
+.nav-link {
+  color: #fff;
+
+  &:hover {
+    color: #757575;
+  }
+}
+
+.nav-link.active {
+
+  background-color: #f15c23 !important;
+}
+
+.bg-primary {
+  background-color: #f15c23 !important;
+}
+
+.list-group-item {
+  background-color: transparent;
+  color: #fff;
+  border: 1px solid #616161;
+}

@@ -76,9 +76,10 @@ func (h EchoHandler) Delete(c echo.Context) error {
 }
 
 func (h EchoHandler) Diagram(c echo.Context) error {
-	circleName := c.Param("name")
+	workspaceId := c.Param("workspaceId")
+	circleName := c.Param("circleName")
 
-	diagram, err := h.circleUseCase.GetDiagram(circleName)
+	diagram, err := h.circleUseCase.GetDiagram(workspaceId, circleName)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest)
 	}
@@ -86,16 +87,19 @@ func (h EchoHandler) Diagram(c echo.Context) error {
 }
 
 func (h EchoHandler) Resource(c echo.Context) error {
-	circleName := c.Param("name")
+	workspaceId := c.Param("workspaceId")
 	resourceName := c.Param("resource")
 	group := c.QueryParam("group")
 	kind := c.QueryParam("kind")
 
-	resource, err := h.circleUseCase.GetResource(circleName, resourceName, group, kind)
+	resource, manifest, err := h.circleUseCase.GetResource(workspaceId, resourceName, group, kind)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest)
+		return c.JSON(500, err)
 	}
-	return c.JSON(200, resource)
+	return c.JSON(200, map[string]interface{}{
+		"metadata": resource,
+		"manifest": manifest,
+	})
 }
 
 func (h EchoHandler) ResourceLogs(c echo.Context) error {
@@ -112,14 +116,14 @@ func (h EchoHandler) ResourceLogs(c echo.Context) error {
 }
 
 func (h EchoHandler) ResourceEvents(c echo.Context) error {
-	circleName := c.Param("name")
+	workspaceId := c.Param("workspaceId")
 	resourceName := c.Param("resource")
-	group := c.QueryParam("group")
 	kind := c.QueryParam("kind")
 
-	events, err := h.circleUseCase.GetEvents(circleName, resourceName, group, kind)
+	events, err := h.circleUseCase.GetEvents(workspaceId, resourceName, kind)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest)
+		return c.JSON(400, err)
 	}
+
 	return c.JSON(200, events)
 }

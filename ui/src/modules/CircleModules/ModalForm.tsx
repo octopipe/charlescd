@@ -5,10 +5,6 @@ import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-monokai";
 
-interface ModalFormProps extends ModalProps {
-
-}
-
 const exampleOverridesValue = [
   {
     key: '$.spec.template.spec.containers[0].image',

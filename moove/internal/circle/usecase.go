@@ -6,6 +6,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/octopipe/charlescd/moove/internal/workspace"
 	pbv1 "github.com/octopipe/charlescd/moove/pb/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 type UseCase struct {
@@ -66,13 +67,31 @@ func (u UseCase) FindByName(workspaceId string, name string) (*pbv1.Circle, erro
 }
 
 // GetDiagram implements CircleUseCase
-func (UseCase) GetDiagram(circleName string) (interface{}, error) {
-	panic("unimplemented")
+func (u UseCase) GetDiagram(workspaceId string, name string) ([]*pbv1.Resource, error) {
+	workspace, err := u.worksaceRepository.FindById(workspaceId)
+	if err != nil {
+		return nil, err
+	}
+
+	namespace := strcase.ToKebab(workspace.Name)
+	items, err := u.circleRepository.GetDiagram(namespace, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }
 
 // GetEvents implements CircleUseCase
-func (UseCase) GetEvents(circleName string, resourceName string, group string, kind string) (interface{}, error) {
-	panic("unimplemented")
+func (u UseCase) GetEvents(workspaceId string, resourceName string, kind string) ([]*pbv1.Event, error) {
+	workspace, err := u.worksaceRepository.FindById(workspaceId)
+	if err != nil {
+		return nil, err
+	}
+
+	namespace := strcase.ToKebab(workspace.Name)
+	events, err := u.circleRepository.GetEvents(namespace, resourceName, kind)
+	return events, err
 }
 
 // GetLogs implements CircleUseCase
@@ -81,8 +100,15 @@ func (UseCase) GetLogs(circleName string, resourceName string, group string, kin
 }
 
 // GetResource implements CircleUseCase
-func (UseCase) GetResource(circleName string, resourceName string, group string, kind string) (interface{}, error) {
-	panic("unimplemented")
+func (u UseCase) GetResource(workspaceId string, resourceName string, group string, kind string) (*pbv1.Resource, *unstructured.Unstructured, error) {
+	workspace, err := u.worksaceRepository.FindById(workspaceId)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	namespace := strcase.ToKebab(workspace.Name)
+	resource, manifest, err := u.circleRepository.GetResource(namespace, resourceName, group, kind)
+	return resource, manifest, err
 }
 
 // Update implements CircleUseCase

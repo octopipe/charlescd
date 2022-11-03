@@ -10,15 +10,27 @@ import (
 
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/internal/utils"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 func (t template) addDefaultAnnotations(manifest *unstructured.Unstructured) *unstructured.Unstructured {
-	annotations := manifest.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
+	ownerReferences := manifest.GetOwnerReferences()
+	newOwnerReferences := []v1.OwnerReference{}
+	for _, owner := range ownerReferences {
+		if owner.Kind != t.circle.Kind && owner.Name != t.circle.Name {
+			newOwnerReferences = append(newOwnerReferences, owner)
+		}
 	}
-
+	controller := true
+	newOwnerReferences = append(newOwnerReferences, v1.OwnerReference{
+		Name:       t.circle.GetName(),
+		Kind:       t.circle.Kind,
+		UID:        t.circle.GetUID(),
+		APIVersion: t.circle.APIVersion,
+		Controller: &controller,
+	})
+	manifest.SetOwnerReferences(newOwnerReferences)
 	labels := manifest.GetLabels()
 	if labels == nil {
 		labels = make(map[string]string)
@@ -27,26 +39,10 @@ func (t template) addDefaultAnnotations(manifest *unstructured.Unstructured) *un
 	labels[utils.AnnotationModuleMark] = string(t.module.GetUID())
 	labels[utils.AnnotationCircleMark] = string(t.circle.GetUID())
 	labels[utils.AnnotationManagedBy] = utils.ManagedBy
-
-	annotations[utils.AnnotationModuleMark] = string(t.module.GetUID())
-	annotations[utils.AnnotationCircleMark] = string(t.circle.GetUID())
-	annotations[utils.AnnotationManagedBy] = utils.ManagedBy
-
 	manifest.SetLabels(labels)
-	manifest.SetAnnotations(annotations)
 
 	_, ok, _ := unstructured.NestedInt64(manifest.Object, "spec", "replicas")
 	if ok {
-		templateAnnotations := map[string]string{}
-		currentAnnotations, ok, _ := unstructured.NestedStringMap(manifest.Object, "spec", "template", "metadata", "annotations")
-		if ok {
-			templateAnnotations = currentAnnotations
-		}
-		templateAnnotations[utils.AnnotationModuleMark] = string(t.module.GetUID())
-		templateAnnotations[utils.AnnotationCircleMark] = string(t.circle.GetUID())
-		templateAnnotations[utils.AnnotationManagedBy] = utils.ManagedBy
-		unstructured.SetNestedStringMap(manifest.Object, templateAnnotations, "spec", "template", "metadata", "annotations")
-
 		templateLabels := map[string]string{}
 		currentLabels, ok, _ := unstructured.NestedStringMap(manifest.Object, "spec", "template", "metadata", "labels")
 		if ok {

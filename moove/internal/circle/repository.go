@@ -2,9 +2,11 @@ package circle
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/octopipe/charlescd/moove/internal/core/grpcclient"
 	pbv1 "github.com/octopipe/charlescd/moove/pb/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 type GrpcRepository struct {
@@ -39,7 +41,7 @@ func (r GrpcRepository) FindAll(filter *pbv1.ListRequest) ([]*pbv1.CircleMetadat
 
 // FindById implements WorkspaceRepository
 func (r GrpcRepository) FindByName(namespace string, name string) (*pbv1.Circle, error) {
-	circle, err := r.grpcClient.CircleClient.Get(context.Background(), &pbv1.GetRequest{
+	circle, err := r.grpcClient.CircleClient.Get(context.Background(), &pbv1.GetCircleRequest{
 		Namespace: namespace,
 		Name:      name,
 	})
@@ -55,14 +57,30 @@ func (r GrpcRepository) Update(id string, workspace Circle) (CircleProvider, err
 	return CircleProvider{}, nil
 }
 
-func (r GrpcRepository) GetDiagram(circleName string) (interface{}, error) {
+func (r GrpcRepository) GetDiagram(namespace string, name string) ([]*pbv1.Resource, error) {
+	hierarchy, err := r.grpcClient.ResourceClient.Hierarchy(context.Background(), &pbv1.HierarchyRequest{
+		Name:      name,
+		Namespace: namespace,
+	})
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	return hierarchy.Items, nil
 }
 
 // GetEvents implements CircleRepository
-func (r GrpcRepository) GetEvents(circleName string, resourceName string, group string, kind string) (interface{}, error) {
-	return nil, nil
+func (r GrpcRepository) GetEvents(namespace string, resourceName string, kind string) ([]*pbv1.Event, error) {
+	eventsResponse, err := r.grpcClient.ResourceClient.Events(context.Background(), &pbv1.EventsRequest{
+		Name:      resourceName,
+		Namespace: namespace,
+		Kind:      kind,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return eventsResponse.Items, nil
 }
 
 // GetLogs implements CircleRepository
@@ -71,6 +89,22 @@ func (r GrpcRepository) GetLogs(circleName string, resourceName string, group st
 }
 
 // GetResource implements CircleRepository
-func (r GrpcRepository) GetResource(circleName string, resourceName string, group string, kind string) (interface{}, error) {
-	return nil, nil
+func (r GrpcRepository) GetResource(namespace string, resourceName string, group string, kind string) (*pbv1.Resource, *unstructured.Unstructured, error) {
+	resource, err := r.grpcClient.ResourceClient.Get(context.Background(), &pbv1.GetResourceRequest{
+		Namespace: namespace,
+		Name:      resourceName,
+		Group:     group,
+		Kind:      kind,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	manifest := &unstructured.Unstructured{}
+	err = json.Unmarshal(resource.Manifest, manifest)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return resource.Metadata, manifest, nil
 }

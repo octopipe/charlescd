@@ -73,9 +73,9 @@ func (s CircleServer) List(ctx context.Context, request *pbv1.ListRequest) (*pbv
 
 func getCircleMetadata(circle charlescdiov1alpha1.Circle) *pbv1.CircleMetadata {
 
-	modules := []*pbv1.CircleMetadataModule{}
+	modules := []*pbv1.CircleModuleMetadata{}
 	for moduleName, moduleStatus := range circle.Status.Modules {
-		module := &pbv1.CircleMetadataModule{
+		module := &pbv1.CircleModuleMetadata{
 			Name:   moduleName,
 			Status: moduleStatus.Status,
 			Error:  &moduleStatus.Error,
@@ -95,7 +95,7 @@ func getCircleMetadata(circle charlescdiov1alpha1.Circle) *pbv1.CircleMetadata {
 	}
 }
 
-func (s CircleServer) Get(ctx context.Context, request *pbv1.GetRequest) (*pbv1.Circle, error) {
+func (s CircleServer) Get(ctx context.Context, request *pbv1.GetCircleRequest) (*pbv1.Circle, error) {
 	circle := &charlescdiov1alpha1.Circle{}
 	namespaceNameType := types.NamespacedName{
 		Name:      request.Name,
@@ -112,8 +112,19 @@ func (s CircleServer) Get(ctx context.Context, request *pbv1.GetRequest) (*pbv1.
 func getCircle(circle charlescdiov1alpha1.Circle) *pbv1.Circle {
 	modules := []*pbv1.CircleModule{}
 	for _, module := range circle.Spec.Modules {
+		overrides := []*pbv1.CircleModuleOverride{}
+
+		for _, o := range module.Overrides {
+			overrides = append(overrides, &pbv1.CircleModuleOverride{
+				Key:   o.Key,
+				Value: o.Value,
+			})
+		}
+
 		m := &pbv1.CircleModule{
-			ModuleRef: module.ModuleRef,
+			Name:      module.ModuleRef,
+			Revision:  module.Revision,
+			Overrides: overrides,
 		}
 
 		modules = append(modules, m)
@@ -129,8 +140,8 @@ func getCircle(circle charlescdiov1alpha1.Circle) *pbv1.Circle {
 		environments = append(environments, e)
 	}
 
-	moduleStatus := []*pbv1.CircleStatusModule{}
-	for _, module := range circle.Status.Modules {
+	moduleStatus := map[string]*pbv1.CircleStatusModule{}
+	for moduleName, module := range circle.Status.Modules {
 
 		resources := []*pbv1.CircleStatusResource{}
 		for _, resource := range module.Resources {
@@ -150,7 +161,7 @@ func getCircle(circle charlescdiov1alpha1.Circle) *pbv1.Circle {
 			Error:     module.Error,
 			Resources: resources,
 		}
-		moduleStatus = append(moduleStatus, m)
+		moduleStatus[moduleName] = m
 	}
 
 	status := &pbv1.CircleStatus{
@@ -186,7 +197,7 @@ func getCircle(circle charlescdiov1alpha1.Circle) *pbv1.Circle {
 }
 
 // Sync implements v1.CircleServiceServer
-func (s CircleServer) Sync(ctx context.Context, request *pbv1.GetRequest) (*anypb.Any, error) {
+func (s CircleServer) Sync(ctx context.Context, request *pbv1.GetCircleRequest) (*anypb.Any, error) {
 	circle := &charlescdiov1alpha1.Circle{}
 	namespaceNameType := types.NamespacedName{
 		Name:      request.Name,

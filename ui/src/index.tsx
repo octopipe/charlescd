@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { Provider as ReduxProvider } from 'react-redux'
 import reportWebVitals from './reportWebVitals';
 import Main from './modules/Main';
@@ -16,6 +16,7 @@ import store from './store'
 import Circle from './modules/Circle';
 import Diagram from './modules/Circle/Diagram';
 import CreateCircle from './modules/CreateCircle';
+import Error from './modules/Error';
 
 
 const root = ReactDOM.createRoot(
@@ -30,6 +31,10 @@ const App = () => {
       },
       response: async ({ response }) => {
         const res = response
+
+        if (response.status >= 500) {
+          window.location.href = '/error'
+        }
         console.log(res)
         return res
       }
@@ -49,10 +54,12 @@ const App = () => {
                 <Route path='workspaces/:workspaceId/circles/create' element={<CreateCircle />} />
                 <Route path='workspaces/:workspaceId/modules' element={<Modules />} />
               </Route>
-              <Route path='workspaces/:workspaceId/circles/:name' element={<Circle />}>
+              <Route path='workspaces/:workspaceId/circles/:circleName' element={<Circle />}>
                 <Route path='' element={<Diagram />} />
               </Route>
+              <Route path='/error' element={<Error />} />
             </Routes>
+            
           </BrowserRouter>
         </FetchProvider>
       </ReduxProvider>

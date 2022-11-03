@@ -1,1 +1,44 @@
-.circle-diagram {}
+.circle-diagram {
+  width: calc(100vw - 400px);
+  height: 100vh;
+
+  &__item {
+    background-color: #424242;
+    cursor: pointer;
+    color: white;
+    border-left: 12px solid #757575;
+    height: 100%;
+    
+    &__header {
+      border-bottom: 1px solid #9e9e9e;
+      padding: .3rem;
+      font-weight: 600;
+    }
+
+    &__content {
+      padding: .3rem;
+    }
+
+    &--Healthy {
+      @extend .circle-diagram__item;
+      border-color: #43a047;
+    }
+
+    &--Progressing {
+      @extend .circle-diagram__item;
+      border-color: #039be5;
+    }
+
+    &--Degraded {
+      @extend .circle-diagram__item;
+      border-color: #e53935;
+    }
+  }
+}
+
+.react-flow__node {
+  padding: 0;
+  text-align: start;
+  width: 200px;
+  height: 80px;
+}

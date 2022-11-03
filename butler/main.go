@@ -93,11 +93,11 @@ func main() {
 	clusterCache := cache.NewClusterCache(config,
 		cache.SetNamespaces([]string{}),
 		cache.SetPopulateResourceInfoHandler(func(un *unstructured.Unstructured, isRoot bool) (interface{}, bool) {
-			managedBy := un.GetAnnotations()[utils.AnnotationManagedBy]
+			managedBy := un.GetLabels()[utils.AnnotationManagedBy]
 			info := &utils.ResourceInfo{
-				ManagedBy:  un.GetAnnotations()[utils.AnnotationManagedBy],
-				ModuleMark: un.GetAnnotations()[utils.AnnotationModuleMark],
-				CircleMark: un.GetAnnotations()[utils.AnnotationCircleMark],
+				ManagedBy:  un.GetLabels()[utils.AnnotationManagedBy],
+				ModuleMark: un.GetLabels()[utils.AnnotationModuleMark],
+				CircleMark: un.GetLabels()[utils.AnnotationCircleMark],
 			}
 			cacheManifest := managedBy == utils.ManagedBy
 			return info, cacheManifest
@@ -180,7 +180,8 @@ func main() {
 	}
 
 	circleServer := server.NewCircleServer(client, clusterCache, clientset, dynamicClient, s)
-	server := server.NewServer(circleServer)
+	resourceServer := server.NewResourceServer(client, clusterCache, clientset, dynamicClient, s)
+	server := server.NewServer(circleServer, resourceServer)
 	setupLog.Info("starting grpc server")
 	if err := server.Start(); err != nil {
 		log.Fatalln(err)

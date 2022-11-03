@@ -14,13 +14,19 @@
   }
 
   &__content {
+    padding: 2rem;
+    &__item {
+      border: 1px solid #757575;
+      background-color: transparent;
+      color: #fff;
+
+      .card-body {
+        background-color: transparent;
+      }
+    }
 
   }
 
 
-  &__item {
-    border: 1px solid #757575;
-    background-color: transparent;
-    color: #fff;
-  }
+  
 }

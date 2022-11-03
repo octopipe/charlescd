@@ -14,8 +14,7 @@ import { CircleItemModule } from '../CircleModules/types'
 
 
 const CircleMain = () => {
-  const { workspaceId } = useParams()
-  const { name: circleName } = useParams()
+  const { workspaceId, circleName } = useParams()
   const [circle, setCircle] = useState<Circle>()
   const { response, get } = useFetch()
 

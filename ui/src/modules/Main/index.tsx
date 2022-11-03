@@ -71,8 +71,10 @@ const Main = () => {
       />
       <div className='main__content'>
         {workspaces?.length > 0 &&  <MainSidebar />}
+        <div className='main__content__body'>
 
-        {workspaces?.length > 0 ? <Outlet /> : <EmptyWorkspacesPlaceholser />}
+          {workspaces?.length > 0 ? <Outlet /> : <EmptyWorkspacesPlaceholser />}
+        </div>
       </div>
     </div>
   )

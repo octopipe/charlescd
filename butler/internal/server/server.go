@@ -11,11 +11,12 @@ import (
 type server struct {
 	grpcServer *grpc.Server
 	listener   net.Listener
-
-	pbv1.CircleServiceServer
 }
 
-func NewServer(circleServer pbv1.CircleServiceServer) *server {
+func NewServer(
+	circleServer pbv1.CircleServiceServer,
+	resourceServer pbv1.ResourceServiceServer,
+) *server {
 	lis, err := net.Listen("tcp", ":3000")
 	if err != nil {
 		log.Fatalln(err)
@@ -23,11 +24,11 @@ func NewServer(circleServer pbv1.CircleServiceServer) *server {
 
 	grpcServer := grpc.NewServer()
 	s := &server{
-		grpcServer:          grpcServer,
-		listener:            lis,
-		CircleServiceServer: circleServer,
+		grpcServer: grpcServer,
+		listener:   lis,
 	}
-	pbv1.RegisterCircleServiceServer(grpcServer, s)
+	pbv1.RegisterCircleServiceServer(grpcServer, circleServer)
+	pbv1.RegisterResourceServiceServer(grpcServer, resourceServer)
 
 	return s
 }
