@@ -29,9 +29,10 @@ type Override struct {
 }
 
 type CircleModule struct {
-	ModuleRef string     `json:"moduleRef,omitempty"`
+	Name      string     `json:"name,omitempty"`
 	Revision  string     `json:"revision,omitempty"`
 	Overrides []Override `json:"overrides,omitempty"`
+	Namespace string     `json:"namespace,omitempty"`
 }
 
 type CircleEnvironments struct {

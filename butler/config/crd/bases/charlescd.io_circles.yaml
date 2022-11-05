@@ -53,7 +53,9 @@ spec:
               modules:
                 items:
                   properties:
-                    moduleRef:
+                    name:
+                      type: string
+                    namespace:
                       type: string
                     overrides:
                       items:

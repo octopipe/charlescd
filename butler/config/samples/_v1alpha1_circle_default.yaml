@@ -5,7 +5,7 @@ metadata:
 spec:
   author: Maycon Pacheco
   isDefault: true
-  namespace: default
+  namespace: test-1
   routing: 
     strategy: default
     default:
@@ -16,7 +16,8 @@ spec:
     - key: API_PATH
       value: http://api.default.io
   modules:
-    - moduleRef: charlescd-guestbook
+    - name: charlescd-guestbook
+      namespace: default
       revision: "aaaa"
       overrides:
         - key: '$.spec.template.spec.containers[0].image'

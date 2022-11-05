@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
+
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/internal/sync"
 	pbv1 "github.com/octopipe/charlescd/butler/pb/v1"
@@ -110,6 +111,7 @@ func (s CircleServer) Get(ctx context.Context, request *pbv1.GetCircleRequest) (
 }
 
 func getCircle(circle charlescdiov1alpha1.Circle) *pbv1.Circle {
+
 	modules := []*pbv1.CircleModule{}
 	for _, module := range circle.Spec.Modules {
 		overrides := []*pbv1.CircleModuleOverride{}
@@ -122,7 +124,7 @@ func getCircle(circle charlescdiov1alpha1.Circle) *pbv1.Circle {
 		}
 
 		m := &pbv1.CircleModule{
-			Name:      module.ModuleRef,
+			Name:      module.Name,
 			Revision:  module.Revision,
 			Overrides: overrides,
 		}
@@ -232,6 +234,31 @@ func (s CircleServer) SyncAll(ctx context.Context, request *pbv1.SyncAllRequest)
 
 	for _, circle := range circles.Items {
 		s.sync.Resync(circle)
+	}
+
+	return &anypb.Any{}, nil
+}
+
+func (s CircleServer) Create(ctx context.Context, request *pbv1.Circle) (*anypb.Any, error) {
+	circle := &charlescdiov1alpha1.Circle{}
+
+	circle.SetName(request.Metadata.Name)
+	// circleSpec := charlescdiov1alpha1.CircleSpec{
+	// 	Description: request.Metadata.Description,
+	// 	Namespace:   request.Metadata.Namespace,
+	// 	IsDefault:   request.Metadata.IsDefault,
+	// 	Routing: &charlescdiov1alpha1.CircleRouting{
+	// 		Strategy: request.Routing.Strategy,
+	// 		Canary: &charlescdiov1alpha1.CanaryDeployStrategy{
+	// 			Weight: int(request.Routing.Canary.Weight),
+	// 		},
+	// 	},
+	// }
+
+	// circle.Spec = circleSpec
+	err := s.k8sCache.Create(ctx, circle)
+	if err != nil {
+		return nil, err
 	}
 
 	return &anypb.Any{}, nil

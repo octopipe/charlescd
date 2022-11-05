@@ -40,7 +40,7 @@ func (s Sync) sync(circle charlescdiov1alpha1.Circle) {
 	modules := map[string]string{}
 	for _, m := range circle.Spec.Modules {
 		module := &charlescdiov1alpha1.Module{}
-		err := s.Get(context.Background(), utils.GetObjectKeyByPath(m.ModuleRef), module)
+		err := s.Get(context.Background(), client.ObjectKey{Namespace: m.Namespace, Name: m.Name}, module)
 		if err != nil {
 			s.updateCircleStatusError(circle, err)
 			return
@@ -60,12 +60,12 @@ func (s Sync) sync(circle charlescdiov1alpha1.Circle) {
 			return
 		}
 
-		circleModules[m.ModuleRef] = charlescdiov1alpha1.CircleModuleStatus{
+		circleModules[m.Name] = charlescdiov1alpha1.CircleModuleStatus{
 			Status:    "",
 			Error:     "",
 			Resources: []charlescdiov1alpha1.CircleModuleResource{},
 		}
-		modules[string(module.GetUID())] = m.ModuleRef
+		modules[string(module.GetUID())] = m.Name
 		targets = append(targets, newTargets...)
 	}
 

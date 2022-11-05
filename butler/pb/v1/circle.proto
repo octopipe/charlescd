@@ -11,6 +11,7 @@ service CircleService {
   rpc Get (GetCircleRequest) returns (Circle) {}
   rpc SyncAll (SyncAllRequest) returns (google.protobuf.Any) {}
   rpc Sync (GetCircleRequest) returns (google.protobuf.Any) {}
+  rpc Create (Circle) returns (google.protobuf.Any) {} 
 }
 
 message ListRequest {
@@ -92,8 +93,9 @@ message CircleStatus {
 
 message CircleModule {
   string name = 1;
-  string revision = 2;
-  repeated CircleModuleOverride overrides = 3;
+  string namespace = 2;
+  string revision = 3;
+  repeated CircleModuleOverride overrides = 4;
 }
 
 message Circle {

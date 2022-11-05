@@ -64,7 +64,7 @@ func (t template) parseManifests(manifests [][]byte) ([]*unstructured.Unstructur
 	circleModule := charlescdiov1alpha1.CircleModule{}
 
 	for _, m := range t.circle.Spec.Modules {
-		if m.ModuleRef == t.module.GetName() {
+		if m.Name == t.module.GetName() {
 			circleModule = m
 			break
 		}
