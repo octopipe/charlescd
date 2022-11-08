@@ -12,6 +12,7 @@ import (
 	"github.com/argoproj/gitops-engine/pkg/sync"
 	"github.com/argoproj/gitops-engine/pkg/sync/common"
 	"github.com/argoproj/gitops-engine/pkg/utils/kube"
+	"github.com/go-logr/logr"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/internal/repository"
 	"github.com/octopipe/charlescd/butler/internal/template"
@@ -21,13 +22,15 @@ import (
 )
 
 type Sync struct {
+	logger logr.Logger
 	client.Client
 	gitopsEngine engine.GitOpsEngine
 	clusterCache cache.ClusterCache
 }
 
-func NewSync(client client.Client, gitopsEngine engine.GitOpsEngine, clusterCache cache.ClusterCache) Sync {
+func NewSync(logger logr.Logger, client client.Client, gitopsEngine engine.GitOpsEngine, clusterCache cache.ClusterCache) Sync {
 	return Sync{
+		logger:       logger,
 		Client:       client,
 		gitopsEngine: gitopsEngine,
 		clusterCache: clusterCache,
@@ -84,6 +87,7 @@ func (s Sync) sync(circle charlescdiov1alpha1.Circle) {
 		time.Now().String(),
 		namespace,
 		sync.WithPrune(true),
+		sync.WithLogr(s.logger),
 	)
 	if err != nil {
 		s.updateCircleStatusError(circle, err)

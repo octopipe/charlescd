@@ -2,8 +2,10 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/jsonpb"
 )
 
 func MessageToStruct(message proto.Message, obj *interface{}) error {
@@ -20,13 +22,15 @@ func MessageToStruct(message proto.Message, obj *interface{}) error {
 	return nil
 }
 
-func StructToMessage(obj interface{}, message interface{}) error {
+func StructToMessage(obj interface{}, message proto.Message) error {
 	b, err := json.Marshal(obj)
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal(b, message)
+	fmt.Println(string(b))
+
+	err = jsonpb.UnmarshalString(string(b), message)
 	if err != nil {
 		return err
 	}

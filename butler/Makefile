@@ -237,3 +237,15 @@ catalog-push: ## Push a catalog image.
 
 proto:
 	docker run -v $(shell pwd):/pb -w /pb --rm bufbuild/buf:$(BUF_VERSION) generate
+# protoc \
+# 	--proto_path=${GOPATH}/src \
+# 	--proto_path=${GOPATH}/src/github.com/google/protobuf/src \
+# 	--proto_path=. \
+# 	--go_out=. \
+# 	--go_opt=paths=source_relative \
+# 	--go-grpc_opt=paths=source_relative,require_unimplemented_servers=false \
+# 	--go-grpc_out=. \
+# 	--govalidators_out=. \
+# 	pb/v1/*.proto
+		
+

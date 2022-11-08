@@ -63,7 +63,6 @@ func init() {
 }
 
 func main() {
-
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
@@ -139,7 +138,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	s := sync.NewSync(client, gitOpsEngine, clusterCache)
+	s := sync.NewSync(logger, client, gitOpsEngine, clusterCache)
 	if err = (&controllers.CircleReconciler{
 		Sync:          s,
 		NetworkClient: networkingLayer,
@@ -181,10 +180,9 @@ func main() {
 
 	circleServer := server.NewCircleServer(client, clusterCache, clientset, dynamicClient, s)
 	resourceServer := server.NewResourceServer(client, clusterCache, clientset, dynamicClient, s)
-	server := server.NewServer(circleServer, resourceServer)
+	server := server.NewServer(logger, circleServer, resourceServer)
 	setupLog.Info("starting grpc server")
 	if err := server.Start(); err != nil {
 		log.Fatalln(err)
 	}
-
 }

@@ -5,7 +5,7 @@ metadata:
 spec:
   author: Maycon Pacheco
   isDefault: true
-  namespace: test-1
+  namespace: workspace-2
   routing: 
     strategy: default
     default:

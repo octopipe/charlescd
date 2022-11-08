@@ -2,13 +2,17 @@ package server
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
 
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
+	"github.com/octopipe/charlescd/butler/internal/errs"
+	"github.com/octopipe/charlescd/butler/internal/mapper"
 	"github.com/octopipe/charlescd/butler/internal/sync"
 	pbv1 "github.com/octopipe/charlescd/butler/pb/v1"
 	anypb "google.golang.org/protobuf/types/known/anypb"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
@@ -60,7 +64,7 @@ func (s CircleServer) List(ctx context.Context, request *pbv1.ListRequest) (*pbv
 
 	err := s.k8sCache.List(ctx, circles, listOptions)
 	if err != nil {
-		return nil, err
+		return nil, errs.E(errs.Internal, errs.Code("list_circles"), err)
 	}
 
 	list := []*pbv1.CircleMetadata{}
@@ -103,99 +107,16 @@ func (s CircleServer) Get(ctx context.Context, request *pbv1.GetCircleRequest) (
 		Namespace: request.Namespace,
 	}
 	err := s.k8sCache.Get(ctx, namespaceNameType, circle)
+	if errors.IsNotFound(err) {
+		return nil, errs.E(errs.NotExist, errs.Code("circle_not_found"), err)
+	}
+
 	if err != nil {
-		return nil, err
+		return nil, errs.E(errs.Other, errs.Code("get_circle"), err)
 	}
 
-	return getCircle(*circle), nil
-}
-
-func getCircle(circle charlescdiov1alpha1.Circle) *pbv1.Circle {
-
-	modules := []*pbv1.CircleModule{}
-	for _, module := range circle.Spec.Modules {
-		overrides := []*pbv1.CircleModuleOverride{}
-
-		for _, o := range module.Overrides {
-			overrides = append(overrides, &pbv1.CircleModuleOverride{
-				Key:   o.Key,
-				Value: o.Value,
-			})
-		}
-
-		m := &pbv1.CircleModule{
-			Name:      module.Name,
-			Revision:  module.Revision,
-			Overrides: overrides,
-		}
-
-		modules = append(modules, m)
-	}
-
-	environments := []*pbv1.CircleEnvironment{}
-	for _, environment := range circle.Spec.Environments {
-		e := &pbv1.CircleEnvironment{
-			Key:   environment.Key,
-			Value: environment.Value,
-		}
-
-		environments = append(environments, e)
-	}
-
-	moduleStatus := map[string]*pbv1.CircleStatusModule{}
-	for moduleName, module := range circle.Status.Modules {
-
-		resources := []*pbv1.CircleStatusResource{}
-		for _, resource := range module.Resources {
-			r := &pbv1.CircleStatusResource{
-				Name:      resource.Name,
-				Namespace: resource.Namespace,
-				Group:     resource.Group,
-				Kind:      resource.Kind,
-				Health:    resource.Health,
-				Error:     resource.Error,
-			}
-			resources = append(resources, r)
-		}
-
-		m := &pbv1.CircleStatusModule{
-			Status:    module.Status,
-			Error:     module.Error,
-			Resources: resources,
-		}
-		moduleStatus[moduleName] = m
-	}
-
-	status := &pbv1.CircleStatus{
-		Modules: moduleStatus,
-	}
-
-	customMatch := &pbv1.CircleMatch{
-		Headers: circle.Spec.Routing.Default.CustomMatch.Headers,
-	}
-	routing := &pbv1.CircleRouting{
-		Strategy: circle.Spec.Routing.Strategy,
-	}
-
-	if circle.Spec.Routing.Canary != nil {
-		routing.Canary = &pbv1.CanaryRouting{
-			Weight: int64(circle.Spec.Routing.Canary.Weight),
-		}
-	}
-
-	if circle.Spec.Routing.Default != nil {
-		routing.Default = &pbv1.DefaultRouting{
-			CustomMatch: customMatch,
-		}
-	}
-
-	return &pbv1.Circle{
-		Metadata:     getCircleMetadata(circle),
-		Modules:      modules,
-		Environments: environments,
-		Routing:      routing,
-		Status:       status,
-	}
+	circleMessage := mapper.CircleToProtoMessage(*circle)
+	return circleMessage, nil
 }
 
 // Sync implements v1.CircleServiceServer
@@ -207,7 +128,7 @@ func (s CircleServer) Sync(ctx context.Context, request *pbv1.GetCircleRequest) 
 	}
 	err := s.k8sCache.Get(ctx, namespaceNameType, circle)
 	if err != nil {
-		return nil, err
+		return nil, errs.E(errs.Internal, err)
 	}
 	s.sync.Resync(*circle)
 	return &anypb.Any{}, nil
@@ -229,7 +150,7 @@ func (s CircleServer) SyncAll(ctx context.Context, request *pbv1.SyncAllRequest)
 	circles := &charlescdiov1alpha1.CircleList{}
 	err := s.k8sCache.List(ctx, circles, listOptions)
 	if err != nil {
-		return nil, err
+		return nil, errs.E(errs.Internal, errs.Code("list_all"), err)
 	}
 
 	for _, circle := range circles.Items {
@@ -242,7 +163,16 @@ func (s CircleServer) SyncAll(ctx context.Context, request *pbv1.SyncAllRequest)
 func (s CircleServer) Create(ctx context.Context, request *pbv1.Circle) (*anypb.Any, error) {
 	circle := &charlescdiov1alpha1.Circle{}
 
-	circle.SetName(request.Metadata.Name)
+	if err := request.ValidateAll(); err != nil {
+		fmt.Println(err.(pbv1.CircleMultiError))
+		return nil, errs.E(errs.InvalidRequest, errs.Code("validate_circle_message"), err)
+	}
+
+	circle.SetName(request.Name)
+	circle.SetNamespace(request.Namespace)
+	circle.Spec = charlescdiov1alpha1.CircleSpec{}
+
+	// circle.SetName(request.Metadata.Name)
 	// circleSpec := charlescdiov1alpha1.CircleSpec{
 	// 	Description: request.Metadata.Description,
 	// 	Namespace:   request.Metadata.Namespace,
@@ -258,7 +188,7 @@ func (s CircleServer) Create(ctx context.Context, request *pbv1.Circle) (*anypb.
 	// circle.Spec = circleSpec
 	err := s.k8sCache.Create(ctx, circle)
 	if err != nil {
-		return nil, err
+		return nil, errs.E(errs.Internal, errs.Code("create_circle"), err)
 	}
 
 	return &anypb.Any{}, nil

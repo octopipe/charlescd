@@ -1,11 +1,10 @@
 package handlers
 
 import (
-	"net/http"
-
 	"github.com/labstack/echo/v4"
 	"github.com/octopipe/charlescd/moove/internal/circle"
 	"github.com/octopipe/charlescd/moove/internal/core/customvalidator"
+	"github.com/octopipe/charlescd/moove/internal/errs"
 )
 
 type EchoHandler struct {
@@ -34,7 +33,7 @@ func (h EchoHandler) FindAll(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	circles, err := h.circleUseCase.FindAll(workspaceId)
 	if err != nil {
-		return c.JSON(500, err)
+		return errs.NewHTTPResponse(c, err)
 	}
 	return c.JSON(200, circles)
 }
@@ -42,7 +41,7 @@ func (h EchoHandler) FindAll(c echo.Context) error {
 func (h EchoHandler) Create(c echo.Context) error {
 	w := new(circle.Circle)
 	if err := c.Bind(w); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return errs.NewHTTPResponse(c, err)
 	}
 
 	if err := h.validator.Validate(w); err != nil {
@@ -51,7 +50,7 @@ func (h EchoHandler) Create(c echo.Context) error {
 
 	newCircle, err := h.circleUseCase.Create(*w)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return errs.NewHTTPResponse(c, err)
 	}
 
 	return c.JSON(201, newCircle)
@@ -62,7 +61,7 @@ func (h EchoHandler) FindById(c echo.Context) error {
 	circleName := c.Param("circleName")
 	circle, err := h.circleUseCase.FindByName(workspaceId, circleName)
 	if err != nil {
-		return c.JSON(500, err)
+		return errs.NewHTTPResponse(c, err)
 	}
 	return c.JSON(200, circle)
 }
@@ -81,7 +80,7 @@ func (h EchoHandler) Diagram(c echo.Context) error {
 
 	diagram, err := h.circleUseCase.GetDiagram(workspaceId, circleName)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest)
+		return errs.NewHTTPResponse(c, err)
 	}
 	return c.JSON(200, diagram)
 }
@@ -94,7 +93,7 @@ func (h EchoHandler) Resource(c echo.Context) error {
 
 	resource, manifest, err := h.circleUseCase.GetResource(workspaceId, resourceName, group, kind)
 	if err != nil {
-		return c.JSON(500, err)
+		return errs.NewHTTPResponse(c, err)
 	}
 	return c.JSON(200, map[string]interface{}{
 		"metadata": resource,
@@ -110,7 +109,7 @@ func (h EchoHandler) ResourceLogs(c echo.Context) error {
 
 	logs, err := h.circleUseCase.GetLogs(circleName, resourceName, group, kind)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest)
+		return errs.NewHTTPResponse(c, err)
 	}
 	return c.JSON(200, logs)
 }
@@ -122,7 +121,7 @@ func (h EchoHandler) ResourceEvents(c echo.Context) error {
 
 	events, err := h.circleUseCase.GetEvents(workspaceId, resourceName, kind)
 	if err != nil {
-		return c.JSON(400, err)
+		return errs.NewHTTPResponse(c, err)
 	}
 
 	return c.JSON(200, events)

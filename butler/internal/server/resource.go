@@ -8,6 +8,7 @@ import (
 	"github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/argoproj/gitops-engine/pkg/utils/kube"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
+	"github.com/octopipe/charlescd/butler/internal/errs"
 	"github.com/octopipe/charlescd/butler/internal/sync"
 	pbv1 "github.com/octopipe/charlescd/butler/pb/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,7 +56,7 @@ func (r ResourceServer) Events(ctx context.Context, req *pbv1.EventsRequest) (*p
 		FieldSelector: fieldSelector.String(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, errs.E(errs.Other, errs.Code("get_events"), err)
 	}
 
 	serializedEvents := []*pbv1.Event{}
@@ -86,7 +87,7 @@ func (r ResourceServer) Get(ctx context.Context, req *pbv1.GetResourceRequest) (
 	resources := r.clusterCache.FindResources(req.Namespace)
 	res, ok := resources[resourceKey]
 	if !ok {
-		return nil, errors.New("not found resource manifest")
+		return nil, errs.E(errs.Other, errs.Code("get_resource"), errors.New("resource not found"))
 	}
 
 	manifest = res.Resource
@@ -109,7 +110,7 @@ func (r ResourceServer) Get(ctx context.Context, req *pbv1.GetResourceRequest) (
 
 	b, err := manifest.MarshalJSON()
 	if err != nil {
-		return nil, err
+		return nil, errs.E(errs.Other, errs.Code("parse_manifest"), err)
 	}
 
 	return &pbv1.GetResourceResponse{
@@ -128,7 +129,7 @@ func (r ResourceServer) Hierarchy(ctx context.Context, request *pbv1.HierarchyRe
 	}
 	err := r.k8sCache.Get(ctx, namespaceNameType, circle)
 	if err != nil {
-		return nil, err
+		return nil, errs.E(errs.Other, errs.Code("get_circle"), err)
 	}
 	circleResource := &pbv1.Resource{
 		Name:      circle.GetName(),
