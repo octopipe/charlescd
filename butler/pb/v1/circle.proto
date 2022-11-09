@@ -11,7 +11,9 @@ service CircleService {
   rpc Get (GetCircleRequest) returns (Circle) {}
   rpc SyncAll (SyncAllRequest) returns (google.protobuf.Any) {}
   rpc Sync (GetCircleRequest) returns (google.protobuf.Any) {}
-  rpc Create (Circle) returns (google.protobuf.Any) {} 
+  rpc Create (CreateCircleRequest) returns (google.protobuf.Any) {} 
+  rpc Update (CreateCircleRequest) returns (google.protobuf.Any) {}
+  rpc Delete (GetCircleRequest) returns (google.protobuf.Any) {}
 }
 
 message ListRequest {
@@ -51,15 +53,21 @@ message CircleSegment {
   string condition = 3; 
 }
 
-message DefaultRouting {
+message MatchRouting {
   CircleMatch customMatch = 1;
   repeated CircleSegment segments = 2;
 }
 
+enum RoutingType {
+  DEFAULT = 0;
+  MATCH = 1;
+  CANARY = 2;
+}
+
 message CircleRouting {
-  string strategy = 1;
+  RoutingType strategy = 1 [(validate.rules).enum.defined_only = true];
   optional CanaryRouting canary = 2;
-  optional DefaultRouting default = 3;
+  optional MatchRouting match = 3;
 }
 
 message CircleModuleOverride {
@@ -99,10 +107,10 @@ message CircleModule {
 }
 
 message Circle {
-  string name = 1 [(validate.rules).string.min_len = 1];
-  string namespace = 2 [(validate.rules).string.min_len = 1];
+  string name = 1;
+  string namespace = 2;
   bool isDefault = 3;
-  CircleRouting routing = 4 [(validate.rules).message.required = true];;
+  CircleRouting routing = 4;
   repeated CircleModule modules = 5 ;
   repeated CircleEnvironment environments = 6;
   CircleStatus status = 7;
@@ -124,3 +132,11 @@ message CircleMetadata {
   repeated CircleModuleMetadata modules = 7;
 }
 
+message CreateCircleRequest {
+  string name = 1 [(validate.rules).string.min_len = 1];
+  string namespace = 2 [(validate.rules).string.min_len = 1];
+  bool isDefault = 3;
+  CircleRouting routing = 4 [(validate.rules).message.required = true];
+  repeated CircleModule modules = 5;
+  repeated CircleEnvironment environments = 6;
+}

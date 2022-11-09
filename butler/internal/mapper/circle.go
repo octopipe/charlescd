@@ -2,6 +2,7 @@ package mapper
 
 import (
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
+	"github.com/octopipe/charlescd/butler/internal/errs"
 	pbv1 "github.com/octopipe/charlescd/butler/pb/v1"
 )
 
@@ -23,11 +24,21 @@ func CircleToProtoMessage(circle charlescdiov1alpha1.Circle) *pbv1.Circle {
 }
 
 func CircleRoutingToProtoMessage(routing charlescdiov1alpha1.CircleRouting) *pbv1.CircleRouting {
+	strategy := 0
+	switch routing.Strategy {
+	case "MATCH":
+		strategy = 1
+		break
+	case "CANARY":
+		strategy = 2
+		break
+	}
+
 	customMatch := &pbv1.CircleMatch{
-		Headers: routing.Default.CustomMatch.Headers,
+		Headers: routing.Match.CustomMatch.Headers,
 	}
 	routingMessage := &pbv1.CircleRouting{
-		Strategy: routing.Strategy,
+		Strategy: pbv1.RoutingType(strategy),
 	}
 
 	if routing.Canary != nil {
@@ -36,8 +47,8 @@ func CircleRoutingToProtoMessage(routing charlescdiov1alpha1.CircleRouting) *pbv
 		}
 	}
 
-	if routing.Default != nil {
-		routingMessage.Default = &pbv1.DefaultRouting{
+	if routing.Match != nil {
+		routingMessage.Match = &pbv1.MatchRouting{
 			CustomMatch: customMatch,
 		}
 	}
@@ -110,4 +121,72 @@ func CircleStatusToProtoMessage(status charlescdiov1alpha1.CircleStatus) *pbv1.C
 	return &pbv1.CircleStatus{
 		Modules: moduleStatusMessage,
 	}
+}
+
+func ProtoMessageToCircle(message *pbv1.CreateCircleRequest) (*charlescdiov1alpha1.Circle, error) {
+	if err := message.ValidateAll(); err != nil {
+		return nil, errs.E(errs.Invalid, errs.Code("proto_to_circle"), err)
+	}
+
+	circle := &charlescdiov1alpha1.Circle{}
+	circle.SetName(message.Name)
+	circle.SetNamespace(message.Namespace)
+
+	routing := charlescdiov1alpha1.CircleRouting{}
+	if message.Routing.Canary != nil {
+		routing.Canary = &charlescdiov1alpha1.CanaryDeployStrategy{
+			Weight: int(message.Routing.Canary.Weight),
+		}
+	}
+
+	if message.Routing.Match != nil {
+		if message.Routing.Match.CustomMatch != nil {
+			routing.Match = &charlescdiov1alpha1.MatchRouteStrategy{
+				CustomMatch: &charlescdiov1alpha1.CircleMatch{
+					Headers: message.Routing.Match.CustomMatch.Headers,
+				},
+			}
+		}
+	}
+
+	environments := []charlescdiov1alpha1.CircleEnvironments{}
+	if message.Environments != nil {
+		for _, e := range message.Environments {
+			environments = append(environments, charlescdiov1alpha1.CircleEnvironments{
+				Key:   e.Key,
+				Value: e.Value,
+			})
+		}
+	}
+
+	modules := []charlescdiov1alpha1.CircleModule{}
+	if message.Modules != nil {
+		for _, m := range message.Modules {
+			overrides := []charlescdiov1alpha1.Override{}
+			if m.Overrides != nil {
+				for _, o := range m.Overrides {
+					overrides = append(overrides, charlescdiov1alpha1.Override{
+						Key:   o.Key,
+						Value: o.Value,
+					})
+				}
+			}
+
+			modules = append(modules, charlescdiov1alpha1.CircleModule{
+				Name:      m.Name,
+				Namespace: m.Namespace,
+				Overrides: overrides,
+				Revision:  m.Revision,
+			})
+		}
+	}
+
+	circle.Spec = charlescdiov1alpha1.CircleSpec{
+		IsDefault:    message.IsDefault,
+		Routing:      routing,
+		Environments: environments,
+		Modules:      modules,
+	}
+
+	return circle, nil
 }

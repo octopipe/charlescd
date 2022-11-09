@@ -17,12 +17,12 @@ import (
 
 func getMatchForDefaultRouting(circle charlescdiov1alpha1.Circle) []*networkingv1alpha3.HTTPMatchRequest {
 	match := []*networkingv1alpha3.HTTPMatchRequest{}
-	defaultRouting := circle.Spec.Routing.Default
+	matchRouting := circle.Spec.Routing.Match
 
-	if defaultRouting.CustomMatch != nil {
+	if matchRouting.CustomMatch != nil {
 
 		headers := map[string]*networkingv1alpha3.StringMatch{}
-		for key, value := range defaultRouting.CustomMatch.Headers {
+		for key, value := range matchRouting.CustomMatch.Headers {
 			headers[key] = &networkingv1alpha3.StringMatch{
 				MatchType: &networkingv1alpha3.StringMatch_Regex{Regex: value},
 			}

@@ -54,15 +54,15 @@ type CanaryDeployStrategy struct {
 	Weight int `json:"weight"`
 }
 
-type DefaultDeployStartegy struct {
+type MatchRouteStrategy struct {
 	CustomMatch *CircleMatch     `json:"customMatch,omitempty"`
 	Segments    []*CircleSegment `json:"segments,omitempty"`
 }
 
 type CircleRouting struct {
-	Strategy string                 `json:"strategy,omitempty"`
-	Canary   *CanaryDeployStrategy  `json:"canary,omitempty"`
-	Default  *DefaultDeployStartegy `json:"default,omitempty"`
+	Strategy string                `json:"strategy,omitempty"`
+	Canary   *CanaryDeployStrategy `json:"canary,omitempty"`
+	Match    *MatchRouteStrategy   `json:"default,omitempty"`
 }
 
 // CircleSpec defines the desired state of Circle
