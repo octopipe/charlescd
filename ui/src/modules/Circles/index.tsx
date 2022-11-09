@@ -102,7 +102,15 @@ const Circles = () => {
           <Col xs={4} key={circle.name}>
             <Card className='circles__content__item mb-4'>
               <Card.Body>
-                <Card.Title><Link className='text-decoration-none text-white' to={circle.name}>{circle.name}</Link></Card.Title>
+                <Card.Title className='d-flex justify-content-between'>
+                  <Link className='text-decoration-none text-white' to={circle.name}>
+                    {circle.name}
+                  </Link>
+                  <div className='d-flex'>
+                    <FontAwesomeIcon icon="eye" size='sm' className='me-3' />
+                    <FontAwesomeIcon icon="trash" size='sm' />
+                  </div>
+                </Card.Title>
                 <CircleModules modules={circle.modules} />
               </Card.Body>
               <div style={{ width: '100%', height: 300 }}>
