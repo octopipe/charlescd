@@ -49,6 +49,10 @@ func grpcLog(logger logr.Logger, kind Kind, e *Error) {
 
 func grpcErrorCode(kind Kind) codes.Code {
 	switch kind {
+	case InvalidRequest, Validation:
+		return codes.InvalidArgument
+	case NotExist:
+		return codes.NotFound
 	default:
 		return codes.Unknown
 	}

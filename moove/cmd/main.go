@@ -11,13 +11,13 @@ import (
 	"github.com/octopipe/charlescd/moove/internal/workspace"
 	workspaceHandler "github.com/octopipe/charlescd/moove/internal/workspace/handler"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 func main() {
-	logger, _ := zap.NewProduction(zap.AddCaller())
-	zap.ReplaceGlobals(logger)
+	logger, _ := zap.NewProduction(zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
 	defer logger.Sync()
 
 	// provider, err := oidc.NewProvider(context.Background(), "http://127.0.0.1:53192/realms/master")
@@ -60,7 +60,7 @@ func main() {
 	e.Use(middleware.CORS())
 	// authMiddleware := auth.NewAuthMiddleware(provider, oauth2Config, verifier)
 	// e.Use(authMiddleware.Handle)
-	workspaceHandler.NewEchohandler(e, workspaceUseCase)
-	circleHandler.NewEchohandler(e, circleUseCase)
+	workspaceHandler.NewEchohandler(e, logger, workspaceUseCase)
+	circleHandler.NewEchohandler(e, logger, circleUseCase)
 	e.Logger.Fatal(e.Start(":8080"))
 }

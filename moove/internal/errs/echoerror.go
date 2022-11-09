@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 )
 
 type HTTPError struct {
@@ -12,12 +13,13 @@ type HTTPError struct {
 	Message string `json:"message"`
 }
 
-func NewHTTPResponse(c echo.Context, err error) error {
+func NewHTTPResponse(c echo.Context, logger *zap.Logger, err error) error {
 	const defaultMessage string = "internal server error - please contact support"
 	var e *Error
 	if errors.As(err, &e) {
+		httpLog(logger, e.Kind, *e)
 		switch e.Kind {
-		case Internal, Database:
+		case Internal, Database, Integration:
 			err := HTTPError{
 				Code:    e.Kind.String(),
 				Message: defaultMessage,
@@ -28,14 +30,24 @@ func NewHTTPResponse(c echo.Context, err error) error {
 				Code:    e.Kind.String(),
 				Message: e.Err.Error(),
 			}
-			c.JSON(httpErrorStatusCode(e.Kind), err)
+			return c.JSON(httpErrorStatusCode(e.Kind), err)
 		}
 	}
 
+	logger.Error(err.Error(), zap.String("code", string(Unknown.String())))
 	return c.JSON(http.StatusInternalServerError, HTTPError{
 		Code:    Unknown.String(),
 		Message: "Unknown Error",
 	})
+}
+
+func httpLog(logger *zap.Logger, k Kind, e Error) {
+	switch k {
+	case NotExist:
+		logger.Info(e.Error(), zap.String("code", string(e.Code)))
+	default:
+		logger.Error(e.Error(), zap.String("code", string(e.Code)))
+	}
 }
 
 func httpErrorStatusCode(k Kind) int {

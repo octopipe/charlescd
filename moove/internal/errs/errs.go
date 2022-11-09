@@ -39,6 +39,7 @@ const (
 	InvalidRequest // Invalid Request
 	Unauthenticated
 	Unauthorized
+	Integration
 )
 
 func (k Kind) String() string {
@@ -73,6 +74,8 @@ func (k Kind) String() string {
 		return "unauthenticated_request"
 	case Unauthorized:
 		return "unauthorized_request"
+	case Integration:
+		return "integration_request"
 	}
 	return "unknown_error_kind"
 }
@@ -92,8 +95,6 @@ func E(args ...interface{}) error {
 	e := &Error{}
 	for _, arg := range args {
 		switch arg := arg.(type) {
-		case UserName:
-			e.User = arg
 		case string:
 			e.Err = errors.New(arg)
 		case Kind:
@@ -112,10 +113,6 @@ func E(args ...interface{}) error {
 			}
 		case Code:
 			e.Code = arg
-		case Parameter:
-			e.Param = arg
-		case Realm:
-			e.Realm = arg
 		default:
 			_, file, line, _ := runtime.Caller(1)
 			return fmt.Errorf("errors.E: bad call from %s:%d: %v, unknown type %T, value %v in error call", file, line, args, arg, arg)

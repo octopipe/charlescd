@@ -18,9 +18,9 @@ type CircleProvider struct {
 type CircleRepository interface {
 	FindAll(filter *pbv1.ListRequest) ([]*pbv1.CircleMetadata, error)
 	FindByName(namespace string, name string) (*pbv1.Circle, error)
-	Create(circle Circle) (*pbv1.Circle, error)
-	Update(id string, circle Circle) (CircleProvider, error)
-	Delete(id string) error
+	Create(circle *pbv1.CreateCircleRequest) (*pbv1.Circle, error)
+	Update(circle *pbv1.CreateCircleRequest) (*pbv1.Circle, error)
+	Delete(namespace string, name string) error
 	GetDiagram(namespace string, name string) ([]*pbv1.Resource, error)
 	GetResource(namespace string, resourceName string, group string, kind string) (*pbv1.Resource, *unstructured.Unstructured, error)
 	GetLogs(circleName string, resourceName string, group string, kind string) (interface{}, error)
@@ -30,9 +30,9 @@ type CircleRepository interface {
 type CircleUseCase interface {
 	FindAll(workspaceId string) ([]*pbv1.CircleMetadata, error)
 	FindByName(workspaceId string, name string) (*pbv1.Circle, error)
-	Create(circle Circle) (*pbv1.Circle, error)
-	Update(id string, circle Circle) (CircleProvider, error)
-	Delete(id string) error
+	Create(circle *pbv1.CreateCircleRequest) (*pbv1.Circle, error)
+	Update(workspaceId string, name string, circle *pbv1.CreateCircleRequest) error
+	Delete(workspaceId string, name string) error
 	GetDiagram(namespace string, name string) ([]*pbv1.Resource, error)
 	GetResource(workspaceId string, resourceName string, group string, kind string) (*pbv1.Resource, *unstructured.Unstructured, error)
 	GetLogs(circleName string, resourceName string, group string, kind string) (interface{}, error)

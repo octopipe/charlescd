@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/octopipe/charlescd/moove/internal/core/grpcclient"
+	"github.com/octopipe/charlescd/moove/internal/errs"
 	pbv1 "github.com/octopipe/charlescd/moove/pb/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -18,13 +19,24 @@ func NewRepository(grpcClient grpcclient.Client) CircleRepository {
 }
 
 // Create implements WorkspaceRepository
-func (r GrpcRepository) Create(circle Circle) (*pbv1.Circle, error) {
-	return nil, nil
+func (r GrpcRepository) Create(circle *pbv1.CreateCircleRequest) (*pbv1.Circle, error) {
+	_, err := r.grpcClient.CircleClient.Create(context.Background(), circle)
+	if err != nil {
+		return nil, errs.ParseGrpcError(err)
+	}
 
+	return nil, nil
 }
 
 // Delete implements WorkspaceRepository
-func (r GrpcRepository) Delete(id string) error {
+func (r GrpcRepository) Delete(namespace string, name string) error {
+	_, err := r.grpcClient.CircleClient.Delete(context.Background(), &pbv1.GetCircleRequest{
+		Namespace: namespace,
+		Name:      name,
+	})
+	if err != nil {
+		return errs.ParseGrpcError(err)
+	}
 
 	return nil
 }
@@ -33,7 +45,7 @@ func (r GrpcRepository) Delete(id string) error {
 func (r GrpcRepository) FindAll(filter *pbv1.ListRequest) ([]*pbv1.CircleMetadata, error) {
 	res, err := r.grpcClient.CircleClient.List(context.Background(), filter)
 	if err != nil {
-		return nil, err
+		return nil, errs.ParseGrpcError(err)
 	}
 
 	return res.Items, err
@@ -46,15 +58,20 @@ func (r GrpcRepository) FindByName(namespace string, name string) (*pbv1.Circle,
 		Name:      name,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errs.ParseGrpcError(err)
 	}
 
 	return circle, nil
 }
 
 // Update implements WorkspaceRepository
-func (r GrpcRepository) Update(id string, workspace Circle) (CircleProvider, error) {
-	return CircleProvider{}, nil
+func (r GrpcRepository) Update(circle *pbv1.CreateCircleRequest) (*pbv1.Circle, error) {
+	_, err := r.grpcClient.CircleClient.Update(context.Background(), circle)
+	if err != nil {
+		return nil, errs.ParseGrpcError(err)
+	}
+
+	return nil, nil
 }
 
 func (r GrpcRepository) GetDiagram(namespace string, name string) ([]*pbv1.Resource, error) {
@@ -63,7 +80,7 @@ func (r GrpcRepository) GetDiagram(namespace string, name string) ([]*pbv1.Resou
 		Namespace: namespace,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errs.ParseGrpcError(err)
 	}
 
 	return hierarchy.Items, nil
@@ -77,7 +94,7 @@ func (r GrpcRepository) GetEvents(namespace string, resourceName string, kind st
 		Kind:      kind,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errs.ParseGrpcError(err)
 	}
 
 	return eventsResponse.Items, nil
@@ -97,7 +114,7 @@ func (r GrpcRepository) GetResource(namespace string, resourceName string, group
 		Kind:      kind,
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errs.ParseGrpcError(err)
 	}
 
 	manifest := &unstructured.Unstructured{}

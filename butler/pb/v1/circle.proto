@@ -4,7 +4,7 @@ package v1;
 option go_package = "./v1";
 
 import "google/protobuf/any.proto";
-import "pb/v1/validate/validate.proto";
+import "pb/v1/validate.proto";
 
 service CircleService {
   rpc List (ListRequest) returns (ListResponse) {}
@@ -65,7 +65,7 @@ enum RoutingType {
 }
 
 message CircleRouting {
-  RoutingType strategy = 1 [(validate.rules).enum.defined_only = true];
+  RoutingType strategy = 1 [(rules).enum.defined_only = true];
   optional CanaryRouting canary = 2;
   optional MatchRouting match = 3;
 }
@@ -133,10 +133,10 @@ message CircleMetadata {
 }
 
 message CreateCircleRequest {
-  string name = 1 [(validate.rules).string.min_len = 1];
-  string namespace = 2 [(validate.rules).string.min_len = 1];
+  string name = 1 [(rules).string.min_len = 1];
+  string namespace = 2 [(rules).string.min_len = 1];
   bool isDefault = 3;
-  CircleRouting routing = 4 [(validate.rules).message.required = true];
+  CircleRouting routing = 4 [(rules).message.required = true];
   repeated CircleModule modules = 5;
   repeated CircleEnvironment environments = 6;
 }

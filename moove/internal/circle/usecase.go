@@ -1,8 +1,6 @@
 package circle
 
 import (
-	"fmt"
-
 	"github.com/iancoleman/strcase"
 	"github.com/octopipe/charlescd/moove/internal/workspace"
 	pbv1 "github.com/octopipe/charlescd/moove/pb/v1"
@@ -22,13 +20,29 @@ func NewUseCase(workspaceRepository workspace.WorkspaceRepository, circleReposit
 }
 
 // Create implements CircleUseCase
-func (UseCase) Create(circle Circle) (*pbv1.Circle, error) {
-	panic("unimplemented")
+func (u UseCase) Create(circle *pbv1.CreateCircleRequest) (*pbv1.Circle, error) {
+	_, err := u.circleRepository.Create(circle)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
 
 // Delete implements CircleUseCase
-func (UseCase) Delete(id string) error {
-	panic("unimplemented")
+func (u UseCase) Delete(workspaceId string, name string) error {
+	workspace, err := u.worksaceRepository.FindById(workspaceId)
+	if err != nil {
+		return err
+	}
+
+	namespace := strcase.ToKebab(workspace.Name)
+	err = u.circleRepository.Delete(name, namespace)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // FindAll implements CircleUseCase
@@ -41,7 +55,6 @@ func (u UseCase) FindAll(workspaceId string) ([]*pbv1.CircleMetadata, error) {
 	filter := &pbv1.ListRequest{
 		Namespace: strcase.ToKebab(namespace),
 	}
-	fmt.Println(filter)
 	circles, err := u.circleRepository.FindAll(filter)
 	if err != nil {
 		return nil, err
@@ -112,6 +125,19 @@ func (u UseCase) GetResource(workspaceId string, resourceName string, group stri
 }
 
 // Update implements CircleUseCase
-func (UseCase) Update(id string, circle Circle) (CircleProvider, error) {
-	panic("unimplemented")
+func (u UseCase) Update(workspaceId string, name string, circle *pbv1.CreateCircleRequest) error {
+	workspace, err := u.worksaceRepository.FindById(workspaceId)
+	if err != nil {
+		return err
+	}
+
+	namespace := strcase.ToKebab(workspace.Name)
+	circle.Name = name
+	circle.Namespace = namespace
+	_, err = u.circleRepository.Update(circle)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

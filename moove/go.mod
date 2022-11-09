@@ -11,12 +11,14 @@ require (
 	github.com/imroc/req/v3 v3.24.1
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/octopipe/charlescd/butler v0.0.0-20220929214022-8085db3c2561
+	github.com/pkg/errors v0.9.1
 	go.uber.org/zap v1.23.0
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
 	gorm.io/driver/sqlite v1.4.2
 	gorm.io/gorm v1.24.0
+	k8s.io/apimachinery v0.25.0
 )
 
 require (
@@ -69,7 +71,6 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/apimachinery v0.25.0 // indirect
 	k8s.io/klog/v2 v2.70.1 // indirect
 	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed // indirect
 	sigs.k8s.io/controller-runtime v0.12.2 // indirect
