@@ -26,6 +26,11 @@
       border-left: 15px solid #1e88e5;
     }
 
+    &--Healthy {
+      @extend .circle-modules__item;
+      border-left: 15px solid #43a047;
+    }
+
     &__menu {
       background-color: transparent;
       border: none;

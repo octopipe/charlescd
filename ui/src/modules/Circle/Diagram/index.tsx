@@ -48,23 +48,32 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 };
 
 const getNodeAndEdgesByResources = (resources: ResourceMetadata[]) => {
-  const nodes = resources.map(resource => ({
-    id: resource.name,
-    type: 'default',
-    data: resource,
-    position,
-  }))
-
-  const edges = resources
-    .filter(resource => resource?.owner)
+  const nodes = resources
     .map(resource => ({
-      id: `${resource.name}-${resource.owner?.name}`,
-      source: resource.owner?.name || '',
-      target: resource.name,
-      type: edgeType,
+      id: `${resource.name}${resource.kind}`,
+      type: 'default',
+      data: resource,
+      position,
     }))
 
-  return {nodes, edges}
+  const edges = resources
+    .filter(resource => resource?.owner && resource.owner.kind !== 'Circle')
+    .map(resource => ({
+      id: `${resource.name}${resource.kind}-${resource.owner?.name}${resource.owner?.kind}`,
+      source: `${resource.owner?.name}${resource.owner?.kind}`,
+      target: `${resource.name}${resource.kind}`,
+      type: edgeType,
+    }))
+ 
+  const circleEdges = resources
+    .filter(resource => resource?.owner && resource.owner.kind === 'Circle')
+    .map(resource => ({
+      id: `${resource.name}${resource.kind}-${resource.owner?.name}${resource.owner?.kind}`,
+      source: `${resource.owner?.name}${resource.owner?.kind}`,
+      target: `${resource.name}${resource.kind}`,
+      type: edgeType,
+    }))
+  return {nodes, edges: [...edges, ...circleEdges]}
 } 
 
 const nodeTypes = {
@@ -85,9 +94,9 @@ const Diagram = () => {
   }
 
   useEffect(() => {
+    loadDiagram()
     const interval = setInterval(() => {
       loadDiagram()
-      console.log('INTERBAL')
     }, 3000)
     
     return () => clearInterval(interval)

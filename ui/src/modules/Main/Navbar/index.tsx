@@ -30,7 +30,7 @@ const MainNavbar = ({ workspaces, onSelectWorkspace }: Props) => {
             <Form.Select defaultValue={defaultWorkspace} onChange={(e) => onSelectWorkspace(e.target.value)}>
               <option value="default" disabled>Select a workspace</option>
               {workspaces?.map((workspace: any) => (
-                <option value={workspace?.id}>{workspace?.name}</option>
+                <option key={workspace?.id} value={workspace?.id}>{workspace?.name}</option>
               ))}
             </Form.Select>
           )}

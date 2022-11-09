@@ -99,34 +99,33 @@ const Circles = () => {
         )}
         <Row>
         {circles?.map(circle => (
-          <Col xs={4}>
-            <Card className='circles__content__item'>
+          <Col xs={4} key={circle.name}>
+            <Card className='circles__content__item mb-4'>
               <Card.Body>
                 <Card.Title><Link className='text-decoration-none text-white' to={circle.name}>{circle.name}</Link></Card.Title>
                 <CircleModules modules={circle.modules} />
-                <div style={{ width: '100%', height: 300 }}>
-                  <ResponsiveContainer>
-                    <AreaChart width={300} height={250} data={data}
-                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-
-                      <Tooltip />
-                      <Area type="monotone" dataKey="uv" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
-                      <Area type="monotone" dataKey="pv" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-                
               </Card.Body>
+              <div style={{ width: '100%', height: 300 }}>
+                <ResponsiveContainer>
+                  <AreaChart width={300} height={250} data={data}
+                    margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+
+                    <Tooltip />
+                    <Area type="monotone" dataKey="uv" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
+                    <Area type="monotone" dataKey="pv" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </Card>
           </Col>
         ))}

@@ -54,7 +54,7 @@ const CircleModules = ({ modules }: Props) => {
           Modules
         </div>
         { modules.map(module => (
-          <div className={`circle-modules__item--${module.status}`}>
+          <div className={`circle-modules__item--${module.status}`} key={module.name}>
             {module.name}
             <Dropdown>
               <Dropdown.Toggle as={CustomToggle}>

@@ -44,11 +44,15 @@ const Main = () => {
     const matches = matchRoutes(routes, location) || []
     dispatch(setDeployStrategy(workspace.deployStrategy))
 
+    if (matches?.length > 0 && matches[0].pathname !== '/') {
+      navigate(matches[0].pathname)
+      return
+    }
+
     if (matches?.length <= 0 || routes[0]?.path === '') {
       navigate(`/workspaces/${workspace.id}`)
       return
     }
-
 
     navigate(generatePath(routes[0]?.path || '' , { workspaceId: workspace.id }))
   }

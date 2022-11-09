@@ -150,9 +150,17 @@ func (r ResourceServer) Hierarchy(ctx context.Context, request *pbv1.HierarchyRe
 			r.clusterCache.IterateHierarchy(kubeKey, func(resource *cache.Resource, namespaceResources map[kube.ResourceKey]*cache.Resource) bool {
 				var owner *pbv1.ResourceOwner
 				if len(resource.OwnerRefs) > 0 {
+					index := 0
+					for i, o := range resource.OwnerRefs {
+						if o.Name == circle.GetName() && o.Kind == circle.Kind {
+							index = i
+							break
+						}
+					}
+
 					owner = &pbv1.ResourceOwner{
-						Name: resource.OwnerRefs[0].Name,
-						Kind: resource.OwnerRefs[0].Kind,
+						Name: resource.OwnerRefs[index].Name,
+						Kind: resource.OwnerRefs[index].Kind,
 					}
 
 					if resource.OwnerRefs[0].Controller != nil {

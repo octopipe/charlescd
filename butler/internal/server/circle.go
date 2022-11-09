@@ -210,6 +210,7 @@ func fillCircle(circle *charlescdiov1alpha1.Circle, message *pbv1.CreateCircleRe
 	}
 
 	circle.Spec = charlescdiov1alpha1.CircleSpec{
+		Namespace:    message.Namespace,
 		IsDefault:    message.IsDefault,
 		Routing:      routing,
 		Environments: environments,

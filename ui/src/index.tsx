@@ -35,7 +35,6 @@ const App = () => {
         if (response.status >= 500) {
           window.location.href = '/error'
         }
-        console.log(res)
         return res
       }
     }

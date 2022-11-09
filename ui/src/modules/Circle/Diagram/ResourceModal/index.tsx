@@ -42,7 +42,6 @@ const ResourceModal = ({ show, onClose, node }: ResourceModalProps) => {
 
   const getEvents = async () => {
     const events = await get(`/workspaces/${workspaceId}/circles/${circleName}/resources/${node?.data.name}/events?kind=${node?.data.kind}`)
-    console.log('EVENTS', events)
     if (response.ok) setEvents(events || [])
   }
 
