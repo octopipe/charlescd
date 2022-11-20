@@ -20,6 +20,7 @@ func NewK8sRepository(clientset client.Client) CircleRepository {
 
 func (r k8sRepository) toCircle(c charlescdiov1alpha1.Circle) Circle {
 	circle := Circle{
+		Name:       c.Name,
 		CircleSpec: c.Spec,
 		Status:     c.Status,
 	}

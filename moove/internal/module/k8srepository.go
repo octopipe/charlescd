@@ -20,6 +20,7 @@ func NewK8sRepository(clientset client.Client) ModuleRepository {
 
 func (r k8sRepository) toModule(c charlescdiov1alpha1.Module) Module {
 	module := Module{
+		Name:       c.Name,
 		ModuleSpec: c.Spec,
 	}
 	return module
