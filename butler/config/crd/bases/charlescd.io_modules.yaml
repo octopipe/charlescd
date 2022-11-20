@@ -34,15 +34,33 @@ spec:
             type: object
           spec:
             properties:
+              auth:
+                properties:
+                  accessToken:
+                    type: string
+                  password:
+                    type: string
+                  sshPrivateKey:
+                    type: string
+                  type:
+                    type: string
+                  username:
+                    type: string
+                type: object
               author:
                 type: string
-              deploymentPath:
-                type: string
-              repositoryPath:
+              path:
                 type: string
               secretRef:
-                type: string
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
               templateType:
+                type: string
+              url:
                 type: string
             type: object
           status:

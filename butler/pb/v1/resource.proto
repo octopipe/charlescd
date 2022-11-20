@@ -7,19 +7,20 @@ import "google/protobuf/any.proto";
 
 
 service ResourceService {
-  rpc Hierarchy(HierarchyRequest) returns (HierarchyResponse) {}
-  rpc Get (GetResourceRequest) returns (GetResourceResponse) {}
+  rpc Tree(TreeRequest) returns (TreeResponse) {}
+  rpc Get (GetResourceRequest) returns (Resource) {}
   rpc Logs (LogsRequest) returns (LogsResponse) {}
   rpc Events (EventsRequest) returns (EventsResponse) {}
+  rpc Manifest (GetResourceRequest) returns (ManifestResponse) {}
 }
 
-message HierarchyResponse {
+message TreeResponse {
   repeated Resource items = 1;
 }
 
-message HierarchyRequest {
-  string name = 1;
-  string namespace = 2;
+message TreeRequest {
+  string circleName = 1;
+  string circleNamespace = 2;
 }
 
 message ResourceOwner {
@@ -36,6 +37,10 @@ message Resource {
   ResourceOwner owner = 5;
   string status = 6;
   string error = 7;
+}
+
+message ManifestResponse {
+  bytes content = 1;
 }
 
 message GetResourceRequest {

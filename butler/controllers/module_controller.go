@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
+	"github.com/octopipe/charlescd/butler/internal/utils"
 )
 
 // ModuleReconciler reconciles a Module object
@@ -47,7 +48,27 @@ type ModuleReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *ModuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
+
+	module := &charlescdiov1alpha1.Module{}
+	err := r.Get(ctx, req.NamespacedName, module)
+	if err != nil {
+		logger.Error(err, "module not found on reconcile")
+	}
+
+	labels := module.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+
+	labels[utils.AnnotationManagedBy] = utils.ManagedBy
+	module.SetLabels(labels)
+
+	err = r.Update(ctx, module)
+	if err != nil {
+		logger.Error(err, "cannot add managaed labels to module")
+		return ctrl.Result{}, nil
+	}
 
 	return ctrl.Result{}, nil
 }

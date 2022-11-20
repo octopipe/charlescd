@@ -113,7 +113,7 @@ const Circles = () => {
                 </Card.Title>
                 <CircleModules modules={circle.modules} />
               </Card.Body>
-              <div style={{ width: '100%', height: 300 }}>
+              <div style={{ width: '100%', height: 150 }}>
                 <ResponsiveContainer>
                   <AreaChart width={300} height={250} data={data}
                     margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>

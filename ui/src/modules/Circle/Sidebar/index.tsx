@@ -22,12 +22,16 @@ const CircleSidebar = ({ circle }: Props) => {
   const getModuleItems = (circle: Circle) => {
     let moduleItems: CircleItemModule[] = []
     
-    for(let module of circle.modules) {
-      const { modules } = circle.status
+    for(let module of circle?.modules) {
+      if (Object.keys(circle?.status).length <= 0) {
+        return moduleItems
+      }      
+
+      const { modules } = circle.status      
 
       moduleItems.push({
         name: module.name,
-        status: modules[module.name].status,
+        status: modules[module.name]?.status || '',
         error: modules[module.name]?.error || ''
       })
     }

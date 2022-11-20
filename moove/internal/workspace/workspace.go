@@ -39,4 +39,5 @@ type WorkspaceUseCase interface {
 	Create(workspace Workspace) (WorkspaceModel, error)
 	Update(id string, workspace Workspace) (WorkspaceModel, error)
 	Delete(id string) error
+	GetKebabCaseNameById(id string) (string, error)
 }

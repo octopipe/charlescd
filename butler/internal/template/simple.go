@@ -6,12 +6,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 )
 
-func (t template) GetSimpleManifests() ([][]byte, error) {
+func (t template) GetSimpleManifests(module charlescdiov1alpha1.Module, circle charlescdiov1alpha1.Circle) ([][]byte, error) {
 	manifests := [][]byte{}
-	deploymentPath := t.module.Spec.DeploymentPath
-	repositoryPath := fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), t.module.Spec.RepositoryPath)
+	deploymentPath := module.Spec.Path
+	repositoryPath := fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), module.Spec.Path)
 	if err := filepath.Walk(filepath.Join(repositoryPath, deploymentPath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err

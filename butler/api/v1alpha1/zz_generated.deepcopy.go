@@ -376,7 +376,7 @@ func (in *ModuleSpec) DeepCopyInto(out *ModuleSpec) {
 	*out = *in
 	if in.SecretRef != nil {
 		in, out := &in.SecretRef, &out.SecretRef
-		*out = new(string)
+		*out = new(SecretRef)
 		**out = **in
 	}
 }

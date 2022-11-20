@@ -5,6 +5,7 @@ import (
 
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -13,37 +14,33 @@ const (
 )
 
 type Template interface {
-	GetManifests() ([]*unstructured.Unstructured, error)
+	GetManifests(module charlescdiov1alpha1.Module, circle charlescdiov1alpha1.Circle) ([]*unstructured.Unstructured, error)
 }
 
 type template struct {
-	module charlescdiov1alpha1.Module
-	circle charlescdiov1alpha1.Circle
+	client.Client
 }
 
-func NewTemplate(module charlescdiov1alpha1.Module, circle charlescdiov1alpha1.Circle) Template {
-	return template{
-		module: module,
-		circle: circle,
-	}
+func NewTemplate() Template {
+	return template{}
 }
 
-func (t template) getManifests() ([][]byte, error) {
-	switch t.module.Spec.TemplateType {
+func (t template) getManifests(module charlescdiov1alpha1.Module, circle charlescdiov1alpha1.Circle) ([][]byte, error) {
+	switch module.Spec.TemplateType {
 	case SimpleTemplate:
-		return t.GetSimpleManifests()
+		return t.GetSimpleManifests(module, circle)
 	case HelmTemplate:
-		return t.GetHelmManifests()
+		return t.GetHelmManifests(module, circle)
 	default:
-		return nil, errors.New("invald template type")
+		return nil, errors.New("invalid template type")
 	}
 }
 
-func (t template) GetManifests() ([]*unstructured.Unstructured, error) {
-	manifests, err := t.getManifests()
+func (t template) GetManifests(module charlescdiov1alpha1.Module, circle charlescdiov1alpha1.Circle) ([]*unstructured.Unstructured, error) {
+	manifests, err := t.getManifests(module, circle)
 	if err != nil {
 		return nil, err
 	}
 
-	return t.parseManifests(manifests)
+	return t.parseManifests(manifests, module, circle)
 }

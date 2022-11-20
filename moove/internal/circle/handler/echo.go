@@ -1,11 +1,14 @@
-package handlers
+package handler
 
 import (
+	"errors"
+	"strconv"
+
 	"github.com/labstack/echo/v4"
 	"github.com/octopipe/charlescd/moove/internal/circle"
 	"github.com/octopipe/charlescd/moove/internal/core/customvalidator"
+	"github.com/octopipe/charlescd/moove/internal/core/listoptions"
 	"github.com/octopipe/charlescd/moove/internal/errs"
-	pbv1 "github.com/octopipe/charlescd/moove/pb/v1"
 	"go.uber.org/zap"
 )
 
@@ -27,15 +30,28 @@ func NewEchohandler(e *echo.Echo, logger *zap.Logger, circleUseCase circle.Circl
 	s.GET("/:circleName", handler.FindById)
 	s.PUT("/:circleName", handler.Update)
 	s.DELETE("/:circleName", handler.Delete)
-	s.GET("/:circleName/diagram", handler.Diagram)
-	s.GET("/:circleName/resources/:resource", handler.Resource)
-	s.GET("/:circleName/resources/:resource/logs", handler.ResourceLogs)
-	s.GET("/:circleName/resources/:resource/events", handler.ResourceEvents)
 }
 
 func (h EchoHandler) FindAll(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
-	circles, err := h.circleUseCase.FindAll(workspaceId)
+	continueParam := c.QueryParam("continue")
+	limitParam := c.QueryParam("limit")
+
+	listOptions := listoptions.Request{
+		Limit:    10,
+		Continue: continueParam,
+	}
+
+	if limitParam != "" {
+		limit, err := strconv.Atoi(limitParam)
+		if err != nil {
+			return errs.NewHTTPResponse(c, h.logger, errors.New("limit param invalid"))
+		}
+
+		listOptions.Limit = int64(limit)
+	}
+
+	circles, err := h.circleUseCase.FindAll(c.Request().Context(), workspaceId, listOptions)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -43,12 +59,13 @@ func (h EchoHandler) FindAll(c echo.Context) error {
 }
 
 func (h EchoHandler) Create(c echo.Context) error {
-	w := new(pbv1.CreateCircleRequest)
-	if err := c.Bind(w); err != nil {
+	workspaceId := c.Param("workspaceId")
+	w := circle.Circle{}
+	if err := c.Bind(&w); err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
 
-	newCircle, err := h.circleUseCase.Create(w)
+	newCircle, err := h.circleUseCase.Create(c.Request().Context(), workspaceId, w)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -59,7 +76,7 @@ func (h EchoHandler) Create(c echo.Context) error {
 func (h EchoHandler) FindById(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	circleName := c.Param("circleName")
-	circle, err := h.circleUseCase.FindByName(workspaceId, circleName)
+	circle, err := h.circleUseCase.FindByName(c.Request().Context(), workspaceId, circleName)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -70,77 +87,24 @@ func (h EchoHandler) Update(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	circleName := c.Param("circleName")
 
-	newCircle := new(pbv1.CreateCircleRequest)
-	if err := c.Bind(newCircle); err != nil {
+	newCircle := circle.Circle{}
+	if err := c.Bind(&newCircle); err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
 
-	err := h.circleUseCase.Update(workspaceId, circleName, newCircle)
+	updatedCircle, err := h.circleUseCase.Update(c.Request().Context(), workspaceId, circleName, newCircle)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
-	return c.JSON(204, nil)
+	return c.JSON(200, updatedCircle)
 }
 
 func (h EchoHandler) Delete(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	circleName := c.Param("circleName")
-	err := h.circleUseCase.Delete(workspaceId, circleName)
+	err := h.circleUseCase.Delete(c.Request().Context(), workspaceId, circleName)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
 	return c.JSON(204, circle.Circle{})
-}
-
-func (h EchoHandler) Diagram(c echo.Context) error {
-	workspaceId := c.Param("workspaceId")
-	circleName := c.Param("circleName")
-
-	diagram, err := h.circleUseCase.GetDiagram(workspaceId, circleName)
-	if err != nil {
-		return errs.NewHTTPResponse(c, h.logger, err)
-	}
-	return c.JSON(200, diagram)
-}
-
-func (h EchoHandler) Resource(c echo.Context) error {
-	workspaceId := c.Param("workspaceId")
-	resourceName := c.Param("resource")
-	group := c.QueryParam("group")
-	kind := c.QueryParam("kind")
-
-	resource, manifest, err := h.circleUseCase.GetResource(workspaceId, resourceName, group, kind)
-	if err != nil {
-		return errs.NewHTTPResponse(c, h.logger, err)
-	}
-	return c.JSON(200, map[string]interface{}{
-		"metadata": resource,
-		"manifest": manifest,
-	})
-}
-
-func (h EchoHandler) ResourceLogs(c echo.Context) error {
-	circleName := c.Param("name")
-	resourceName := c.Param("resource")
-	group := c.QueryParam("group")
-	kind := c.QueryParam("kind")
-
-	logs, err := h.circleUseCase.GetLogs(circleName, resourceName, group, kind)
-	if err != nil {
-		return errs.NewHTTPResponse(c, h.logger, err)
-	}
-	return c.JSON(200, logs)
-}
-
-func (h EchoHandler) ResourceEvents(c echo.Context) error {
-	workspaceId := c.Param("workspaceId")
-	resourceName := c.Param("resource")
-	kind := c.QueryParam("kind")
-
-	events, err := h.circleUseCase.GetEvents(workspaceId, resourceName, kind)
-	if err != nil {
-		return errs.NewHTTPResponse(c, h.logger, err)
-	}
-
-	return c.JSON(200, events)
 }

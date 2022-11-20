@@ -21,13 +21,15 @@ import (
 
 	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/internal/networking"
-	"github.com/octopipe/charlescd/butler/internal/sync"
+	circlesync "github.com/octopipe/charlescd/butler/internal/sync"
+	"github.com/octopipe/charlescd/butler/internal/utils"
 )
 
 // CircleReconciler reconciles a Circle object
@@ -35,7 +37,7 @@ type CircleReconciler struct {
 	client.Client
 	NetworkClient networking.NetworkingLayer
 	Scheme        *runtime.Scheme
-	Sync          sync.Sync
+	Sync          circlesync.CircleSync
 }
 
 //+kubebuilder:rbac:groups=charlescd.io,resources=circles,verbs=get;list;watch;create;update;patch;delete
@@ -59,17 +61,57 @@ func (r *CircleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	err := r.Get(ctx, req.NamespacedName, circle)
 	if err != nil {
 		logger.Error(err, "circle not found on reconcile")
+		return ctrl.Result{}, err
 	}
 
-	r.Sync.Resync(*circle)
+	err = r.Sync.Sync(circle)
+	if err != nil {
+		logger.Info("failed to sync circle err", "error", err)
+		return ctrl.Result{}, nil
+	}
+
+	err = r.Sync.CircleSyncModules(circle)
+	if err != nil {
+		logger.Info("failed to sync circle modules err", "error", err)
+		return ctrl.Result{}, nil
+	}
+
 	if r.NetworkClient != nil {
 		err = r.NetworkClient.Sync(*circle)
 		if err != nil {
 			logger.Error(err, "cannot resync network layer")
+			return ctrl.Result{}, nil
 		}
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *CircleReconciler) AddManagedLabelToCircle(ctx context.Context, req ctrl.Request) error {
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		circle := &charlescdiov1alpha1.Circle{}
+		err := r.Get(ctx, req.NamespacedName, circle)
+		if err != nil {
+			return err
+		}
+
+		labels := circle.GetLabels()
+		if labels == nil {
+			labels = make(map[string]string)
+		}
+
+		labels[utils.AnnotationManagedBy] = utils.ManagedBy
+		circle.SetLabels(labels)
+
+		err = r.Update(ctx, circle)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return retryErr
 }
 
 // SetupWithManager sets up the controller with the Manager.

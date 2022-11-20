@@ -17,6 +17,20 @@
 
     &__content {
       padding: .3rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &__project {
+      @extend .circle-diagram__item;
+      font-size: 12px;
+      border-image: 
+        linear-gradient(
+          to bottom, 
+          #ef4622, 
+          #f7901e
+        ) 1 100%;
     }
 
     &--Healthy {

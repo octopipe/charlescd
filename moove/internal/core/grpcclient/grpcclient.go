@@ -8,7 +8,6 @@ import (
 )
 
 type Client struct {
-	CircleClient   pbv1.CircleServiceClient
 	ResourceClient pbv1.ResourceServiceClient
 }
 
@@ -21,11 +20,9 @@ func NewGrpcClient() (Client, error) {
 		return Client{}, err
 	}
 
-	circleClient := pbv1.NewCircleServiceClient(conn)
 	resourceClient := pbv1.NewResourceServiceClient(conn)
 
 	grpcClient := Client{
-		CircleClient:   circleClient,
 		ResourceClient: resourceClient,
 	}
 

@@ -1,5 +1,7 @@
 package workspace
 
+import "github.com/iancoleman/strcase"
+
 type UseCase struct {
 	repository WorkspaceRepository
 }
@@ -59,4 +61,13 @@ func (u UseCase) Update(id string, workspace Workspace) (WorkspaceModel, error) 
 	}
 
 	return workspaceModel, nil
+}
+
+func (u UseCase) GetKebabCaseNameById(id string) (string, error) {
+	workspace, err := u.repository.FindById(id)
+	if err != nil {
+		return "", err
+	}
+
+	return strcase.ToKebab(workspace.Name), nil
 }

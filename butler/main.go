@@ -45,7 +45,7 @@ import (
 	"github.com/octopipe/charlescd/butler/controllers"
 	"github.com/octopipe/charlescd/butler/internal/networking"
 	"github.com/octopipe/charlescd/butler/internal/server"
-	"github.com/octopipe/charlescd/butler/internal/sync"
+	circlesync "github.com/octopipe/charlescd/butler/internal/sync"
 	"github.com/octopipe/charlescd/butler/internal/utils"
 	//+kubebuilder:scaffold:imports
 )
@@ -94,14 +94,13 @@ func main() {
 		cache.SetPopulateResourceInfoHandler(func(un *unstructured.Unstructured, isRoot bool) (interface{}, bool) {
 			managedBy := un.GetLabels()[utils.AnnotationManagedBy]
 			info := &utils.ResourceInfo{
-				ManagedBy:  un.GetLabels()[utils.AnnotationManagedBy],
-				ModuleMark: un.GetLabels()[utils.AnnotationModuleMark],
-				CircleMark: un.GetLabels()[utils.AnnotationCircleMark],
+				ManagedBy: un.GetLabels()[utils.AnnotationManagedBy],
 			}
 			cacheManifest := managedBy == utils.ManagedBy
 			return info, cacheManifest
 		}),
 	)
+
 	gitOpsEngine := engine.NewEngine(config, clusterCache, engine.WithLogr(logger))
 	cleanup, err := gitOpsEngine.Run()
 	if err != nil {
@@ -138,9 +137,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	s := sync.NewSync(logger, client, gitOpsEngine, clusterCache)
+	circleSync := circlesync.NewCircleSync(logger, client, gitOpsEngine, clusterCache)
+
 	if err = (&controllers.CircleReconciler{
-		Sync:          s,
+		Sync:          circleSync,
 		NetworkClient: networkingLayer,
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
@@ -170,7 +170,7 @@ func main() {
 	if autoSync {
 		go func() {
 			setupLog.Info("starting sync engine")
-			err = s.StartSyncAll(context.Background())
+			err = circleSync.StartSyncAll(context.Background())
 			if err != nil {
 				setupLog.Error(err, "problem running sync engine")
 				os.Exit(1)
@@ -178,9 +178,8 @@ func main() {
 		}()
 	}
 
-	circleServer := server.NewCircleServer(client, clusterCache, clientset, dynamicClient, s)
-	resourceServer := server.NewResourceServer(client, clusterCache, clientset, dynamicClient, s)
-	server := server.NewServer(logger, circleServer, resourceServer)
+	resourceServer := server.NewResourceServer(client, clusterCache, clientset, dynamicClient)
+	server := server.NewServer(logger, resourceServer)
 	setupLog.Info("starting grpc server")
 	if err := server.Start(); err != nil {
 		log.Fatalln(err)

@@ -7,11 +7,12 @@ import './style.scss'
 import { Resource, ResourceMetadata } from "./types";
 import DefaultNode from "./DefaultNode";
 import ResourceModal from "./ResourceModal";
+import ProjectNode from "./ProjectNode";
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-const nodeWidth = 200;
+const nodeWidth = 180;
 const nodeHeight = 60;
 const position = { x: 0, y: 0 }
 const edgeType = 'smoothstep'
@@ -51,7 +52,7 @@ const getNodeAndEdgesByResources = (resources: ResourceMetadata[]) => {
   const nodes = resources
     .map(resource => ({
       id: `${resource.name}${resource.kind}`,
-      type: 'default',
+      type: resource.kind !== "Circle" && resource.kind !== "Module" ? 'default' : 'project',
       data: resource,
       position,
     }))
@@ -78,6 +79,7 @@ const getNodeAndEdgesByResources = (resources: ResourceMetadata[]) => {
 
 const nodeTypes = {
   default: DefaultNode,
+  project: ProjectNode,
 };
 
 const Diagram = () => {

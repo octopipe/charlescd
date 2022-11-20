@@ -1,12 +1,29 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dropdown, Modal, Form, Button, ModalProps } from "react-bootstrap";
 import ModalForm from './ModalForm'
 import { CircleItemModule } from "./types";
 import Alert from "../../core/components/Alert";
 import './style.scss'
+import { CircleItem } from "../CreateCircle/types";
+import useFetch from "use-http";
+import { useParams } from "react-router-dom";
+
 
 const ModalMoveTo = ({ show, onClose }: ModalProps) => {
+  const [circles, setCircles] = useState<CircleItem[]>()
+  const { response, get } = useFetch()
+  const { workspaceId } = useParams()
+
+  const loadCircles = async () => {
+    const circle = await get(`/workspaces/${workspaceId}/circles`)
+    if (response.ok) setCircles(circle)
+  }
+
+  useEffect(() => {
+    loadCircles()
+  }, [])
+
   return (
     <Modal size="sm" show={show} onHide={onClose}>
       <Modal.Header closeButton>
@@ -14,7 +31,9 @@ const ModalMoveTo = ({ show, onClose }: ModalProps) => {
       </Modal.Header>
       <Modal.Body>
         <Form.Select>
-          <option>Circle1</option>
+          {circles?.map(circle => (
+            <option value={circle.name}>{circle.name}</option>
+          ))}
         </Form.Select>
       </Modal.Body>
       <Modal.Footer>
@@ -53,8 +72,8 @@ const CircleModules = ({ modules }: Props) => {
         <div className="circle-modules__title">
           Modules
         </div>
-        { modules.map(module => (
-          <div className={`circle-modules__item--${module.status}`} key={module.name}>
+        { modules?.map(module => (
+          <div className={module.status ? `circle-modules__item--${module.status}` : `circle-modules__item`} key={module.name}>
             {module.name}
             <Dropdown>
               <Dropdown.Toggle as={CustomToggle}>

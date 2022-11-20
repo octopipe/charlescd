@@ -3,9 +3,7 @@ package networking
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	"github.com/argoproj/gitops-engine/pkg/health"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
 	"github.com/octopipe/charlescd/butler/internal/utils"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
@@ -83,9 +81,9 @@ func newVirtualService(module charlescdiov1alpha1.CircleModule, circle charlescd
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      module.Name,
 			Namespace: circle.Spec.Namespace,
-			Annotations: map[string]string{
+			Labels: map[string]string{
 				utils.AnnotationManagedBy: utils.ManagedBy,
-				utils.AnnotationCircles:   strings.Join([]string{circle.GetName()}, " "),
+				utils.AnnotationCircles:   utils.AddCircleToLabels(string(circle.UID), map[string]string{}),
 			},
 		},
 		Spec: networkingv1alpha3.VirtualService{
@@ -112,20 +110,10 @@ func mergeVirtualServices(module charlescdiov1alpha1.CircleModule, circle charle
 		}
 	}
 
-	annotations := virtualService.GetAnnotations()
-	newCircleAnnotations := []string{circle.GetName()}
-	circleAnnotations := strings.Split(annotations[utils.AnnotationCircles], " ")
-	for _, a := range circleAnnotations {
-		if a != circle.GetName() {
-			newCircleAnnotations = append(newCircleAnnotations, a)
-		}
-	}
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	annotations[utils.AnnotationCircles] = strings.Join(newCircleAnnotations, " ")
-
-	virtualService.SetAnnotations(annotations)
+	labels := virtualService.GetLabels()
+	circlesLabel := utils.AddCircleToLabels(string(circle.UID), labels)
+	labels[utils.AnnotationCircles] = circlesLabel
+	virtualService.SetLabels(circle.Labels)
 	virtualService.Spec.Http = currentRoutes
 
 	return virtualService
@@ -164,7 +152,7 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 			Namespace: circle.Spec.Namespace,
 			Annotations: map[string]string{
 				utils.AnnotationManagedBy: utils.ManagedBy,
-				utils.AnnotationCircles:   strings.Join([]string{circle.GetName()}, " "),
+				utils.AnnotationCircles:   utils.AddCircleToLabels(string(circle.UID), map[string]string{}),
 			},
 		},
 		Spec: networkingv1alpha3.DestinationRule{
@@ -200,20 +188,10 @@ func mergeDestionRules(module charlescdiov1alpha1.CircleModule, circle charlescd
 		}
 	}
 
-	annotations := destinationRule.GetAnnotations()
-	newCircleAnnotations := []string{circle.GetName()}
-	circleAnnotations := strings.Split(annotations[utils.AnnotationCircles], " ")
-	for _, a := range circleAnnotations {
-		if a != circle.GetName() {
-			newCircleAnnotations = append(newCircleAnnotations, a)
-		}
-	}
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	annotations[utils.AnnotationCircles] = strings.Join(newCircleAnnotations, " ")
-
-	destinationRule.SetAnnotations(annotations)
+	labels := destinationRule.GetLabels()
+	circlesLabel := utils.AddCircleToLabels(string(circle.UID), labels)
+	labels[utils.AnnotationCircles] = circlesLabel
+	destinationRule.SetLabels(circle.Labels)
 	destinationRule.Spec.Subsets = subsets
 
 	return destinationRule
@@ -251,9 +229,10 @@ func (n networkingLayer) SyncIstio(circle charlescdiov1alpha1.Circle) error {
 
 	for _, module := range circle.Spec.Modules {
 		currentModule := circle.Status.Modules[module.Name]
-		if currentModule.Status != string(health.HealthStatusHealthy) {
-			continue
-		}
+		// if currentModule.Status != string(health.HealthStatusHealthy) {
+
+		//	continue
+		// }
 
 		service := getModuleService(currentModule)
 		if service == nil {

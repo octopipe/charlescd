@@ -25,12 +25,26 @@ import (
 
 // ModuleSpec defines the desired state of Module
 
+type ModuleAuth struct {
+	AuthType      string `json:"type,omitempty"`
+	SshPrivateKey string `json:"sshPrivateKey,omitempty"`
+	Username      string `json:"username,omitempty"`
+	Password      string `json:"password,omitempty"`
+	AccessToken   string `json:"accessToken,omitempty"`
+}
+
+type SecretRef struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+}
+
 type ModuleSpec struct {
-	Author         string  `json:"author,omitempty"`
-	RepositoryPath string  `json:"repositoryPath,omitempty"`
-	SecretRef      *string `json:"secretRef,omitempty"`
-	DeploymentPath string  `json:"deploymentPath,omitempty"`
-	TemplateType   string  `json:"templateType,omitempty"`
+	Author       string      `json:"author,omitempty"`
+	SecretRef    *SecretRef  `json:"secretRef,omitempty"`
+	Path         string      `json:"path,omitempty"`
+	Url          string      `json:"url,omitempty"`
+	TemplateType string      `json:"templateType,omitempty"`
+	Auth         *ModuleAuth `json:"auth,omitempty"`
 }
 
 // ModuleStatus defines the observed state of Module

@@ -1,40 +1,38 @@
 package circle
 
 import (
+	"context"
+
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/butler/api/v1alpha1"
-	pbv1 "github.com/octopipe/charlescd/moove/pb/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"github.com/octopipe/charlescd/moove/internal/core/listoptions"
 )
+
+type CircleItem struct {
+	Name        string                             `json:"name"`
+	Description string                             `json:"description"`
+	Modules     []charlescdiov1alpha1.CircleModule `json:"modules"`
+	IsDefault   bool                               `json:"isDefault"`
+	Status      charlescdiov1alpha1.CircleStatus
+}
 
 type Circle struct {
 	Name string `json:"name"`
 	charlescdiov1alpha1.CircleSpec
-}
-
-type CircleProvider struct {
-	Circle
+	Status charlescdiov1alpha1.CircleStatus
 }
 
 type CircleRepository interface {
-	FindAll(filter *pbv1.ListRequest) ([]*pbv1.CircleMetadata, error)
-	FindByName(namespace string, name string) (*pbv1.Circle, error)
-	Create(circle *pbv1.CreateCircleRequest) (*pbv1.Circle, error)
-	Update(circle *pbv1.CreateCircleRequest) (*pbv1.Circle, error)
-	Delete(namespace string, name string) error
-	GetDiagram(namespace string, name string) ([]*pbv1.Resource, error)
-	GetResource(namespace string, resourceName string, group string, kind string) (*pbv1.Resource, *unstructured.Unstructured, error)
-	GetLogs(circleName string, resourceName string, group string, kind string) (interface{}, error)
-	GetEvents(namespace string, resourceName string, kind string) ([]*pbv1.Event, error)
+	FindAll(ctx context.Context, namespace string, listoptions listoptions.Request) (listoptions.Response, error)
+	FindByName(ctx context.Context, namespace string, name string) (Circle, error)
+	Create(ctx context.Context, namespace string, circle Circle) (Circle, error)
+	Update(ctx context.Context, namespace string, name string, circle Circle) (Circle, error)
+	Delete(ctx context.Context, namespace string, name string) error
 }
 
 type CircleUseCase interface {
-	FindAll(workspaceId string) ([]*pbv1.CircleMetadata, error)
-	FindByName(workspaceId string, name string) (*pbv1.Circle, error)
-	Create(circle *pbv1.CreateCircleRequest) (*pbv1.Circle, error)
-	Update(workspaceId string, name string, circle *pbv1.CreateCircleRequest) error
-	Delete(workspaceId string, name string) error
-	GetDiagram(namespace string, name string) ([]*pbv1.Resource, error)
-	GetResource(workspaceId string, resourceName string, group string, kind string) (*pbv1.Resource, *unstructured.Unstructured, error)
-	GetLogs(circleName string, resourceName string, group string, kind string) (interface{}, error)
-	GetEvents(workspaceId string, resourceName string, kind string) ([]*pbv1.Event, error)
+	FindAll(ctx context.Context, workspaceId string, listoptions listoptions.Request) (listoptions.Response, error)
+	FindByName(ctx context.Context, workspaceId string, name string) (Circle, error)
+	Create(ctx context.Context, workspaceId string, circle Circle) (Circle, error)
+	Update(ctx context.Context, workspaceId string, name string, circle Circle) (Circle, error)
+	Delete(ctx context.Context, workspaceId string, name string) error
 }
