@@ -7,9 +7,18 @@ import (
 	"github.com/octopipe/charlescd/moove/internal/core/listoptions"
 )
 
+type ModuleAuth struct {
+	AuthType      string `json:"type,omitempty"`
+	SshPrivateKey string `json:"sshPrivateKey,omitempty"`
+	Username      string `json:"username,omitempty"`
+	Password      string `json:"password,omitempty"`
+	AccessToken   string `json:"accessToken,omitempty"`
+}
+
 type Module struct {
 	Name string `json:"name"`
 	charlescdiov1alpha1.ModuleSpec
+	Auth ModuleAuth `json:"auth"`
 }
 
 type ModuleRepository interface {

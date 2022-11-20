@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/argoproj/gitops-engine v0.7.1-0.20220829125054-c036d3f6b0e2
-	github.com/envoyproxy/protoc-gen-validate v0.9.0
 	github.com/goccy/go-yaml v1.9.5
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0

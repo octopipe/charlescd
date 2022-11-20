@@ -12,13 +12,13 @@ type CircleItem struct {
 	Description string                             `json:"description"`
 	Modules     []charlescdiov1alpha1.CircleModule `json:"modules"`
 	IsDefault   bool                               `json:"isDefault"`
-	Status      charlescdiov1alpha1.CircleStatus
+	Status      charlescdiov1alpha1.CircleStatus   `json:"status"`
 }
 
 type Circle struct {
 	Name string `json:"name"`
 	charlescdiov1alpha1.CircleSpec
-	Status charlescdiov1alpha1.CircleStatus
+	Status charlescdiov1alpha1.CircleStatus `json:"status"`
 }
 
 type CircleRepository interface {

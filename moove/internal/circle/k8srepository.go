@@ -67,6 +67,7 @@ func (r k8sRepository) FindAll(ctx context.Context, namespace string, request li
 			Name:        i.GetName(),
 			Description: i.GetNamespace(),
 			Modules:     i.Spec.Modules,
+			Status:      i.Status,
 		})
 	}
 
