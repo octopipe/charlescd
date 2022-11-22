@@ -14,7 +14,6 @@ type k8sRepository struct {
 }
 
 func NewK8sRepository(clientset client.Client) ModuleRepository {
-
 	return k8sRepository{clientset: clientset}
 }
 

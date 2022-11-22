@@ -17,15 +17,21 @@ func NewRepository(grpcClient grpcclient.Client) GrpcRepository {
 }
 
 func (r GrpcRepository) messageToResource(resourceMessage *pbv1.Resource) Resource {
+
+	owner := ResourceOwner{}
+	if resourceMessage.Owner != nil {
+		owner.Name = resourceMessage.Name
+		owner.Kind = resourceMessage.Kind
+	}
+
 	return Resource{
 		Name:      resourceMessage.Name,
 		Namespace: resourceMessage.Namespace,
 		Kind:      resourceMessage.Kind,
 		Group:     resourceMessage.Group,
-		Owner: ResourceOwner{
-			Name: resourceMessage.Owner.Name,
-			Kind: resourceMessage.Owner.Kind,
-		},
+		Owner:     owner,
+		Status:    resourceMessage.Status,
+		Message:   resourceMessage.Error,
 	}
 }
 
