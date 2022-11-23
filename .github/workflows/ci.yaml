@@ -5,9 +5,9 @@ on:
     branches:
       - main
 
-jobs:
-  example:
-    name: Run CI pipeline of modules
+jobs: 
+  butler:
+    name: Butler CI
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -18,7 +18,7 @@ jobs:
           minikube version: 'v1.26.1'
           kubernetes version: 'v1.25.0'
           github token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install proto
+      - name: Build proto
         working-directory: ./butler
         run: |
           make proto
@@ -30,3 +30,4 @@ jobs:
         working-directory: ./butler
         run: |
           make e2e-test
+    
