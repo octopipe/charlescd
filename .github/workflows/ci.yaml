@@ -5,9 +5,9 @@ on:
     branches:
       - main
 
-jobs:
-  pre:
-    name: Run CI pipeline of modules
+jobs: 
+  butler:
+    name: Butler CI
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -18,15 +18,7 @@ jobs:
           minikube version: 'v1.26.1'
           kubernetes version: 'v1.25.0'
           github token: ${{ secrets.GITHUB_TOKEN }}
-      
-  butler:
-    name: Butler CI
-    runs-on: ubuntu-latest
-    needs: [pre]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Install proto
+      - name: Build proto
         working-directory: ./butler
         run: |
           make proto
