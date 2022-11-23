@@ -180,7 +180,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circla_name}}",
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}",
 							"host": [
 								"{{MOOVE_PATH}}"
 							],
@@ -188,7 +188,7 @@
 								"workspaces",
 								"{{workspace_id}}",
 								"circles",
-								"{{circla_name}}"
+								"{{circle_name}}"
 							]
 						}
 					},
