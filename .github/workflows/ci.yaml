@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  example:
+  pre:
     name: Run CI pipeline of modules
     runs-on: ubuntu-latest
     steps:
@@ -18,6 +18,12 @@ jobs:
           minikube version: 'v1.26.1'
           kubernetes version: 'v1.25.0'
           github token: ${{ secrets.GITHUB_TOKEN }}
+      
+  butler:
+    name: Butler CI
+    runs-on: ubuntu-latest
+    needs: [pre]
+    steps:
       - name: Install proto
         working-directory: ./butler
         run: |
@@ -30,3 +36,4 @@ jobs:
         working-directory: ./butler
         run: |
           make e2e-test
+    
