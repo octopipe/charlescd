@@ -113,10 +113,20 @@ func (s *SyncCircleTestSuite) SetupTest() {
 }
 
 func (s *SyncCircleTestSuite) AfterTest(_, _ string) {
-	newCircle := newCircleObject("circle-1", "module-1")
-	newModule := newModuleObject("module-1")
-	s.clientset.Delete(context.Background(), newCircle)
-	s.clientset.Delete(context.Background(), newModule)
+	circles := &charlescdiov1alpha1.CircleList{}
+	modules := &charlescdiov1alpha1.ModuleList{}
+
+	s.clientset.List(s.ctx, circles)
+
+	for _, c := range circles.Items {
+		s.clientset.Delete(s.ctx, c.DeepCopy())
+	}
+
+	s.clientset.List(s.ctx, modules)
+
+	for _, m := range modules.Items {
+		s.clientset.Delete(s.ctx, m.DeepCopy())
+	}
 }
 
 func (s *SyncCircleTestSuite) TestSyncCircleModules() {
@@ -147,7 +157,25 @@ func (s *SyncCircleTestSuite) TestSyncCircleModules() {
 	assert.Equal(s.T(), "Service", resources[0].Kind)
 	assert.Equal(s.T(), "circle-1-guestbook-ui", resources[1].Name)
 	assert.Equal(s.T(), "Deployment", resources[1].Kind)
+}
 
+func (s *SyncCircleTestSuite) TestSyncCircleWithoutModuleInCluster() {
+	newCircle := newCircleObject("circle-error", "module-2")
+	err := s.clientset.Create(s.ctx, newCircle)
+	assert.NoError(s.T(), err)
+
+	os.Setenv("REPOSITORIES_TMP_DIR", "./tmp/repositories")
+	err = s.sync.CircleSyncModules(newCircle)
+	assert.Error(s.T(), err)
+
+	err = s.sync.Sync(newCircle)
+	assert.NoError(s.T(), err)
+
+	syncedCircle := &charlescdiov1alpha1.Circle{}
+	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)
+
+	assert.Equal(s.T(), syncedCircle.Status.Error, `modules.charlescd.io "module-2" not found`)
+	assert.Equal(s.T(), syncedCircle.Status.Status, `FAILED`)
 }
 
 func TestSyncCircleTestSuite(t *testing.T) {
