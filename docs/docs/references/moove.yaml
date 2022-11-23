@@ -217,7 +217,7 @@ paths:
                   - value: API_URL
                     key: http://service.api.com.br
                 modules:
-                  - namespace: workspace-2
+                  - namespace: workspace-test
                     overrides:
                       - value: mayconjrpacheco/dragonboarding:goku
                         key: $.spec.template.spec.containers[0].image
@@ -230,7 +230,6 @@ paths:
                     customMatch:
                       headers:
                         x-product-id: aaaaaaaaaaa
-                  strategy: 2
       parameters:
         - name: workspace_id
           in: path
@@ -359,6 +358,24 @@ paths:
       tags:
         - Workspace
       summary: Find all
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    post:
+      tags:
+        - Workspace
+      summary: Create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: Workspace test 1
+                description: Lorem ipsum
+                deployStrategy: circle
       responses:
         '200':
           description: Successful response

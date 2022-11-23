@@ -139,12 +139,24 @@
 				},
 				{
 					"name": "Create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.environment.set(\"circle_name\", jsonData.name);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"namespace\": \"workspace-2\",\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"guestbook-ui\",\n            \"revision\": \"HEAD\"\n        }\n    ],\n    \"name\": \"teste-a\",\n    \"namespace\": \"workspace-2\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"aaaaaaaaaaa\"\n                }\n            }\n        },\n        \"strategy\": 2\n    }\n}",
+							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"namespace\": \"workspace-test\",\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"guestbook-ui\",\n            \"revision\": \"HEAD\"\n        }\n    ],\n    \"name\": \"teste-a\",\n    \"namespace\": \"workspace-2\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"aaaaaaaaaaa\"\n                }\n            }\n        }\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -388,6 +400,44 @@
 							"path": [
 								"workspaces",
 								"{{workspace_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.environment.set(\"workspace_id\", jsonData.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Workspace test 1\",\n    \"description\": \"Lorem ipsum\",\n    \"deployStrategy\": \"circle\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces"
 							]
 						}
 					},
