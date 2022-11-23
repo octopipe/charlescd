@@ -17,13 +17,20 @@ theme:
     - navigation.tabs.sticky
     - navigation.top
 
+plugins:
+  - render_swagger
+
 markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
   - attr_list
   - meta
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.details
@@ -41,9 +48,14 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Installing:
+  - About:
+    - Overview: about/README.md
+    - Concepts: about/concepts.md
+  - Install:
       - Overview: install/README.md
       - Install CharlesCD with YAML: install/install-charlescd-with-yaml.md
+  - References: 
+    - Moove API: references/moove-api.md
 
 watch:
   - overrides

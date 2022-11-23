@@ -27,6 +27,9 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 proto:
 	docker run -v $(shell pwd):/pb -w /pb --rm bufbuild/buf:$(BUF_VERSION) generate
 
+swagger:
+	p2o data/postman/Moove.postman_collection.json -f ./docs/docs/references/moove.yaml
+
 e2e-test:
 	go test ./test/e2e -v
 

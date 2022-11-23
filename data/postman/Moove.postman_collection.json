@@ -1,0 +1,399 @@
+{
+	"info": {
+		"_postman_id": "03dce0f5-3e14-4e04-9f2f-046a9eb4244d",
+		"name": "Moove",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1247615"
+	},
+	"item": [
+		{
+			"name": "Circle",
+			"item": [
+				{
+					"name": "Find by name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"circles",
+								"{{circle_name}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Resource",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}/resources/{{resource_name}}?group=apps&kind=Deployment",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"circles",
+								"{{circle_name}}",
+								"resources",
+								"{{resource_name}}"
+							],
+							"query": [
+								{
+									"key": "group",
+									"value": "apps"
+								},
+								{
+									"key": "kind",
+									"value": "Deployment"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Events",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}/resources/{{resource_name}}/events?kind=ReplicaSet",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"circles",
+								"{{circle_name}}",
+								"resources",
+								"{{resource_name}}",
+								"events"
+							],
+							"query": [
+								{
+									"key": "kind",
+									"value": "ReplicaSet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Tree",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}/resources/tree",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"circles",
+								"{{circle_name}}",
+								"resources",
+								"tree"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find all",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles?limit=10",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"circles"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"namespace\": \"workspace-2\",\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"guestbook-ui\",\n            \"revision\": \"HEAD\"\n        }\n    ],\n    \"name\": \"teste-a\",\n    \"namespace\": \"workspace-2\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"aaaaaaaaaaa\"\n                }\n            }\n        },\n        \"strategy\": 2\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"circles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"namespace\": \"default\",\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"charlescd-guestbook\",\n            \"revision\": \"officia nisi pariatur laboris\"\n        }\n    ],\n    \"name\": \"circle-1\",\n    \"namespace\": \"workspace-2\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"333\"\n                }\n            }\n        },\n        \"strategy\": 2\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circla_name}}",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"circles",
+								"{{circla_name}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"namespace\": \"default\",\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"charlescd-guestbook\",\n            \"revision\": \"officia nisi pariatur laboris\"\n        }\n    ],\n    \"name\": \"circle-1\",\n    \"namespace\": \"workspace-2\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"333\"\n                }\n            }\n        },\n        \"strategy\": 2\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"circles",
+								"{{circle_name}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Module",
+			"item": [
+				{
+					"name": "Find by name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/modules/{{module_name}}",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"modules",
+								"{{module_name}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find all",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/modules",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"modules"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"guestbook-ui\",\n    \"path\": \"guestbook\",\n    \"url\": \"https://github.com/octopipe/charlescd-samples\",\n    \"teamplateType\": \"simple\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/modules",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"modules"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"guestbook-ui\",\n    \"path\": \"guestbook\",\n    \"url\": \"https://github.com/octopipe/charlescd-samples\",\n    \"teamplateType\": \"simple\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/modules/{{module_name}}",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"modules",
+								"{{module_name}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"namespace\": \"default\",\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"charlescd-guestbook\",\n            \"revision\": \"officia nisi pariatur laboris\"\n        }\n    ],\n    \"name\": \"circle-1\",\n    \"namespace\": \"workspace-2\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"333\"\n                }\n            }\n        },\n        \"strategy\": 2\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/modules/{{module_name}}",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"modules",
+								"{{module_name}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Workspace",
+			"item": [
+				{
+					"name": "Find all",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
