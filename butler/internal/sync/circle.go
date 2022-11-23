@@ -71,6 +71,10 @@ func (s CircleSync) Sync(circle *charlescdiov1alpha1.Circle) error {
 			})
 		}
 
+		circle.Status = charlescdiov1alpha1.CircleStatus{
+			Modules: make(map[string]charlescdiov1alpha1.CircleModuleStatus),
+		}
+
 		circle.Status.Modules[circleModuleName] = charlescdiov1alpha1.CircleModuleStatus{
 			Resources: circleModuleResources,
 		}

@@ -3,6 +3,7 @@ package e2e
 import (
 	"context"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
@@ -29,7 +30,7 @@ type SyncCircleTestSuite struct {
 	sync      sync.CircleSync
 }
 
-func newCircleObject(name string) *charlescdiov1alpha1.Circle {
+func newCircleObject(name string, moduleName string) *charlescdiov1alpha1.Circle {
 	newCircle := &charlescdiov1alpha1.Circle{}
 	newCircle.SetName(name)
 	newCircle.SetNamespace("default")
@@ -46,6 +47,19 @@ func newCircleObject(name string) *charlescdiov1alpha1.Circle {
 				},
 			},
 		},
+		Modules: []charlescdiov1alpha1.CircleModule{
+			{
+				Name:      moduleName,
+				Namespace: "default",
+				Revision:  "1",
+				Overrides: []charlescdiov1alpha1.Override{
+					{
+						Key:   "$.spec.template.spec.containers[0].image",
+						Value: "mayconjrpacheco/dragonboarding:goku",
+					},
+				},
+			},
+		},
 	}
 
 	return newCircle
@@ -58,14 +72,14 @@ func newModuleObject(name string) *charlescdiov1alpha1.Module {
 	newModule.Spec = charlescdiov1alpha1.ModuleSpec{
 		Path:         "guestbook",
 		Url:          "https://github.com/octopipe/charlescd-samples",
-		TemplateType: "default",
+		TemplateType: "simple",
 		Author:       "test",
 	}
 
 	return newModule
 }
 
-func (s *SyncCircleTestSuite) newSyncWithDependencies(config *rest.Config) sync.CircleSync {
+func (s *SyncCircleTestSuite) newSyncWithDependencies(config *rest.Config, logger logr.Logger) sync.CircleSync {
 	clusterCache := cache.NewClusterCache(config,
 		cache.SetNamespaces([]string{}),
 		cache.SetPopulateResourceInfoHandler(func(un *unstructured.Unstructured, isRoot bool) (interface{}, bool) {
@@ -78,13 +92,14 @@ func (s *SyncCircleTestSuite) newSyncWithDependencies(config *rest.Config) sync.
 		}),
 	)
 
-	gitopsEngine := engine.NewEngine(config, clusterCache, engine.WithLogr(logr.Logger{}))
-	circleSync := sync.NewCircleSync(logr.Logger{}, s.clientset, gitopsEngine, clusterCache)
+	gitopsEngine := engine.NewEngine(config, clusterCache, engine.WithLogr(logger))
+	circleSync := sync.NewCircleSync(logger, s.clientset, gitopsEngine, clusterCache)
 	return circleSync
 }
 
 func (s *SyncCircleTestSuite) SetupTest() {
 	scheme := runtime.NewScheme()
+	setupLog := ctrl.Log.WithName("setup")
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(charlescdiov1alpha1.AddToScheme(scheme))
 	config := ctrl.GetConfigOrDie()
@@ -94,25 +109,45 @@ func (s *SyncCircleTestSuite) SetupTest() {
 	}
 	s.ctx = context.Background()
 	s.clientset = clientset
-	s.sync = s.newSyncWithDependencies(config)
+	s.sync = s.newSyncWithDependencies(config, setupLog)
 }
 
 func (s *SyncCircleTestSuite) AfterTest(_, _ string) {
-	newCircle := newCircleObject("circle-1")
+	newCircle := newCircleObject("circle-1", "module-1")
 	newModule := newModuleObject("module-1")
 	s.clientset.Delete(context.Background(), newCircle)
 	s.clientset.Delete(context.Background(), newModule)
 }
 
-func (s *SyncCircleTestSuite) TestSyncCircle() {
+func (s *SyncCircleTestSuite) TestSyncCircleModules() {
 	newModule := newModuleObject("module-1")
-	newCircle := newCircleObject("circle-1")
+	newCircle := newCircleObject("circle-1", "module-1")
 	err := s.clientset.Create(s.ctx, newModule)
 	assert.NoError(s.T(), err)
 	err = s.clientset.Create(s.ctx, newCircle)
 	assert.NoError(s.T(), err)
+
+	os.Setenv("REPOSITORIES_TMP_DIR", "./tmp/repositories")
+	err = s.sync.CircleSyncModules(newCircle)
+	assert.NoError(s.T(), err)
+
 	err = s.sync.Sync(newCircle)
 	assert.NoError(s.T(), err)
+
+	syncedCircle := &charlescdiov1alpha1.Circle{}
+	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)
+
+	assert.Equal(s.T(), syncedCircle.Status.Error, "")
+
+	log.Println(syncedCircle.Status)
+
+	resources := syncedCircle.Status.Modules["module-1"].Resources
+	assert.Equal(s.T(), 2, len(resources))
+	assert.Equal(s.T(), "guestbook-ui", resources[0].Name)
+	assert.Equal(s.T(), "Service", resources[0].Kind)
+	assert.Equal(s.T(), "circle-1-guestbook-ui", resources[1].Name)
+	assert.Equal(s.T(), "Deployment", resources[1].Kind)
+
 }
 
 func TestSyncCircleTestSuite(t *testing.T) {
