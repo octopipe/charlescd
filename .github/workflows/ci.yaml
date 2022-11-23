@@ -24,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [pre]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Install proto
         working-directory: ./butler
         run: |
