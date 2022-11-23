@@ -18,6 +18,14 @@ jobs:
           minikube version: 'v1.26.1'
           kubernetes version: 'v1.25.0'
           github token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install proto
+        working-directory: ./butler
+        run: |
+          make proto
+      - name: Install crds
+        working-directory: ./butler
+        run: |
+          make install
       - name: Run butler e2e tests
         working-directory: ./butler
         run: |
