@@ -1,9 +1,0 @@
-apiVersion: charlescd.io/v1alpha1
-kind: Module
-metadata:
-  name: charlescd-guestbook
-spec:
-  author: Mayco Pacheco
-  repositoryPath: https://github.com/argoproj/argocd-example-apps.git
-  deploymentPath: guestbook
-  templateType: simple

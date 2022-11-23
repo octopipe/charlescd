@@ -1,0 +1,26 @@
+domain: charlescd.io
+layout:
+- go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: butler
+repo: github.com/octopipe/charlescd/butler
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: charlescd.io
+  kind: Module
+  path: github.com/octopipe/charlescd/pkg/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: charlescd.io
+  kind: Circle
+  path: github.com/octopipe/charlescd/pkg/api/v1alpha1
+  version: v1alpha1
+version: "3"
