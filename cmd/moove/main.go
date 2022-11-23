@@ -54,13 +54,13 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	workspaceRepository := workspace.NewRepository(db)
-	workspaceUseCase := workspace.NewUseCase(workspaceRepository)
-
 	clientset, err := client.New(k8sConfig, client.Options{Scheme: scheme})
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	workspaceRepository := workspace.NewRepository(db, clientset)
+	workspaceUseCase := workspace.NewUseCase(workspaceRepository)
 
 	circleRepository := circle.NewK8sRepository(clientset)
 	circleUseCase := circle.NewUseCase(workspaceUseCase, circleRepository)

@@ -27,22 +27,23 @@ func (r k8sRepository) toCircle(c charlescdiov1alpha1.Circle) Circle {
 	return circle
 }
 
-func (r k8sRepository) toK8sCircle(c Circle) charlescdiov1alpha1.Circle {
+func (r k8sRepository) toK8sCircle(workspace string, c Circle) charlescdiov1alpha1.Circle {
 	circle := charlescdiov1alpha1.Circle{}
 	circle.SetName(c.Name)
+	circle.SetNamespace(workspace)
 	circle.Spec = c.CircleSpec
 	return circle
 }
 
 // Create implements CircleRepository
 func (r k8sRepository) Create(ctx context.Context, workspace string, circle Circle) (Circle, error) {
-	newCircle := r.toK8sCircle(circle)
+	newCircle := r.toK8sCircle(workspace, circle)
 	err := r.clientset.Create(ctx, &newCircle)
 	return r.toCircle(newCircle), err
 }
 
 func (r k8sRepository) Update(ctx context.Context, workspace string, name string, circle Circle) (Circle, error) {
-	newCircle := r.toK8sCircle(circle)
+	newCircle := r.toK8sCircle(workspace, circle)
 	err := r.clientset.Update(ctx, &newCircle)
 	return r.toCircle(newCircle), err
 }

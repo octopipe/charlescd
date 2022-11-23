@@ -1,19 +1,33 @@
 package workspace
 
 import (
+	"context"
+
+	"github.com/iancoleman/strcase"
 	"gorm.io/gorm"
+	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type GormRepository struct {
-	db *gorm.DB
+	db        *gorm.DB
+	clientset client.Client
 }
 
-func NewRepository(db *gorm.DB) WorkspaceRepository {
-	return GormRepository{db: db}
+func NewRepository(db *gorm.DB, clientset client.Client) WorkspaceRepository {
+	return GormRepository{db: db, clientset: clientset}
 }
 
 // Create implements WorkspaceRepository
 func (r GormRepository) Create(workspace Workspace) (WorkspaceModel, error) {
+	newNamespace := v1.Namespace{}
+	newNamespace.SetName(strcase.ToKebab(workspace.Name))
+
+	err := r.clientset.Create(context.Background(), &newNamespace)
+	if err != nil {
+		return WorkspaceModel{}, err
+	}
+
 	workspaceModel := WorkspaceModel{Workspace: workspace}
 	res := r.db.Table("workspaces").Save(&workspaceModel)
 	if res.Error != nil {
