@@ -247,5 +247,8 @@ proto:
 # 	--go-grpc_out=. \
 # 	--govalidators_out=. \
 # 	pb/v1/*.proto
+
+e2e-test:
+	go test ./test/e2e -v
 		
 
