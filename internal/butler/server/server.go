@@ -29,6 +29,7 @@ func serverIntercepetor(logger logr.Logger) func(ctx context.Context, req interf
 
 func NewServer(
 	logger logr.Logger,
+	circleServer pbv1.CircleServiceServer,
 	resourceServer pbv1.ResourceServiceServer,
 ) *server {
 	lis, err := net.Listen("tcp", ":3000")
@@ -43,6 +44,7 @@ func NewServer(
 		grpcServer: grpcServer,
 		listener:   lis,
 	}
+	pbv1.RegisterCircleServiceServer(grpcServer, circleServer)
 	pbv1.RegisterResourceServiceServer(grpcServer, resourceServer)
 
 	return s

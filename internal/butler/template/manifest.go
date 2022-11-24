@@ -11,6 +11,7 @@ import (
 	"github.com/octopipe/charlescd/internal/butler/utils"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func (t template) addLabels(currentLabels map[string]string, manifest *unstructured.Unstructured, module charlescdiov1alpha1.Module, circle charlescdiov1alpha1.Circle) map[string]string {
@@ -19,13 +20,14 @@ func (t template) addLabels(currentLabels map[string]string, manifest *unstructu
 		labels = make(map[string]string)
 	}
 
+	namespacedName := types.NamespacedName{Name: circle.Name, Namespace: circle.Namespace}
 	labels[utils.AnnotationManagedBy] = utils.ManagedBy
 
 	if manifest.GetKind() == "Service" {
-		labels[utils.AnnotationCircles] = utils.AddCircleToLabels(string(circle.UID), labels)
+		labels[utils.AnnotationCircles] = utils.AddCircleToLabels(utils.GetCircleMark(namespacedName), labels)
 	} else {
 		labels[utils.AnnotationModuleMark] = string(module.UID)
-		labels[utils.AnnotationCircleMark] = string(circle.UID)
+		labels[utils.AnnotationCircleMark] = utils.GetCircleMark(namespacedName)
 	}
 
 	return labels

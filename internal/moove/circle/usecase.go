@@ -8,12 +8,14 @@ import (
 )
 
 type UseCase struct {
+	circleProvider   CircleProvider
 	circleRepository CircleRepository
 	workspaceUseCase workspace.WorkspaceUseCase
 }
 
-func NewUseCase(workspaceUseCase workspace.WorkspaceUseCase, circleRepository CircleRepository) CircleUseCase {
+func NewUseCase(workspaceUseCase workspace.WorkspaceUseCase, circleProvider CircleProvider, circleRepository CircleRepository) CircleUseCase {
 	return UseCase{
+		circleProvider:   circleProvider,
 		circleRepository: circleRepository,
 		workspaceUseCase: workspaceUseCase,
 	}
@@ -41,7 +43,7 @@ func (u UseCase) Delete(ctx context.Context, workspaceId string, name string) er
 		return err
 	}
 
-	err = u.circleRepository.Delete(ctx, name, namespace)
+	err = u.circleRepository.Delete(ctx, namespace, name)
 	if err != nil {
 		return err
 	}
@@ -77,6 +79,16 @@ func (u UseCase) FindByName(ctx context.Context, workspaceId string, name string
 	}
 
 	return circle, nil
+}
+
+func (u UseCase) Sync(ctx context.Context, workspaceId string, name string) error {
+	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
+	if err != nil {
+		return err
+	}
+
+	err = u.circleProvider.Sync(ctx, namespace, name)
+	return err
 }
 
 // Update implements CircleUseCase

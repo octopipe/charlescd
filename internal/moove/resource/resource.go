@@ -26,7 +26,7 @@ type ResourceEvent struct {
 	Action  string `json:"action"`
 }
 
-type ResourceRepository interface {
+type ResourceProvider interface {
 	GetTree(ctx context.Context, namespace string, name string) ([]Resource, error)
 	GetResource(ctx context.Context, namespace string, resourceName string, group string, kind string) (Resource, error)
 	GetLogs(ctx context.Context, circleName string, resourceName string, group string, kind string) (interface{}, error)

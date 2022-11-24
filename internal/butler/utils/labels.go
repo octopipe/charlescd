@@ -3,6 +3,8 @@ package utils
 import (
 	"fmt"
 	"strings"
+
+	"k8s.io/apimachinery/pkg/types"
 )
 
 const (
@@ -18,6 +20,10 @@ type ResourceInfo struct {
 	ModuleMark string
 	CircleMark string
 	ManagedBy  string
+}
+
+func GetCircleMark(namespacedName types.NamespacedName) string {
+	return fmt.Sprintf("%s_%s", namespacedName.Name, namespacedName.Namespace)
 }
 
 func AddCircleToLabels(circleReference string, currentLabels map[string]string) string {

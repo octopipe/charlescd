@@ -63,13 +63,14 @@ func main() {
 	workspaceUseCase := workspace.NewUseCase(workspaceRepository)
 
 	circleRepository := circle.NewK8sRepository(clientset)
-	circleUseCase := circle.NewUseCase(workspaceUseCase, circleRepository)
+	circleProvider := circle.NewGrpcProvider(grpcClient)
+	circleUseCase := circle.NewUseCase(workspaceUseCase, circleProvider, circleRepository)
 
 	moduleRepository := module.NewK8sRepository(clientset)
 	moduleUseCase := module.NewUseCase(workspaceUseCase, moduleRepository)
 
-	resourceRepository := resource.NewRepository(grpcClient)
-	resourceUseCase := resource.NewUseCase(workspaceUseCase, resourceRepository)
+	resourceProvider := resource.NewGrpcProvider(grpcClient)
+	resourceUseCase := resource.NewUseCase(workspaceUseCase, resourceProvider)
 
 	e := echo.New()
 	e.Use(middleware.CORS())

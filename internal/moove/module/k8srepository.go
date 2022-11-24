@@ -25,22 +25,23 @@ func (r k8sRepository) toModule(c charlescdiov1alpha1.Module) Module {
 	return module
 }
 
-func (r k8sRepository) toK8sModule(c Module) charlescdiov1alpha1.Module {
+func (r k8sRepository) toK8sModule(workspace string, c Module) charlescdiov1alpha1.Module {
 	module := charlescdiov1alpha1.Module{}
 	module.SetName(c.Name)
+	module.SetNamespace(workspace)
 	module.Spec = c.ModuleSpec
 	return module
 }
 
 // Create implements ModuleRepository
 func (r k8sRepository) Create(ctx context.Context, workspace string, module Module) (Module, error) {
-	newModule := r.toK8sModule(module)
+	newModule := r.toK8sModule(workspace, module)
 	err := r.clientset.Create(ctx, &newModule)
 	return r.toModule(newModule), err
 }
 
 func (r k8sRepository) Update(ctx context.Context, workspace string, name string, module Module) (Module, error) {
-	newModule := r.toK8sModule(module)
+	newModule := r.toK8sModule(workspace, module)
 	err := r.clientset.Update(ctx, &newModule)
 	return r.toModule(newModule), err
 }

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package v1;
+
+option go_package = "./v1";
+
+import "google/protobuf/any.proto";
+
+service CircleService {
+  rpc Sync(SyncRequest) returns (google.protobuf.Any) {}
+}
+
+message SyncRequest {
+  string circleName = 1;
+  string circleNamespace = 2;
+}

@@ -14,6 +14,7 @@ import (
 	"github.com/octopipe/charlescd/internal/butler/utils"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -36,19 +37,19 @@ func NewCircleSync(logger logr.Logger, client client.Client, gitopsEngine engine
 	}
 }
 
-func (s CircleSync) Sync(circle *charlescdiov1alpha1.Circle) error {
-	targets := s.targets[string(circle.UID)]
+func (s CircleSync) SyncCircle(circle *charlescdiov1alpha1.Circle) error {
 	namespace := "default"
 	if circle.Spec.Namespace != "" {
 		namespace = circle.Spec.Namespace
 	}
-
+	namespacedName := types.NamespacedName{Name: circle.Name, Namespace: namespace}
+	targets := s.targets[utils.GetCircleMark(namespacedName)]
 	for circleModuleName, circleModuleTargets := range targets {
 		res, err := s.gitopsEngine.Sync(
 			context.Background(),
 			circleModuleTargets,
 			func(r *cache.Resource) bool {
-				isSameCircle := r.Info.(*utils.ResourceInfo).CircleMark == string(circle.UID)
+				isSameCircle := r.Info.(*utils.ResourceInfo).CircleMark == utils.GetCircleMark(namespacedName)
 				return isSameCircle
 			},
 			time.Now().String(),
@@ -85,6 +86,23 @@ func (s CircleSync) Sync(circle *charlescdiov1alpha1.Circle) error {
 	}
 
 	return nil
+}
+
+func (s CircleSync) SyncCircleDeletion(namespacedName types.NamespacedName) error {
+	_, err := s.gitopsEngine.Sync(
+		context.Background(),
+		[]*unstructured.Unstructured{},
+		func(r *cache.Resource) bool {
+			fmt.Println("INFOOOOO", r.Info)
+			isSameCircle := r.Info.(*utils.ResourceInfo).CircleMark == utils.GetCircleMark(namespacedName)
+			return isSameCircle
+		},
+		time.Now().String(),
+		namespacedName.Namespace,
+		sync.WithPrune(true),
+		sync.WithLogr(s.logger),
+	)
+	return err
 }
 
 func (s CircleSync) StartSyncAll(ctx context.Context) error {

@@ -5,19 +5,22 @@ import (
 
 	"github.com/octopipe/charlescd/internal/butler/repository"
 	"github.com/octopipe/charlescd/internal/butler/template"
+	"github.com/octopipe/charlescd/internal/butler/utils"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func (s *CircleSync) CircleSyncModules(circle *charlescdiov1alpha1.Circle) error {
-	if _, ok := s.targets[string(circle.UID)]; !ok {
-		s.targets[string(circle.UID)] = map[string][]*unstructured.Unstructured{}
+	namespacedName := types.NamespacedName{Name: circle.Name, Namespace: circle.Namespace}
+	if _, ok := s.targets[utils.GetCircleMark(namespacedName)]; !ok {
+		s.targets[utils.GetCircleMark(namespacedName)] = map[string][]*unstructured.Unstructured{}
 	}
 
 	for _, m := range circle.Spec.Modules {
 		module := &charlescdiov1alpha1.Module{}
-		err := s.Get(context.Background(), client.ObjectKey{Namespace: m.Namespace, Name: m.Name}, module)
+		moduleNamespacedName := types.NamespacedName{Namespace: m.Namespace, Name: m.Name}
+		err := s.Get(context.Background(), moduleNamespacedName, module)
 		if err != nil {
 			s.addSyncErrorToCircleModule(circle, m.Name, err)
 			return err
@@ -36,7 +39,7 @@ func (s *CircleSync) CircleSyncModules(circle *charlescdiov1alpha1.Circle) error
 			s.addSyncErrorToCircleModule(circle, m.Name, err)
 			return err
 		}
-		s.targets[string(circle.UID)][module.Name] = newTargets
+		s.targets[utils.GetCircleMark(namespacedName)][module.Name] = newTargets
 	}
 
 	return nil

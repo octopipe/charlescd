@@ -7,14 +7,14 @@ import (
 )
 
 type UseCase struct {
-	resourceRepository ResourceRepository
-	workspaceUseCase   workspace.WorkspaceUseCase
+	resourceProvider ResourceProvider
+	workspaceUseCase workspace.WorkspaceUseCase
 }
 
-func NewUseCase(workspaceUseCase workspace.WorkspaceUseCase, resourceRepository ResourceRepository) ResourceUseCase {
+func NewUseCase(workspaceUseCase workspace.WorkspaceUseCase, resourceProvider ResourceProvider) ResourceUseCase {
 	return UseCase{
-		resourceRepository: resourceRepository,
-		workspaceUseCase:   workspaceUseCase,
+		resourceProvider: resourceProvider,
+		workspaceUseCase: workspaceUseCase,
 	}
 }
 
@@ -25,7 +25,7 @@ func (u UseCase) GetTree(ctx context.Context, workspaceId string, name string) (
 		return nil, err
 	}
 
-	items, err := u.resourceRepository.GetTree(ctx, namespace, name)
+	items, err := u.resourceProvider.GetTree(ctx, namespace, name)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (u UseCase) GetEvents(ctx context.Context, workspaceId string, resourceName
 		return nil, err
 	}
 
-	events, err := u.resourceRepository.GetEvents(ctx, namespace, resourceName, kind)
+	events, err := u.resourceProvider.GetEvents(ctx, namespace, resourceName, kind)
 	return events, err
 }
 
@@ -56,6 +56,6 @@ func (u UseCase) GetResource(ctx context.Context, workspaceId string, resourceNa
 		return Resource{}, err
 	}
 
-	resource, err := u.resourceRepository.GetResource(ctx, namespace, resourceName, group, kind)
+	resource, err := u.resourceProvider.GetResource(ctx, namespace, resourceName, group, kind)
 	return resource, err
 }

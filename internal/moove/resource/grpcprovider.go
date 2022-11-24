@@ -8,15 +8,15 @@ import (
 	pbv1 "github.com/octopipe/charlescd/pb/v1"
 )
 
-type GrpcRepository struct {
+type GrpcProvider struct {
 	grpcClient grpcclient.Client
 }
 
-func NewRepository(grpcClient grpcclient.Client) GrpcRepository {
-	return GrpcRepository{grpcClient: grpcClient}
+func NewGrpcProvider(grpcClient grpcclient.Client) GrpcProvider {
+	return GrpcProvider{grpcClient: grpcClient}
 }
 
-func (r GrpcRepository) messageToResource(resourceMessage *pbv1.Resource) Resource {
+func (r GrpcProvider) messageToResource(resourceMessage *pbv1.Resource) Resource {
 
 	owner := ResourceOwner{}
 	if resourceMessage.Owner != nil {
@@ -35,7 +35,7 @@ func (r GrpcRepository) messageToResource(resourceMessage *pbv1.Resource) Resour
 	}
 }
 
-func (r GrpcRepository) GetTree(ctx context.Context, namespace string, name string) ([]Resource, error) {
+func (r GrpcProvider) GetTree(ctx context.Context, namespace string, name string) ([]Resource, error) {
 	tree, err := r.grpcClient.ResourceClient.Tree(ctx, &pbv1.TreeRequest{
 		CircleName:      name,
 		CircleNamespace: namespace,
@@ -53,7 +53,7 @@ func (r GrpcRepository) GetTree(ctx context.Context, namespace string, name stri
 }
 
 // GetEvents implements CircleRepository
-func (r GrpcRepository) GetEvents(ctx context.Context, namespace string, resourceName string, kind string) ([]ResourceEvent, error) {
+func (r GrpcProvider) GetEvents(ctx context.Context, namespace string, resourceName string, kind string) ([]ResourceEvent, error) {
 	eventsResponse, err := r.grpcClient.ResourceClient.Events(ctx, &pbv1.EventsRequest{
 		Name:      resourceName,
 		Namespace: namespace,
@@ -78,12 +78,12 @@ func (r GrpcRepository) GetEvents(ctx context.Context, namespace string, resourc
 }
 
 // GetLogs implements CircleRepository
-func (r GrpcRepository) GetLogs(ctx context.Context, circleName string, resourceName string, group string, kind string) (interface{}, error) {
+func (r GrpcProvider) GetLogs(ctx context.Context, circleName string, resourceName string, group string, kind string) (interface{}, error) {
 	return nil, nil
 }
 
 // GetResource implements CircleRepository
-func (r GrpcRepository) GetResource(ctx context.Context, namespace string, resourceName string, group string, kind string) (Resource, error) {
+func (r GrpcProvider) GetResource(ctx context.Context, namespace string, resourceName string, group string, kind string) (Resource, error) {
 	resourceMessage, err := r.grpcClient.ResourceClient.Get(ctx, &pbv1.GetResourceRequest{
 		Namespace: namespace,
 		Name:      resourceName,
