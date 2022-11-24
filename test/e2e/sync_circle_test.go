@@ -168,7 +168,7 @@ func (s *SyncCircleTestSuite) TestSyncCircleWithoutModuleInCluster() {
 	err = s.sync.CircleSyncModules(newCircle)
 	assert.Error(s.T(), err)
 
-	err = s.sync.Sync(newCircle)
+	err = s.sync.SyncCircle(newCircle)
 	assert.NoError(s.T(), err)
 
 	syncedCircle := &charlescdiov1alpha1.Circle{}

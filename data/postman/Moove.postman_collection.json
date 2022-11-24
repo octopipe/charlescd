@@ -156,7 +156,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"namespace\": \"workspace-test\",\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"guestbook-ui\",\n            \"revision\": \"HEAD\"\n        }\n    ],\n    \"name\": \"teste-a\",\n    \"namespace\": \"workspace-2\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"aaaaaaaaaaa\"\n                }\n            }\n        }\n    }\n}",
+							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"guestbook-ui\",\n            \"revision\": \"HEAD\"\n        }\n    ],\n    \"name\": \"teste-f\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"aaaaaaaaaaa\"\n                }\n            }\n        }\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -178,13 +178,54 @@
 					"response": []
 				},
 				{
+					"name": "Sync",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}/sync",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}",
+								"circles",
+								"{{circle_name}}",
+								"sync"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Update",
 					"request": {
 						"method": "PUT",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"namespace\": \"default\",\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"charlescd-guestbook\",\n            \"revision\": \"officia nisi pariatur laboris\"\n        }\n    ],\n    \"name\": \"circle-1\",\n    \"namespace\": \"workspace-2\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"333\"\n                }\n            }\n        },\n        \"strategy\": 2\n    }\n}",
+							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"guestbook-ui\",\n            \"revision\": \"HEAD\"\n        }\n    ],\n    \"name\": \"teste-c\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"aaaaaaaaaaa\"\n                }\n            }\n        }\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -281,12 +322,24 @@
 				},
 				{
 					"name": "Create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.environment.set(\"module_name\", jsonData.name);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"guestbook-ui\",\n    \"path\": \"guestbook\",\n    \"url\": \"https://github.com/octopipe/charlescd-samples\",\n    \"teamplateType\": \"simple\" \n}",
+							"raw": "{\n    \"name\": \"guestbook-ui\",\n    \"path\": \"guestbook\",\n    \"url\": \"https://github.com/octopipe/charlescd-samples\",\n    \"templateType\": \"simple\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -294,14 +347,15 @@
 							}
 						},
 						"url": {
-							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/modules",
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/modules/{{module_name}}",
 							"host": [
 								"{{MOOVE_PATH}}"
 							],
 							"path": [
 								"workspaces",
 								"{{workspace_id}}",
-								"modules"
+								"modules",
+								"{{module_name}}"
 							]
 						}
 					},
@@ -314,7 +368,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"guestbook-ui\",\n    \"path\": \"guestbook\",\n    \"url\": \"https://github.com/octopipe/charlescd-samples\",\n    \"teamplateType\": \"simple\" \n}",
+							"raw": "{\n    \"name\": \"guestbook-ui\",\n    \"path\": \"guestbook\",\n    \"url\": \"https://github.com/octopipe/charlescd-samples\",\n    \"templateType\": \"simple\" \n}",
 							"options": {
 								"raw": {
 									"language": "json"
