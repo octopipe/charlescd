@@ -31,7 +31,7 @@ swagger:
 	p2o data/postman/Moove.postman_collection.json -f ./docs/docs/references/moove.yaml
 
 e2e-test:
-	go test ./test/e2e -v
+	go test ./test -v
 
 ## BUTLER
 

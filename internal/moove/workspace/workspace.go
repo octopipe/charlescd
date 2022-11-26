@@ -1,9 +1,5 @@
 package workspace
 
-import (
-	"github.com/octopipe/charlescd/internal/moove/core/gorm"
-)
-
 const (
 	IstioNetworking = "istio"
 	GateNetworking  = "gate"
@@ -21,7 +17,8 @@ type Workspace struct {
 }
 
 type WorkspaceModel struct {
-	gorm.Model
+	ID        string `json:"id"`
+	CreatedAt string `json:"createdAt"`
 	Workspace
 }
 

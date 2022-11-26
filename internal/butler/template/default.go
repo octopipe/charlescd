@@ -10,7 +10,7 @@ import (
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 )
 
-func (t template) GetSimpleManifests(module charlescdiov1alpha1.Module, circle charlescdiov1alpha1.Circle) ([][]byte, error) {
+func (t template) GetDefaultManifests(module charlescdiov1alpha1.Module, circle charlescdiov1alpha1.Circle) ([][]byte, error) {
 	manifests := [][]byte{}
 	deploymentPath := module.Spec.Path
 	repositoryPath := fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), module.Spec.Path)

@@ -18,7 +18,7 @@ type EchoHandler struct {
 	validator     customvalidator.CustomValidator
 }
 
-func NewEchohandler(e *echo.Echo, logger *zap.Logger, circleUseCase circle.CircleUseCase) {
+func NewEchohandler(e *echo.Echo, logger *zap.Logger, circleUseCase circle.CircleUseCase) EchoHandler {
 	handler := EchoHandler{
 		logger:        logger,
 		circleUseCase: circleUseCase,
@@ -31,6 +31,8 @@ func NewEchohandler(e *echo.Echo, logger *zap.Logger, circleUseCase circle.Circl
 	s.GET("/:circleName", handler.FindById)
 	s.PUT("/:circleName", handler.Update)
 	s.DELETE("/:circleName", handler.Delete)
+
+	return handler
 }
 
 func (h EchoHandler) FindAll(c echo.Context) error {

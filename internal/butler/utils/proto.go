@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/jsonpb"
@@ -27,8 +26,6 @@ func StructToMessage(obj interface{}, message proto.Message) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(string(b))
 
 	err = jsonpb.UnmarshalString(string(b), message)
 	if err != nil {

@@ -93,7 +93,6 @@ func (s CircleSync) SyncCircleDeletion(namespacedName types.NamespacedName) erro
 		context.Background(),
 		[]*unstructured.Unstructured{},
 		func(r *cache.Resource) bool {
-			fmt.Println("INFOOOOO", r.Info)
 			isSameCircle := r.Info.(*utils.ResourceInfo).CircleMark == utils.GetCircleMark(namespacedName)
 			return isSameCircle
 		},

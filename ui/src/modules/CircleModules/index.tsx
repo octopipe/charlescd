@@ -8,10 +8,11 @@ import './style.scss'
 import { CircleItem } from "../CreateCircle/types";
 import useFetch from "use-http";
 import { useParams } from "react-router-dom";
+import { CirclePagination } from "../Circles/types";
 
 
 const ModalMoveTo = ({ show, onClose }: ModalProps) => {
-  const [circles, setCircles] = useState<CircleItem[]>()
+  const [circles, setCircles] = useState<CirclePagination>({continue: '', items: []})
   const { response, get } = useFetch()
   const { workspaceId } = useParams()
 
@@ -31,7 +32,7 @@ const ModalMoveTo = ({ show, onClose }: ModalProps) => {
       </Modal.Header>
       <Modal.Body>
         <Form.Select>
-          {circles?.map(circle => (
+          {circles?.items?.map(circle => (
             <option value={circle.name}>{circle.name}</option>
           ))}
         </Form.Select>

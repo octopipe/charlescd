@@ -11,16 +11,10 @@ type Kind uint8
 
 type Code string
 
-type ErrorField struct {
-	name       string
-	validation string
-}
-
 type Error struct {
-	Kind   Kind
-	Code   Code
-	Err    error
-	Fields []ErrorField
+	Kind Kind
+	Code Code
+	Err  error
 }
 
 const (
@@ -80,7 +74,11 @@ func (k Kind) String() string {
 	return "unknown_error_kind"
 }
 
-func (e Error) Error() string {
+func (e *Error) Unwrap() error {
+	return e.Err
+}
+
+func (e *Error) Error() string {
 	return e.Err.Error()
 }
 

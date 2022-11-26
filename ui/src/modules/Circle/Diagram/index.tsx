@@ -91,7 +91,7 @@ const Diagram = () => {
   const [selectedNode, setSelectedNode] = useState<Node<ResourceMetadata> | undefined>(undefined)
 
   const loadDiagram = async () => {
-    const circles = await get(`/workspaces/${workspaceId}/circles/${circleName}/diagram`)
+    const circles = await get(`/workspaces/${workspaceId}/circles/${circleName}/resources/tree`)
     if (response.ok) setDiagram(circles || [])
   }
 

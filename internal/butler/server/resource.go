@@ -175,12 +175,7 @@ func (r ResourceServer) Tree(ctx context.Context, request *pbv1.TreeRequest) (*p
 
 			r.clusterCache.IterateHierarchy(kubeKey, func(resource *cache.Resource, namespaceResources map[kube.ResourceKey]*cache.Resource) bool {
 				currentOwner := &pbv1.ResourceOwner{}
-				if resource.OwnerRefs == nil || len(resource.OwnerRefs) <= 0 {
-					currentOwner = &pbv1.ResourceOwner{
-						Name: moduleResource.Name,
-						Kind: moduleResource.Kind,
-					}
-				} else if len(resource.OwnerRefs) > 0 {
+				if len(resource.OwnerRefs) > 0 {
 					currentOwner = &pbv1.ResourceOwner{
 						Name: resource.OwnerRefs[0].Name,
 						Kind: resource.OwnerRefs[0].Kind,
@@ -199,9 +194,7 @@ func (r ResourceServer) Tree(ctx context.Context, request *pbv1.TreeRequest) (*p
 				})
 				return true
 			})
-
 		}
-
 	}
 
 	return &pbv1.TreeResponse{

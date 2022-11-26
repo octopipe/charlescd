@@ -17,8 +17,6 @@ import (
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -42,13 +40,6 @@ func main() {
 
 	k8sConfig := ctrl.GetConfigOrDie()
 
-	db, err := gorm.Open(sqlite.Open("sample.db"), &gorm.Config{})
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	db.Table("workspaces").AutoMigrate(&workspace.WorkspaceModel{})
-
 	grpcClient, err := grpcclient.NewGrpcClient()
 	if err != nil {
 		log.Fatalln(err)
@@ -59,7 +50,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	workspaceRepository := workspace.NewRepository(db, clientset)
+	workspaceRepository := workspace.NewRepository(clientset)
 	workspaceUseCase := workspace.NewUseCase(workspaceRepository)
 
 	circleRepository := circle.NewK8sRepository(clientset)

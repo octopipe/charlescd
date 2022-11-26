@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  butler:
+    build: .
+    ports:
+      - "8000:5000"
+  moove:
+    image: "redis:alpine"

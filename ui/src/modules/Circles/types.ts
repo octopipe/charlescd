@@ -7,3 +7,8 @@ export interface CircleItem {
   isDefault: boolean
   modules: CircleItemModule[]
 }
+
+export interface CirclePagination {
+  continue: string
+  items: CircleItem[]
+}

@@ -14,7 +14,7 @@ type EchoHandler struct {
 	validator        customvalidator.CustomValidator
 }
 
-func NewEchohandler(e *echo.Echo, logger *zap.Logger, workspaceUseCase workspace.WorkspaceUseCase) {
+func NewEchohandler(e *echo.Echo, logger *zap.Logger, workspaceUseCase workspace.WorkspaceUseCase) EchoHandler {
 	handler := EchoHandler{
 		logger:           logger,
 		workspaceUseCase: workspaceUseCase,
@@ -26,6 +26,8 @@ func NewEchohandler(e *echo.Echo, logger *zap.Logger, workspaceUseCase workspace
 	s.GET("/:workspaceId", handler.FindById)
 	s.PUT("/:workspaceId", handler.Update)
 	s.DELETE("/:workspaceId", handler.Delete)
+
+	return handler
 }
 
 func (h EchoHandler) FindAll(c echo.Context) error {
@@ -43,7 +45,8 @@ func (h EchoHandler) Create(c echo.Context) error {
 	}
 
 	if err := h.validator.Validate(w); err != nil {
-		return err
+		validateErr := errs.E(errs.Validation, errs.Code("WORKSPACE_HTTP_VALIDATIONS"), err)
+		return errs.NewHTTPResponse(c, h.logger, validateErr)
 	}
 
 	newWorkspace, err := h.workspaceUseCase.Create(*w)

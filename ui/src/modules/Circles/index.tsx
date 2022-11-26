@@ -7,7 +7,7 @@ import { useAppSelector } from '../../core/hooks/redux'
 import CircleModules from '../CircleModules'
 import { ReactComponent as EmptyCircles } from '../../core/assets/svg/empty-circles.svg'
 import './style.scss'
-import { CircleItem } from './types'
+import { CircleItem, CirclePagination } from './types'
 import Placeholder from '../../core/components/Placeholder'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -60,7 +60,7 @@ const data = [
 const Circles = () => {
   const navigate = useNavigate()
   const { workspaceId } = useParams()
-  const [circles, setCircles] = useState<CircleItem[]>([])
+  const [circles, setCircles] = useState<CirclePagination>({continue: '', items: []})
   const { response, get } = useFetch()
 
   const loadCircles = async () => {
@@ -92,13 +92,13 @@ const Circles = () => {
       </div>
 
       <Container className='circles__content'>
-        {circles.length <= 0 && (
+        {circles?.items?.length <= 0 && (
           <Placeholder text="There are no circles in this workspace">
             <EmptyCircles />
           </Placeholder>
         )}
         <Row>
-        {circles?.map(circle => (
+        {circles?.items.map(circle => (
           <Col xs={4} key={circle.name}>
             <Card className='circles__content__item mb-4'>
               <Card.Body>

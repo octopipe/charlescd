@@ -2,6 +2,7 @@ package errs
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -17,17 +18,18 @@ func NewHTTPResponse(c echo.Context, logger *zap.Logger, err error) error {
 	const defaultMessage string = "internal server error - please contact support"
 	var e *Error
 	if errors.As(err, &e) {
+		log.Println(err)
 		httpLog(logger, e.Kind, *e)
 		switch e.Kind {
 		case Internal, Database, Integration:
 			err := HTTPError{
-				Code:    e.Kind.String(),
+				Code:    string(e.Code),
 				Message: defaultMessage,
 			}
 			return c.JSON(httpErrorStatusCode(e.Kind), err)
 		default:
 			err := HTTPError{
-				Code:    e.Kind.String(),
+				Code:    string(e.Code),
 				Message: e.Err.Error(),
 			}
 			return c.JSON(httpErrorStatusCode(e.Kind), err)

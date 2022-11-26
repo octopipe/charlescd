@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	SimpleTemplate = "simple"
-	HelmTemplate   = "helm"
+	DefaultTemplate = "default"
+	HelmTemplate    = "helm"
 )
 
 type Template interface {
@@ -27,8 +27,8 @@ func NewTemplate() Template {
 
 func (t template) getManifests(module charlescdiov1alpha1.Module, circle charlescdiov1alpha1.Circle) ([][]byte, error) {
 	switch module.Spec.TemplateType {
-	case SimpleTemplate:
-		return t.GetSimpleManifests(module, circle)
+	case DefaultTemplate:
+		return t.GetDefaultManifests(module, circle)
 	case HelmTemplate:
 		return t.GetHelmManifests(module, circle)
 	default:
