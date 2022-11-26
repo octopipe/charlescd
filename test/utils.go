@@ -46,7 +46,7 @@ func newModuleObject(name string) *charlescdiov1alpha1.Module {
 	newModule.Spec = charlescdiov1alpha1.ModuleSpec{
 		Path:         "guestbook",
 		Url:          "https://github.com/octopipe/charlescd-samples",
-		TemplateType: "simple",
+		TemplateType: "default",
 		Author:       "test",
 	}
 

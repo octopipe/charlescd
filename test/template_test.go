@@ -24,7 +24,7 @@ type TemplateTestSuite struct {
 	repository repository.Repository
 }
 
-func (s *TemplateTestSuite) TemplateTestSuiteSetupTest() {
+func (s *TemplateTestSuite) SetupTest() {
 	os.Setenv("REPOSITORIES_TMP_DIR", "./tmp/repositories")
 	scheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))

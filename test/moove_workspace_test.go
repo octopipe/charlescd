@@ -84,8 +84,6 @@ func (s *WorkspaceTestSuite) TestCreateWorkspace() {
 
 	workspaceModel := &workspace.WorkspaceModel{}
 
-	log.Println(rec.Body.String())
-
 	if assert.NoError(s.T(), h.Create(c)) {
 		err := json.Unmarshal(rec.Body.Bytes(), workspaceModel)
 		assert.NoError(s.T(), err)

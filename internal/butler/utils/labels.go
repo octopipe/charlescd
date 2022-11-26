@@ -36,7 +36,5 @@ func AddCircleToLabels(circleReference string, currentLabels map[string]string) 
 		}
 	}
 
-	fmt.Println(newCirclesLabel)
-
 	return strings.TrimSpace(strings.Join(newCirclesLabel, " "))
 }

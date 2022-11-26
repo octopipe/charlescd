@@ -95,9 +95,7 @@ func (s *SyncCircleTestSuite) TestSyncCircleModules() {
 	syncedCircle := &charlescdiov1alpha1.Circle{}
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)
 
-	assert.Equal(s.T(), syncedCircle.Status.Error, "")
-
-	log.Println(syncedCircle.Status)
+	assert.Equal(s.T(), "", syncedCircle.Status.Error)
 
 	resources := syncedCircle.Status.Modules["module-1"].Resources
 	assert.Equal(s.T(), 2, len(resources))
