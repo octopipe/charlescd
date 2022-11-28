@@ -1,4 +1,4 @@
-package test
+package workspace
 
 import (
 	"context"
@@ -12,8 +12,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/octopipe/charlescd/internal/moove/core/grpcclient"
-	"github.com/octopipe/charlescd/internal/moove/workspace"
-	workspaceHandler "github.com/octopipe/charlescd/internal/moove/workspace/handler"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -31,7 +29,7 @@ type WorkspaceTestSuite struct {
 	ctx               context.Context
 	clientset         client.Client
 	grpcClient        grpcclient.Client
-	workspacerUseCase workspace.WorkspaceUseCase
+	workspacerUseCase WorkspaceUseCase
 	logger            *zap.Logger
 }
 
@@ -52,8 +50,8 @@ func (s *WorkspaceTestSuite) SetupTest() {
 		log.Fatalln(err)
 	}
 
-	workspaceRepository := workspace.NewRepository(clientset)
-	workspaceUseCase := workspace.NewUseCase(workspaceRepository)
+	workspaceRepository := NewRepository(clientset)
+	workspaceUseCase := NewUseCase(workspaceRepository)
 
 	s.ctx = context.Background()
 	s.clientset = clientset
@@ -80,9 +78,9 @@ func (s *WorkspaceTestSuite) TestCreateWorkspace() {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	h := workspaceHandler.NewEchohandler(e, s.logger, s.workspacerUseCase)
+	h := NewEchohandler(e, s.logger, s.workspacerUseCase)
 
-	workspaceModel := &workspace.WorkspaceModel{}
+	workspaceModel := &WorkspaceModel{}
 
 	if assert.NoError(s.T(), h.Create(c)) {
 		err := json.Unmarshal(rec.Body.Bytes(), workspaceModel)
@@ -96,6 +94,6 @@ func (s *WorkspaceTestSuite) TestCreateWorkspace() {
 
 }
 
-func TestMooveWorkspaceTestSuite(t *testing.T) {
+func TestWorkspaceTestSuite(t *testing.T) {
 	suite.Run(t, new(WorkspaceTestSuite))
 }

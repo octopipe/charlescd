@@ -1,20 +1,19 @@
-package handlers
+package workspace
 
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/octopipe/charlescd/internal/moove/core/customvalidator"
 	"github.com/octopipe/charlescd/internal/moove/errs"
-	"github.com/octopipe/charlescd/internal/moove/workspace"
 	"go.uber.org/zap"
 )
 
 type EchoHandler struct {
 	logger           *zap.Logger
-	workspaceUseCase workspace.WorkspaceUseCase
+	workspaceUseCase WorkspaceUseCase
 	validator        customvalidator.CustomValidator
 }
 
-func NewEchohandler(e *echo.Echo, logger *zap.Logger, workspaceUseCase workspace.WorkspaceUseCase) EchoHandler {
+func NewEchohandler(e *echo.Echo, logger *zap.Logger, workspaceUseCase WorkspaceUseCase) EchoHandler {
 	handler := EchoHandler{
 		logger:           logger,
 		workspaceUseCase: workspaceUseCase,
@@ -39,7 +38,7 @@ func (h EchoHandler) FindAll(c echo.Context) error {
 }
 
 func (h EchoHandler) Create(c echo.Context) error {
-	w := new(workspace.Workspace)
+	w := new(Workspace)
 	if err := c.Bind(w); err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -67,9 +66,9 @@ func (h EchoHandler) FindById(c echo.Context) error {
 }
 
 func (h EchoHandler) Update(c echo.Context) error {
-	return c.JSON(200, workspace.Workspace{})
+	return c.JSON(200, Workspace{})
 }
 
 func (h EchoHandler) Delete(c echo.Context) error {
-	return c.JSON(204, workspace.Workspace{})
+	return c.JSON(204, Workspace{})
 }

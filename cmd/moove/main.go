@@ -13,7 +13,6 @@ import (
 	"github.com/octopipe/charlescd/internal/moove/resource"
 	resourceHandler "github.com/octopipe/charlescd/internal/moove/resource/handler"
 	"github.com/octopipe/charlescd/internal/moove/workspace"
-	workspaceHandler "github.com/octopipe/charlescd/internal/moove/workspace/handler"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -65,7 +64,7 @@ func main() {
 
 	e := echo.New()
 	e.Use(middleware.CORS())
-	workspaceHandler.NewEchohandler(e, logger, workspaceUseCase)
+	workspace.NewEchohandler(e, logger, workspaceUseCase)
 	circleHandler.NewEchohandler(e, logger, circleUseCase)
 	moduleHandler.NewEchohandler(e, logger, moduleUseCase)
 	resourceHandler.NewEchohandler(e, logger, resourceUseCase)

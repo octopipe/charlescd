@@ -1,4 +1,4 @@
-package test
+package sync
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/engine"
 	"github.com/go-logr/logr"
-	"github.com/octopipe/charlescd/internal/butler/sync"
 	"github.com/octopipe/charlescd/internal/butler/utils"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
@@ -27,10 +26,59 @@ type SyncCircleTestSuite struct {
 	suite.Suite
 	ctx       context.Context
 	clientset client.Client
-	sync      sync.CircleSync
+	sync      CircleSync
 }
 
-func (s *SyncCircleTestSuite) newSyncWithDependencies(config *rest.Config, logger logr.Logger) sync.CircleSync {
+func newCircleObject(name string, moduleName string) *charlescdiov1alpha1.Circle {
+	newCircle := &charlescdiov1alpha1.Circle{}
+	newCircle.SetName(name)
+	newCircle.SetNamespace("default")
+	newCircle.Spec = charlescdiov1alpha1.CircleSpec{
+		Namespace: "default",
+		Author:    "Test",
+		IsDefault: true,
+		Routing: charlescdiov1alpha1.CircleRouting{
+			Match: &charlescdiov1alpha1.MatchRouteStrategy{
+				CustomMatch: &charlescdiov1alpha1.CircleMatch{
+					Headers: map[string]string{
+						"x-test-id": "1111",
+					},
+				},
+			},
+		},
+		Modules: []charlescdiov1alpha1.CircleModule{
+			{
+				Name:      moduleName,
+				Namespace: "default",
+				Revision:  "1",
+				Overrides: []charlescdiov1alpha1.Override{
+					{
+						Key:   "$.spec.template.spec.containers[0].image",
+						Value: "mayconjrpacheco/dragonboarding:goku",
+					},
+				},
+			},
+		},
+	}
+
+	return newCircle
+}
+
+func newModuleObject(name string) *charlescdiov1alpha1.Module {
+	newModule := &charlescdiov1alpha1.Module{}
+	newModule.SetName(name)
+	newModule.SetNamespace("default")
+	newModule.Spec = charlescdiov1alpha1.ModuleSpec{
+		Path:         "guestbook",
+		Url:          "https://github.com/octopipe/charlescd-samples",
+		TemplateType: "default",
+		Author:       "test",
+	}
+
+	return newModule
+}
+
+func (s *SyncCircleTestSuite) newSyncWithDependencies(config *rest.Config, logger logr.Logger) CircleSync {
 	clusterCache := cache.NewClusterCache(config,
 		cache.SetNamespaces([]string{}),
 		cache.SetPopulateResourceInfoHandler(func(un *unstructured.Unstructured, isRoot bool) (interface{}, bool) {
@@ -44,7 +92,7 @@ func (s *SyncCircleTestSuite) newSyncWithDependencies(config *rest.Config, logge
 	)
 
 	gitopsEngine := engine.NewEngine(config, clusterCache, engine.WithLogr(logger))
-	circleSync := sync.NewCircleSync(logger, s.clientset, gitopsEngine, clusterCache)
+	circleSync := NewCircleSync(logger, s.clientset, gitopsEngine, clusterCache)
 	return circleSync
 }
 

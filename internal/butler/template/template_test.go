@@ -1,4 +1,4 @@
-package test
+package template
 
 import (
 	"context"
@@ -22,6 +22,20 @@ type TemplateTestSuite struct {
 	ctx        context.Context
 	clientset  client.Client
 	repository repository.Repository
+}
+
+func newModuleObject(name string) *charlescdiov1alpha1.Module {
+	newModule := &charlescdiov1alpha1.Module{}
+	newModule.SetName(name)
+	newModule.SetNamespace("default")
+	newModule.Spec = charlescdiov1alpha1.ModuleSpec{
+		Path:         "guestbook",
+		Url:          "https://github.com/octopipe/charlescd-samples",
+		TemplateType: "default",
+		Author:       "test",
+	}
+
+	return newModule
 }
 
 func (s *TemplateTestSuite) SetupTest() {
