@@ -24,8 +24,8 @@ jobs:
       - name: Install CRDs
         run: |
           make install
-      - name: Run coverage
-        run: go test -race -coverprofile=coverage.txt -covermode=atomic ./test
+      - name: Run test and coverage
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic ./test -v
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
     
