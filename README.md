@@ -1,4 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/charlescd/badge/?version=latest)](https://charlescd.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/github/octopipe/charlescd/branch/main/graph/badge.svg?token=CM4IIS6O4F)](https://codecov.io/github/octopipe/charlescd)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 
