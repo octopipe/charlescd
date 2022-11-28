@@ -1,0 +1,12 @@
+ignore:
+  - ".github/**/*"
+  - "**/*_test.go"
+  - "pkg/apis/.*"
+  - "**/*.pb.go"
+  - "**/*.pb.gw.go"
+  
+ coverage:
+  status:
+    project:
+      default:
+        threshold: 3
