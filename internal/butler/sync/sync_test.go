@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -36,7 +35,6 @@ func newCircleObject(name string, moduleName string) *charlescdiov1alpha1.Circle
 	newCircle := &charlescdiov1alpha1.Circle{}
 	newCircle.SetName(name)
 	newCircle.SetNamespace("default")
-	newCircle.SetUID(types.UID(uuid.NewString()))
 	newCircle.Spec = charlescdiov1alpha1.CircleSpec{
 		Namespace: "default",
 		Author:    "Test",
@@ -61,6 +59,12 @@ func newCircleObject(name string, moduleName string) *charlescdiov1alpha1.Circle
 						Value: "mayconjrpacheco/dragonboarding:goku",
 					},
 				},
+			},
+		},
+		Environments: []charlescdiov1alpha1.CircleEnvironments{
+			{
+				Key:   "HOST",
+				Value: "api.com.br",
 			},
 		},
 	}
