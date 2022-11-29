@@ -2,6 +2,7 @@ package sync
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -9,6 +10,7 @@ import (
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/engine"
 	"github.com/go-logr/logr"
+	"github.com/google/uuid"
 	"github.com/octopipe/charlescd/internal/butler/utils"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
@@ -129,8 +131,9 @@ func (s *SyncCircleTestSuite) AfterTest(_, _ string) {
 }
 
 func (s *SyncCircleTestSuite) TestSyncCircleModules() {
-	newModule := newModuleObject("module-1")
-	newCircle := newCircleObject("circle-1", "module-1")
+	circleName, moduleName := uuid.NewString(), uuid.NewString()
+	newModule := newModuleObject(moduleName)
+	newCircle := newCircleObject(circleName, moduleName)
 	err := s.clientset.Create(s.ctx, newModule)
 	assert.NoError(s.T(), err)
 	err = s.clientset.Create(s.ctx, newCircle)
@@ -145,16 +148,17 @@ func (s *SyncCircleTestSuite) TestSyncCircleModules() {
 
 	assert.Equal(s.T(), "", syncedCircle.Status.Error)
 
-	resources := syncedCircle.Status.Modules["module-1"].Resources
+	resources := syncedCircle.Status.Modules[moduleName].Resources
 	assert.Equal(s.T(), 2, len(resources))
 	assert.Equal(s.T(), "guestbook-ui", resources[0].Name)
 	assert.Equal(s.T(), "Service", resources[0].Kind)
-	assert.Equal(s.T(), "circle-1-guestbook-ui", resources[1].Name)
+	assert.Equal(s.T(), fmt.Sprintf("%s-guestbook-ui", circleName), resources[1].Name)
 	assert.Equal(s.T(), "Deployment", resources[1].Kind)
 }
 
 func (s *SyncCircleTestSuite) TestSyncCircleWithoutModuleInCluster() {
-	newCircle := newCircleObject("circle-error", "module-2")
+	circleName, moduleName := uuid.NewString(), uuid.NewString()
+	newCircle := newCircleObject(circleName, moduleName)
 	err := s.clientset.Create(s.ctx, newCircle)
 	assert.NoError(s.T(), err)
 
@@ -165,12 +169,13 @@ func (s *SyncCircleTestSuite) TestSyncCircleWithoutModuleInCluster() {
 	syncedCircle := &charlescdiov1alpha1.Circle{}
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)
 
-	assert.Equal(s.T(), syncedCircle.Status.Error, `modules.charlescd.io "module-2" not found`)
+	assert.Equal(s.T(), syncedCircle.Status.Error, fmt.Sprintf(`modules.charlescd.io "%s" not found`, moduleName))
 	assert.Equal(s.T(), syncedCircle.Status.Status, `FAILED`)
 }
 
 func (s *SyncCircleTestSuite) TestReSyncCircle() {
-	newCircle := newCircleObject("circle-error", "module-2")
+	circleName, moduleName := uuid.NewString(), uuid.NewString()
+	newCircle := newCircleObject(circleName, moduleName)
 	err := s.clientset.Create(s.ctx, newCircle)
 	assert.NoError(s.T(), err)
 
@@ -181,10 +186,10 @@ func (s *SyncCircleTestSuite) TestReSyncCircle() {
 	syncedCircle := &charlescdiov1alpha1.Circle{}
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)
 
-	assert.Equal(s.T(), syncedCircle.Status.Error, `modules.charlescd.io "module-2" not found`)
+	assert.Equal(s.T(), syncedCircle.Status.Error, fmt.Sprintf(`modules.charlescd.io "%s" not found`, moduleName))
 	assert.Equal(s.T(), syncedCircle.Status.Status, `FAILED`)
 
-	newModule := newModuleObject("module-2")
+	newModule := newModuleObject(moduleName)
 	err = s.clientset.Create(s.ctx, newModule)
 	assert.NoError(s.T(), err)
 

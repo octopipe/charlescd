@@ -31,7 +31,7 @@ swagger:
 	p2o data/postman/Moove.postman_collection.json -f ./docs/docs/references/moove.yaml
 
 tests:
-	go test ./test -v
+	go test -race -coverprofile=coverage.out -covermode=atomic ./... -v
 
 ## BUTLER
 
