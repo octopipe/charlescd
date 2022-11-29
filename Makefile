@@ -33,6 +33,9 @@ swagger:
 tests:
 	go test -race -coverprofile=coverage.out -covermode=atomic ./... -v
 
+test-report: tests
+	go tool cover -html=coverage.out
+
 ## BUTLER
 
 butler-run:

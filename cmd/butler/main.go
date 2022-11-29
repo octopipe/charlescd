@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"flag"
 	"log"
 	"os"
@@ -41,10 +40,10 @@ import (
 	"github.com/argoproj/gitops-engine/pkg/cache"
 	"github.com/argoproj/gitops-engine/pkg/engine"
 	"github.com/joho/godotenv"
+	circlemanager "github.com/octopipe/charlescd/internal/butler/circle_manager"
 	"github.com/octopipe/charlescd/internal/butler/controllers"
 	"github.com/octopipe/charlescd/internal/butler/networking"
 	"github.com/octopipe/charlescd/internal/butler/server"
-	circlesync "github.com/octopipe/charlescd/internal/butler/sync"
 	"github.com/octopipe/charlescd/internal/butler/utils"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	//+kubebuilder:scaffold:imports
@@ -139,10 +138,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	circleSync := circlesync.NewCircleSync(logger, client, gitOpsEngine, clusterCache)
-
+	circleManager := circlemanager.NewCircleManager(logger, client, gitOpsEngine, clusterCache)
 	if err = (&controllers.CircleReconciler{
-		Sync:          circleSync,
+		CircleManager: circleManager,
 		NetworkClient: networkingLayer,
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
@@ -169,18 +167,7 @@ func main() {
 		}
 	}()
 
-	if autoSync {
-		go func() {
-			setupLog.Info("starting sync engine")
-			err = circleSync.StartSyncAll(context.Background())
-			if err != nil {
-				setupLog.Error(err, "problem running sync engine")
-				os.Exit(1)
-			}
-		}()
-	}
-
-	circleServer := server.NewCircleServer(client, circleSync)
+	circleServer := server.NewCircleServer(client, circleManager)
 	resourceServer := server.NewResourceServer(client, clusterCache, clientset, dynamicClient)
 	server := server.NewServer(logger, circleServer, resourceServer)
 	setupLog.Info("starting grpc server")

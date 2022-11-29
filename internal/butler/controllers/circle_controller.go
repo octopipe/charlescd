@@ -22,15 +22,12 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	circlemanager "github.com/octopipe/charlescd/internal/butler/circle_manager"
 	"github.com/octopipe/charlescd/internal/butler/networking"
-	circlesync "github.com/octopipe/charlescd/internal/butler/sync"
-	"github.com/octopipe/charlescd/internal/butler/utils"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 )
 
@@ -39,7 +36,7 @@ type CircleReconciler struct {
 	client.Client
 	NetworkClient networking.NetworkingLayer
 	Scheme        *runtime.Scheme
-	Sync          circlesync.CircleSync
+	CircleManager circlemanager.CircleManager
 }
 
 //+kubebuilder:rbac:groups=charlescd.io,resources=circles,verbs=get;list;watch;create;update;patch;delete
@@ -56,36 +53,6 @@ type CircleReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 
-const circleFinalizer = "circles.charlescd.io/finalizer"
-
-func (r *CircleReconciler) finalizeCircle(ctx context.Context, req ctrl.Request, circle *charlescdiov1alpha1.Circle) (ctrl.Result, error) {
-	isCircleToBeDeleted := circle.GetDeletionTimestamp() != nil
-	if isCircleToBeDeleted {
-		if controllerutil.ContainsFinalizer(circle, circleFinalizer) {
-			if err := r.Sync.SyncCircleDeletion(req.NamespacedName); err != nil {
-				return ctrl.Result{}, err
-			}
-
-			controllerutil.RemoveFinalizer(circle, circleFinalizer)
-			err := r.Update(ctx, circle)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
-		}
-		return ctrl.Result{}, nil
-	}
-
-	if !controllerutil.ContainsFinalizer(circle, circleFinalizer) {
-		controllerutil.AddFinalizer(circle, circleFinalizer)
-		err := r.Update(ctx, circle)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-	}
-
-	return ctrl.Result{}, nil
-}
-
 func (r *CircleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
@@ -99,14 +66,21 @@ func (r *CircleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
-	result, err := r.finalizeCircle(ctx, req, circle)
+	err = r.CircleManager.AddFinalizer(ctx, circle)
 	if err != nil {
-		return result, err
+		logger.Error(err, "failed to add finalizer to circle", "error", err)
+		return ctrl.Result{}, err
 	}
 
-	err = r.Sync.Sync(circle)
+	if r.CircleManager.IsCircleToBeDeleted(ctx, circle) {
+		err = r.CircleManager.FinalizeCircle(ctx, circle)
+		logger.Error(err, "failed to finalize circle", "error", err)
+		return ctrl.Result{}, err
+	}
+
+	err = r.CircleManager.Sync(circle)
 	if err != nil {
-		logger.Info("failed to sync circle err", "error", err)
+		logger.Error(err, "failed to sync circle", "error", err)
 		return ctrl.Result{}, nil
 	}
 
@@ -119,33 +93,6 @@ func (r *CircleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 
 	return ctrl.Result{}, nil
-}
-
-func (r *CircleReconciler) AddManagedLabelToCircle(ctx context.Context, req ctrl.Request) error {
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		circle := &charlescdiov1alpha1.Circle{}
-		err := r.Get(ctx, req.NamespacedName, circle)
-		if err != nil {
-			return err
-		}
-
-		labels := circle.GetLabels()
-		if labels == nil {
-			labels = make(map[string]string)
-		}
-
-		labels[utils.AnnotationManagedBy] = utils.ManagedBy
-		circle.SetLabels(labels)
-
-		err = r.Update(ctx, circle)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	return retryErr
 }
 
 // SetupWithManager sets up the controller with the Manager.

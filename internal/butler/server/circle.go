@@ -3,7 +3,7 @@ package server
 import (
 	context "context"
 
-	"github.com/octopipe/charlescd/internal/butler/sync"
+	circlemanager "github.com/octopipe/charlescd/internal/butler/circle_manager"
 	pbv1 "github.com/octopipe/charlescd/pb/v1"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	anypb "google.golang.org/protobuf/types/known/anypb"
@@ -12,17 +12,17 @@ import (
 )
 
 type CircleServer struct {
-	k8sCache   client.Client
-	circleSync sync.CircleSync
+	k8sCache      client.Client
+	circleManager circlemanager.CircleManager
 }
 
 func NewCircleServer(
 	k8sCache client.Client,
-	circleSync sync.CircleSync,
+	circleManager circlemanager.CircleManager,
 ) pbv1.CircleServiceServer {
 	return CircleServer{
-		k8sCache:   k8sCache,
-		circleSync: circleSync,
+		k8sCache:      k8sCache,
+		circleManager: circleManager,
 	}
 }
 
@@ -38,7 +38,7 @@ func (s CircleServer) Sync(ctx context.Context, request *pbv1.SyncRequest) (*any
 		return nil, err
 	}
 
-	err = s.circleSync.Sync(circle)
+	err = s.circleManager.Sync(circle)
 	if err != nil {
 		return nil, err
 	}

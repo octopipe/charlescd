@@ -1,10 +1,12 @@
-package sync
+package circlemanager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
@@ -15,6 +17,7 @@ import (
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -26,15 +29,16 @@ import (
 
 type SyncCircleTestSuite struct {
 	suite.Suite
-	ctx       context.Context
-	clientset client.Client
-	sync      CircleSync
+	ctx           context.Context
+	clientset     client.Client
+	circleManager CircleManager
 }
 
 func newCircleObject(name string, moduleName string) *charlescdiov1alpha1.Circle {
 	newCircle := &charlescdiov1alpha1.Circle{}
 	newCircle.SetName(name)
 	newCircle.SetNamespace("default")
+
 	newCircle.Spec = charlescdiov1alpha1.CircleSpec{
 		Namespace: "default",
 		Author:    "Test",
@@ -86,13 +90,15 @@ func newModuleObject(name string) *charlescdiov1alpha1.Module {
 	return newModule
 }
 
-func (s *SyncCircleTestSuite) newSyncWithDependencies(config *rest.Config, logger logr.Logger) CircleSync {
+func (s *SyncCircleTestSuite) newCircleManagerWithDependencies(config *rest.Config, logger logr.Logger) CircleManager {
 	clusterCache := cache.NewClusterCache(config,
 		cache.SetNamespaces([]string{}),
 		cache.SetPopulateResourceInfoHandler(func(un *unstructured.Unstructured, isRoot bool) (interface{}, bool) {
 			managedBy := un.GetLabels()[utils.AnnotationManagedBy]
 			info := &utils.ResourceInfo{
-				ManagedBy: un.GetLabels()[utils.AnnotationManagedBy],
+				ManagedBy:  un.GetLabels()[utils.AnnotationManagedBy],
+				CircleMark: un.GetLabels()[utils.AnnotationCircleMark],
+				ModuleMark: un.GetLabels()[utils.AnnotationModuleMark],
 			}
 			cacheManifest := managedBy == utils.ManagedBy
 			return info, cacheManifest
@@ -100,8 +106,13 @@ func (s *SyncCircleTestSuite) newSyncWithDependencies(config *rest.Config, logge
 	)
 
 	gitopsEngine := engine.NewEngine(config, clusterCache, engine.WithLogr(logger))
-	circleSync := NewCircleSync(logger, s.clientset, gitopsEngine, clusterCache)
-	return circleSync
+	_, err := gitopsEngine.Run()
+	if err != nil {
+		s.T().Fatal(err)
+	}
+	circleManager := NewCircleManager(logger, s.clientset, gitopsEngine, clusterCache)
+
+	return circleManager
 }
 
 func (s *SyncCircleTestSuite) SetupTest() {
@@ -116,7 +127,7 @@ func (s *SyncCircleTestSuite) SetupTest() {
 	}
 	s.ctx = context.Background()
 	s.clientset = clientset
-	s.sync = s.newSyncWithDependencies(config, setupLog)
+	s.circleManager = s.newCircleManagerWithDependencies(config, setupLog)
 }
 
 func (s *SyncCircleTestSuite) AfterTest(_, _ string) {
@@ -126,13 +137,15 @@ func (s *SyncCircleTestSuite) AfterTest(_, _ string) {
 	s.clientset.List(s.ctx, circles)
 
 	for _, c := range circles.Items {
-		s.clientset.Delete(s.ctx, c.DeepCopy())
+		circle := c
+		s.clientset.Delete(s.ctx, &circle)
 	}
 
 	s.clientset.List(s.ctx, modules)
 
 	for _, m := range modules.Items {
-		s.clientset.Delete(s.ctx, m.DeepCopy())
+		module := m
+		s.clientset.Delete(s.ctx, &module)
 	}
 }
 
@@ -146,7 +159,7 @@ func (s *SyncCircleTestSuite) TestSyncCircleModules() {
 	assert.NoError(s.T(), err)
 
 	os.Setenv("REPOSITORIES_TMP_DIR", "./tmp/repositories")
-	err = s.sync.Sync(newCircle)
+	err = s.circleManager.Sync(newCircle)
 	assert.NoError(s.T(), err)
 
 	syncedCircle := &charlescdiov1alpha1.Circle{}
@@ -169,7 +182,7 @@ func (s *SyncCircleTestSuite) TestSyncCircleWithoutModuleInCluster() {
 	assert.NoError(s.T(), err)
 
 	os.Setenv("REPOSITORIES_TMP_DIR", "./tmp/repositories")
-	err = s.sync.Sync(newCircle)
+	err = s.circleManager.Sync(newCircle)
 	assert.Error(s.T(), err)
 
 	syncedCircle := &charlescdiov1alpha1.Circle{}
@@ -186,7 +199,7 @@ func (s *SyncCircleTestSuite) TestReSyncCircle() {
 	assert.NoError(s.T(), err)
 
 	os.Setenv("REPOSITORIES_TMP_DIR", "./tmp/repositories")
-	err = s.sync.Sync(newCircle)
+	err = s.circleManager.Sync(newCircle)
 	assert.Error(s.T(), err)
 
 	syncedCircle := &charlescdiov1alpha1.Circle{}
@@ -199,8 +212,67 @@ func (s *SyncCircleTestSuite) TestReSyncCircle() {
 	err = s.clientset.Create(s.ctx, newModule)
 	assert.NoError(s.T(), err)
 
-	err = s.sync.Sync(newCircle)
+	err = s.circleManager.Sync(newCircle)
 	assert.NoError(s.T(), err)
+}
+
+func (s *SyncCircleTestSuite) TestSyncCircleDeletionModules() {
+	circleName1, moduleName1 := uuid.NewString(), uuid.NewString()
+	circleName2 := uuid.NewString()
+	newModule := newModuleObject(moduleName1)
+	newCircle1 := newCircleObject(circleName1, moduleName1)
+	newCircle2 := newCircleObject(circleName2, moduleName1)
+	err := s.clientset.Create(s.ctx, newModule)
+	assert.NoError(s.T(), err)
+	err = s.clientset.Create(s.ctx, newCircle1)
+	assert.NoError(s.T(), err)
+	err = s.clientset.Create(s.ctx, newCircle2)
+	assert.NoError(s.T(), err)
+
+	os.Setenv("REPOSITORIES_TMP_DIR", "./tmp/repositories")
+	err = s.circleManager.Sync(newCircle1)
+	assert.NoError(s.T(), err)
+
+	err = s.circleManager.Sync(newCircle2)
+	assert.NoError(s.T(), err)
+
+	syncedCircle1 := &charlescdiov1alpha1.Circle{}
+	syncedCircle2 := &charlescdiov1alpha1.Circle{}
+	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle1), syncedCircle1)
+	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle2), syncedCircle2)
+
+	assert.Equal(s.T(), "", syncedCircle1.Status.Error)
+
+	resources1 := syncedCircle1.Status.Modules[moduleName1].Resources
+	assert.Equal(s.T(), 2, len(resources1))
+	assert.Equal(s.T(), "guestbook-ui", resources1[0].Name)
+	assert.Equal(s.T(), "Service", resources1[0].Kind)
+	assert.Equal(s.T(), fmt.Sprintf("%s-guestbook-ui", circleName1), resources1[1].Name)
+	assert.Equal(s.T(), "Deployment", resources1[1].Kind)
+
+	resources2 := syncedCircle2.Status.Modules[moduleName1].Resources
+	assert.Equal(s.T(), 2, len(resources2))
+	assert.Equal(s.T(), "guestbook-ui", resources2[0].Name)
+	assert.Equal(s.T(), "Service", resources2[0].Kind)
+	assert.Equal(s.T(), fmt.Sprintf("%s-guestbook-ui", circleName2), resources2[1].Name)
+	assert.Equal(s.T(), "Deployment", resources2[1].Kind)
+
+	err = s.circleManager.AddFinalizer(s.ctx, syncedCircle1)
+	assert.NoError(s.T(), err)
+
+	err = s.circleManager.FinalizeCircle(s.ctx, syncedCircle1)
+	assert.NoError(s.T(), err)
+
+	deployments := v1.DeploymentList{}
+	s.clientset.List(s.ctx, &deployments, &client.ListOptions{
+		Namespace: "default",
+	})
+
+	for _, i := range deployments.Items {
+		if strings.Contains(i.GetName(), circleName1) && i.DeletionTimestamp == nil {
+			s.T().Fatal(errors.New("circle1 deployment not removed"))
+		}
+	}
 }
 
 func TestSyncCircleTestSuite(t *testing.T) {
