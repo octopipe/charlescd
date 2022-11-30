@@ -12,12 +12,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.7.1
-        with:
-          minikube version: 'v1.27.1'
-          kubernetes version: 'v1.25.2'
-          github token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: engineerd/setup-kind@v0.5.0
       - name: Build proto
         run: |
           make proto
