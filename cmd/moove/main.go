@@ -6,7 +6,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/octopipe/charlescd/internal/moove/circle"
-	circleHandler "github.com/octopipe/charlescd/internal/moove/circle/handler"
 	"github.com/octopipe/charlescd/internal/moove/core/grpcclient"
 	"github.com/octopipe/charlescd/internal/moove/module"
 	moduleHandler "github.com/octopipe/charlescd/internal/moove/module/handler"
@@ -65,7 +64,7 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.CORS())
 	workspace.NewEchohandler(e, logger, workspaceUseCase)
-	circleHandler.NewEchohandler(e, logger, circleUseCase)
+	circle.NewEchohandler(e, logger, circleUseCase)
 	moduleHandler.NewEchohandler(e, logger, moduleUseCase)
 	resourceHandler.NewEchohandler(e, logger, resourceUseCase)
 	e.Logger.Fatal(e.Start(":8080"))

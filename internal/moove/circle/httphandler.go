@@ -1,11 +1,10 @@
-package handler
+package circle
 
 import (
 	"errors"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/octopipe/charlescd/internal/moove/circle"
 	"github.com/octopipe/charlescd/internal/moove/core/customvalidator"
 	"github.com/octopipe/charlescd/internal/moove/core/listoptions"
 	"github.com/octopipe/charlescd/internal/moove/errs"
@@ -14,11 +13,11 @@ import (
 
 type EchoHandler struct {
 	logger        *zap.Logger
-	circleUseCase circle.CircleUseCase
+	circleUseCase CircleUseCase
 	validator     customvalidator.CustomValidator
 }
 
-func NewEchohandler(e *echo.Echo, logger *zap.Logger, circleUseCase circle.CircleUseCase) EchoHandler {
+func NewEchohandler(e *echo.Echo, logger *zap.Logger, circleUseCase CircleUseCase) EchoHandler {
 	handler := EchoHandler{
 		logger:        logger,
 		circleUseCase: circleUseCase,
@@ -63,7 +62,7 @@ func (h EchoHandler) FindAll(c echo.Context) error {
 
 func (h EchoHandler) Create(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
-	w := circle.Circle{}
+	w := Circle{}
 	if err := c.Bind(&w); err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -100,7 +99,7 @@ func (h EchoHandler) Update(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	circleName := c.Param("circleName")
 
-	newCircle := circle.Circle{}
+	newCircle := Circle{}
 	if err := c.Bind(&newCircle); err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -119,5 +118,5 @@ func (h EchoHandler) Delete(c echo.Context) error {
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
-	return c.JSON(204, circle.Circle{})
+	return c.JSON(204, Circle{})
 }

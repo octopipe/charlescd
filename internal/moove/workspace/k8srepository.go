@@ -11,7 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -26,7 +25,7 @@ func NewRepository(clientset client.Client) WorkspaceRepository {
 func (r k8sRepository) getObjectByUID(uid string) (v1.Namespace, error) {
 	list := &v1.NamespaceList{}
 	err := r.clientset.List(context.Background(), list, &client.ListOptions{
-		FieldSelector: fields.ParseSelectorOrDie(fmt.Sprintf("metadata.uid=%s", uid)),
+		FieldSelector: fields.SelectorFromSet(fields.Set{"metadata.name": uid}),
 	})
 	if err != nil {
 		return v1.Namespace{}, err
@@ -86,11 +85,9 @@ func (r k8sRepository) Delete(id string) error {
 // FindAll implements WorkspaceModelRepository
 func (r k8sRepository) FindAll() ([]WorkspaceModel, error) {
 	list := &v1.NamespaceList{}
-	l := labels.NewSelector()
-	managedBy, _ := labels.NewRequirement("managed-by", selection.Equals, []string{"moove"})
-	l.Add(*managedBy)
+	labelSelector := labels.SelectorFromSet(labels.Set{"managed-by": "moove"})
 	err := r.clientset.List(context.Background(), list, &client.ListOptions{
-		LabelSelector: l,
+		LabelSelector: labelSelector,
 	})
 	if err != nil {
 		return nil, err
@@ -98,16 +95,17 @@ func (r k8sRepository) FindAll() ([]WorkspaceModel, error) {
 
 	models := []WorkspaceModel{}
 	for _, i := range list.Items {
-		info := i.GetLabels()
-
-		models = append(models, WorkspaceModel{
-			ID: string(i.UID),
-			Workspace: Workspace{
-				Name:           info["name"],
-				Description:    info["description"],
-				DeployStrategy: info["deploy-strategy"],
-			},
-		})
+		if i.DeletionTimestamp == nil {
+			info := i.GetAnnotations()
+			models = append(models, WorkspaceModel{
+				ID: string(i.UID),
+				Workspace: Workspace{
+					Name:           info["name"],
+					Description:    info["description"],
+					DeployStrategy: info["deploy-strategy"],
+				},
+			})
+		}
 	}
 
 	return models, nil
@@ -115,7 +113,22 @@ func (r k8sRepository) FindAll() ([]WorkspaceModel, error) {
 
 // FindById implements WorkspaceModelRepository
 func (r k8sRepository) FindById(id string) (WorkspaceModel, error) {
-	return WorkspaceModel{}, nil
+	fmt.Println(id)
+	namespace, err := r.getObjectByUID(id)
+	if err != nil {
+		return WorkspaceModel{}, err
+	}
+
+	annotations := namespace.GetAnnotations()
+	return WorkspaceModel{
+		ID: string(namespace.GetUID()),
+		Workspace: Workspace{
+			Name:           annotations["name"],
+			Description:    annotations["description"],
+			DeployStrategy: annotations["deployStrategy"],
+		},
+		CreatedAt: namespace.CreationTimestamp.Format(time.RFC3339),
+	}, nil
 }
 
 // Update implements WorkspaceModelRepository
