@@ -7,10 +7,12 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/octopipe/charlescd/internal/moove/errs"
+	"github.com/octopipe/charlescd/internal/utils/id"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -63,7 +65,7 @@ func (r k8sRepository) Create(workspace Workspace) (WorkspaceModel, error) {
 	}
 
 	model := WorkspaceModel{
-		ID:        string(newNamespace.UID),
+		ID:        id.ToID(workspace.Name),
 		Workspace: workspace,
 		CreatedAt: newNamespace.CreationTimestamp.Format(time.RFC3339),
 	}
@@ -98,7 +100,7 @@ func (r k8sRepository) FindAll() ([]WorkspaceModel, error) {
 		if i.DeletionTimestamp == nil {
 			info := i.GetAnnotations()
 			models = append(models, WorkspaceModel{
-				ID: string(i.UID),
+				ID: id.ToID(i.Name),
 				Workspace: Workspace{
 					Name:           info["name"],
 					Description:    info["description"],
@@ -112,16 +114,21 @@ func (r k8sRepository) FindAll() ([]WorkspaceModel, error) {
 }
 
 // FindById implements WorkspaceModelRepository
-func (r k8sRepository) FindById(id string) (WorkspaceModel, error) {
-	fmt.Println(id)
-	namespace, err := r.getObjectByUID(id)
+func (r k8sRepository) FindById(workspaceId string) (WorkspaceModel, error) {
+	name, err := id.DecodeID(workspaceId)
+	if err != nil {
+		return WorkspaceModel{}, err
+	}
+
+	namespace := v1.Namespace{}
+	err = r.clientset.Get(context.Background(), types.NamespacedName{Name: name}, &namespace)
 	if err != nil {
 		return WorkspaceModel{}, err
 	}
 
 	annotations := namespace.GetAnnotations()
 	return WorkspaceModel{
-		ID: string(namespace.GetUID()),
+		ID: workspaceId,
 		Workspace: Workspace{
 			Name:           annotations["name"],
 			Description:    annotations["description"],

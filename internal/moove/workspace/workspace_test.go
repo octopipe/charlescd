@@ -13,6 +13,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/labstack/echo/v4"
 	"github.com/octopipe/charlescd/internal/moove/core/grpcclient"
+	"github.com/octopipe/charlescd/internal/utils/id"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -155,6 +156,42 @@ func (s *WorkspaceTestSuite) TestListWorkspaces() {
 	assert.Equal(s.T(), 3, len(workspaceModels))
 	assert.Equal(s.T(), "Workspace 1", workspaceModels[0].Name)
 	assert.Equal(s.T(), "Workspace 2", workspaceModels[1].Name)
+}
+
+func (s *WorkspaceTestSuite) TestGetWorkspace() {
+	workspaceName := "single workspace"
+	newNamespace := v1.Namespace{}
+	newNamespace.SetName(strcase.ToKebab(workspaceName))
+	newNamespace.SetLabels(map[string]string{
+		"managed-by": "moove",
+	})
+
+	newNamespace.SetAnnotations(map[string]string{
+		"name":           workspaceName,
+		"description":    "Lorem ipsum",
+		"deployStrategy": "circle",
+	})
+
+	err := s.clientset.Create(context.Background(), &newNamespace)
+	assert.NoError(s.T(), err)
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:workspaceId")
+	c.SetParamNames("workspaceId")
+	c.SetParamValues(id.ToID(newNamespace.GetName()))
+	h := NewEchohandler(e, s.logger, s.workspacerUseCase)
+
+	workspaceModel := WorkspaceModel{}
+	err = h.FindById(c)
+	assert.NoError(s.T(), err)
+	err = json.Unmarshal(rec.Body.Bytes(), &workspaceModel)
+	assert.NoError(s.T(), err)
+	assert.Equal(s.T(), http.StatusOK, rec.Code)
+	assert.Equal(s.T(), "single workspace", workspaceModel.Name)
 }
 
 func TestWorkspaceTestSuite(t *testing.T) {
