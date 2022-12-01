@@ -183,7 +183,7 @@ func (s *SyncCircleTestSuite) TestSyncCircleWithoutModuleInCluster() {
 
 	os.Setenv("REPOSITORIES_TMP_DIR", "./tmp/repositories")
 	err = s.circleManager.Sync(newCircle)
-	assert.Error(s.T(), err)
+	assert.NoError(s.T(), err)
 
 	syncedCircle := &charlescdiov1alpha1.Circle{}
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)
@@ -200,7 +200,7 @@ func (s *SyncCircleTestSuite) TestReSyncCircle() {
 
 	os.Setenv("REPOSITORIES_TMP_DIR", "./tmp/repositories")
 	err = s.circleManager.Sync(newCircle)
-	assert.Error(s.T(), err)
+	assert.NoError(s.T(), err)
 
 	syncedCircle := &charlescdiov1alpha1.Circle{}
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)

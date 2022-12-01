@@ -17,34 +17,47 @@ import (
 )
 
 func (c CircleManager) Sync(circle *charlescdiov1alpha1.Circle) error {
+	result := map[string]charlescdiov1alpha1.CircleModuleStatus{}
 	for _, circleModule := range circle.Spec.Modules {
-		targets, err := c.getCircleTargets(circle, circleModule.Name, circle.Spec.Namespace)
+		res, err := c.syncResourcesByCircleModule(circle, circleModule)
 		if err != nil {
-			c.addSyncErrorToCircleModule(circle, circleModule.Name, err)
-			return err
+			result[circleModule.Name] = charlescdiov1alpha1.CircleModuleStatus{
+				Status: "FAILED",
+				Error:  err.Error(),
+			}
+
+			continue
 		}
 
-		res, err := c.syncResources(targets, circleModule.Name, circle.Spec.Namespace)
-		if err != nil {
-			c.addSyncErrorToCircle(circle, err)
-			return err
-		}
-
-		modules := circle.Status.Modules
-		if modules == nil {
-			modules = make(map[string]charlescdiov1alpha1.CircleModuleStatus)
-		}
-		modules[circleModule.Name] = charlescdiov1alpha1.CircleModuleStatus{
+		result[circleModule.Name] = charlescdiov1alpha1.CircleModuleStatus{
 			Resources: res,
-		}
-		circle.Status.Modules = modules
-		err = c.updateCircleStatusWithSuccess(circle, fmt.Sprintf("update module %s with success", circleModule.Name))
-		if err != nil {
-			return err
+			Status:    "SYNCED",
 		}
 	}
 
+	circle.Status.Modules = result
+	err := c.updateCircleStatus(circle, fmt.Sprintf("circle synced at %s ", time.Now().Format(time.RFC3339)))
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func (c CircleManager) syncResourcesByCircleModule(circle *charlescdiov1alpha1.Circle, circleModule charlescdiov1alpha1.CircleModule) ([]charlescdiov1alpha1.CircleModuleResource, error) {
+	targets, err := c.getCircleTargets(circle, circleModule.Name, circle.Spec.Namespace)
+	if err != nil {
+		c.addSyncErrorToCircleModule(circle, circleModule.Name, err)
+		return nil, err
+	}
+
+	res, err := c.syncResources(targets, circleModule.Name, circle.Spec.Namespace)
+	if err != nil {
+		c.addSyncErrorToCircle(circle, err)
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (c *CircleManager) getCircleTargets(circle *charlescdiov1alpha1.Circle, circleModuleName string, namespace string) ([]*unstructured.Unstructured, error) {
