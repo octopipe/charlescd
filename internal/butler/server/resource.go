@@ -146,7 +146,7 @@ func (r ResourceServer) Tree(ctx context.Context, request *pbv1.TreeRequest) (*p
 		Namespace: circle.Namespace,
 		Kind:      circle.Kind,
 		Group:     circle.GroupVersionKind().Group,
-		Error:     circle.Status.Error,
+		Error:     "",
 		Status:    circle.Status.Status,
 	})
 
