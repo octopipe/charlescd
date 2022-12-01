@@ -17,6 +17,7 @@ import (
 )
 
 func (c CircleManager) Sync(circle *charlescdiov1alpha1.Circle) error {
+	circleStatus := "SYNCED"
 	result := map[string]charlescdiov1alpha1.CircleModuleStatus{}
 	for _, circleModule := range circle.Spec.Modules {
 		res, err := c.syncResourcesByCircleModule(circle, circleModule)
@@ -25,7 +26,7 @@ func (c CircleManager) Sync(circle *charlescdiov1alpha1.Circle) error {
 				Status: "FAILED",
 				Error:  err.Error(),
 			}
-
+			circleStatus = "FAILED"
 			continue
 		}
 
@@ -35,7 +36,10 @@ func (c CircleManager) Sync(circle *charlescdiov1alpha1.Circle) error {
 		}
 	}
 
-	circle.Status.Modules = result
+	circle.Status = charlescdiov1alpha1.CircleStatus{
+		Modules: result,
+		Status:  circleStatus,
+	}
 	err := c.updateCircleStatus(circle, fmt.Sprintf("circle synced at %s ", time.Now().Format(time.RFC3339)))
 	if err != nil {
 		return err
@@ -47,13 +51,11 @@ func (c CircleManager) Sync(circle *charlescdiov1alpha1.Circle) error {
 func (c CircleManager) syncResourcesByCircleModule(circle *charlescdiov1alpha1.Circle, circleModule charlescdiov1alpha1.CircleModule) ([]charlescdiov1alpha1.CircleModuleResource, error) {
 	targets, err := c.getCircleTargets(circle, circleModule.Name, circle.Spec.Namespace)
 	if err != nil {
-		c.addSyncErrorToCircleModule(circle, circleModule.Name, err)
 		return nil, err
 	}
 
 	res, err := c.syncResources(targets, circleModule.Name, circle.Spec.Namespace)
 	if err != nil {
-		c.addSyncErrorToCircle(circle, err)
 		return nil, err
 	}
 
@@ -118,34 +120,4 @@ func (c CircleManager) syncResources(targets []*unstructured.Unstructured, circl
 	}
 
 	return circleModuleResources, nil
-}
-
-func (s CircleManager) addSyncErrorToCircleModule(circle *charlescdiov1alpha1.Circle, moduleName string, syncError error) error {
-	modules := map[string]charlescdiov1alpha1.CircleModuleStatus{}
-	if circle.Status.Modules != nil {
-		modules = circle.Status.Modules
-	}
-
-	modules[moduleName] = charlescdiov1alpha1.CircleModuleStatus{
-		Status: "FAILED",
-		Error:  syncError.Error(),
-	}
-
-	circle.Status = charlescdiov1alpha1.CircleStatus{
-		Status:  "FAILED",
-		Modules: modules,
-		Error:   syncError.Error(),
-	}
-
-	err := s.updateCircleStatusWithError(circle, syncError)
-	return err
-}
-
-func (s CircleManager) addSyncErrorToCircle(circle *charlescdiov1alpha1.Circle, syncError error) error {
-	circle.Status = charlescdiov1alpha1.CircleStatus{
-		Status: "FAILED",
-		Error:  syncError.Error(),
-	}
-	err := s.updateCircleStatusWithError(circle, syncError)
-	return err
 }

@@ -99,7 +99,6 @@ type CircleStatus struct {
 	Conditions []metav1.Condition            `json:"conditions,omitempty"`
 	Status     string                        `json:"status,omitempty"`
 	Modules    map[string]CircleModuleStatus `json:"modules,omitempty"`
-	Error      string                        `json:"error,omitempty"`
 }
 
 //+kubebuilder:object:root=true

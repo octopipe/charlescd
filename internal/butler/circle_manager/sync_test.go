@@ -165,8 +165,6 @@ func (s *SyncCircleTestSuite) TestSyncCircleModules() {
 	syncedCircle := &charlescdiov1alpha1.Circle{}
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)
 
-	assert.Equal(s.T(), "", syncedCircle.Status.Error)
-
 	resources := syncedCircle.Status.Modules[moduleName].Resources
 	assert.Equal(s.T(), 2, len(resources))
 	assert.Equal(s.T(), "guestbook-ui", resources[0].Name)
@@ -188,7 +186,6 @@ func (s *SyncCircleTestSuite) TestSyncCircleWithoutModuleInCluster() {
 	syncedCircle := &charlescdiov1alpha1.Circle{}
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)
 
-	assert.Equal(s.T(), syncedCircle.Status.Error, fmt.Sprintf(`modules.charlescd.io "%s" not found`, moduleName))
 	assert.Equal(s.T(), syncedCircle.Status.Status, `FAILED`)
 }
 
@@ -205,7 +202,6 @@ func (s *SyncCircleTestSuite) TestReSyncCircle() {
 	syncedCircle := &charlescdiov1alpha1.Circle{}
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)
 
-	assert.Equal(s.T(), syncedCircle.Status.Error, fmt.Sprintf(`modules.charlescd.io "%s" not found`, moduleName))
 	assert.Equal(s.T(), syncedCircle.Status.Status, `FAILED`)
 
 	newModule := newModuleObject(moduleName)
@@ -241,7 +237,7 @@ func (s *SyncCircleTestSuite) TestSyncCircleDeletionModules() {
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle1), syncedCircle1)
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle2), syncedCircle2)
 
-	assert.Equal(s.T(), "", syncedCircle1.Status.Error)
+	assert.Equal(s.T(), "SYNCED", syncedCircle1.Status.Status)
 
 	resources1 := syncedCircle1.Status.Modules[moduleName1].Resources
 	assert.Equal(s.T(), 2, len(resources1))
