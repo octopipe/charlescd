@@ -65,7 +65,7 @@ func (r k8sRepository) Create(workspace Workspace) (WorkspaceModel, error) {
 	}
 
 	model := WorkspaceModel{
-		ID:        id.ToID(workspace.Name),
+		ID:        id.ToID(newNamespace.Name),
 		Workspace: workspace,
 		CreatedAt: newNamespace.CreationTimestamp.Format(time.RFC3339),
 	}
@@ -104,8 +104,9 @@ func (r k8sRepository) FindAll() ([]WorkspaceModel, error) {
 				Workspace: Workspace{
 					Name:           info["name"],
 					Description:    info["description"],
-					DeployStrategy: info["deploy-strategy"],
+					DeployStrategy: info["deployStrategy"],
 				},
+				CreatedAt: i.CreationTimestamp.Format(time.RFC3339),
 			})
 		}
 	}
@@ -121,7 +122,7 @@ func (r k8sRepository) FindById(workspaceId string) (WorkspaceModel, error) {
 	}
 
 	namespace := v1.Namespace{}
-	err = r.clientset.Get(context.Background(), types.NamespacedName{Name: name}, &namespace)
+	err = r.clientset.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ""}, &namespace)
 	if err != nil {
 		return WorkspaceModel{}, err
 	}
