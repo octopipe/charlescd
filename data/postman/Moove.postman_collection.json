@@ -10,12 +10,12 @@
 			"name": "Circle",
 			"item": [
 				{
-					"name": "Find by name",
+					"name": "Find by id",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}",
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_id}}",
 							"host": [
 								"{{MOOVE_PATH}}"
 							],
@@ -23,7 +23,7 @@
 								"workspaces",
 								"{{workspace_id}}",
 								"circles",
-								"{{circle_name}}"
+								"{{circle_id}}"
 							]
 						}
 					},
@@ -35,7 +35,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}/resources/{{resource_name}}?group=apps&kind=Deployment",
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_id}}/resources/{{resource_name}}?group=apps&kind=Deployment",
 							"host": [
 								"{{MOOVE_PATH}}"
 							],
@@ -43,7 +43,7 @@
 								"workspaces",
 								"{{workspace_id}}",
 								"circles",
-								"{{circle_name}}",
+								"{{circle_id}}",
 								"resources",
 								"{{resource_name}}"
 							],
@@ -67,7 +67,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}/resources/{{resource_name}}/events?kind=ReplicaSet",
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_id}}/resources/{{resource_name}}/events?kind=ReplicaSet",
 							"host": [
 								"{{MOOVE_PATH}}"
 							],
@@ -75,7 +75,7 @@
 								"workspaces",
 								"{{workspace_id}}",
 								"circles",
-								"{{circle_name}}",
+								"{{circle_id}}",
 								"resources",
 								"{{resource_name}}",
 								"events"
@@ -96,7 +96,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}/resources/tree",
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_id}}/resources/tree",
 							"host": [
 								"{{MOOVE_PATH}}"
 							],
@@ -104,7 +104,7 @@
 								"workspaces",
 								"{{workspace_id}}",
 								"circles",
-								"{{circle_name}}",
+								"{{circle_id}}",
 								"resources",
 								"tree"
 							]
@@ -145,7 +145,7 @@
 							"script": {
 								"exec": [
 									"var jsonData = pm.response.json();",
-									"pm.environment.set(\"circle_name\", jsonData.name);"
+									"pm.environment.set(\"circle_id\", jsonData.id);"
 								],
 								"type": "text/javascript"
 							}
@@ -156,7 +156,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"guestbook-ui\",\n            \"revision\": \"HEAD\"\n        }\n    ],\n    \"name\": \"teste-f\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"aaaaaaaaaaa\"\n                }\n            }\n        }\n    }\n}",
+							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"guestbook-ui\",\n            \"revision\": \"HEAD\"\n        }\n    ],\n    \"name\": \"Circle 2\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"aaaaaaaaaaa\"\n                }\n            }\n        }\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -203,7 +203,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}/sync",
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_id}}/sync",
 							"host": [
 								"{{MOOVE_PATH}}"
 							],
@@ -211,7 +211,7 @@
 								"workspaces",
 								"{{workspace_id}}",
 								"circles",
-								"{{circle_name}}",
+								"{{circle_id}}",
 								"sync"
 							]
 						}
@@ -225,7 +225,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"guestbook-ui\",\n            \"revision\": \"HEAD\"\n        }\n    ],\n    \"name\": \"teste-c\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"aaaaaaaaaaa\"\n                }\n            }\n        }\n    }\n}",
+							"raw": "{\n    \"environments\": [\n        {\n            \"value\": \"API_URL\",\n            \"key\": \"http://service.api.com.br\"\n        }\n    ],\n    \"modules\": [\n        {\n            \"overrides\": [\n                {\n                    \"value\": \"mayconjrpacheco/dragonboarding:goku\",\n                    \"key\": \"$.spec.template.spec.containers[0].image\"\n                }\n            ],\n            \"name\": \"guestbook-ui-1\",\n            \"revision\": \"HEAD\"\n        }\n    ],\n    \"name\": \"teste-c\",\n    \"routing\": {\n        \"match\": {\n            \"customMatch\": {\n                \"headers\": {\n                    \"x-product-id\": \"aaaaaaaaaaa\"\n                }\n            }\n        }\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -233,7 +233,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}",
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_id}}",
 							"host": [
 								"{{MOOVE_PATH}}"
 							],
@@ -241,7 +241,7 @@
 								"workspaces",
 								"{{workspace_id}}",
 								"circles",
-								"{{circle_name}}"
+								"{{circle_id}}"
 							]
 						}
 					},
@@ -262,7 +262,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_name}}",
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/circles/{{circle_id}}",
 							"host": [
 								"{{MOOVE_PATH}}"
 							],
@@ -270,7 +270,7 @@
 								"workspaces",
 								"{{workspace_id}}",
 								"circles",
-								"{{circle_name}}"
+								"{{circle_id}}"
 							]
 						}
 					},
@@ -339,7 +339,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"guestbook-ui\",\n    \"path\": \"guestbook\",\n    \"url\": \"https://github.com/octopipe/charlescd-samples\",\n    \"templateType\": \"simple\"\n}",
+							"raw": "{\n    \"name\": \"guestbook-ui\",\n    \"path\": \"guestbook\",\n    \"url\": \"https://github.com/octopipe/charlescd-samples\",\n    \"templateType\": \"default\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -347,15 +347,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/modules/{{module_name}}",
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}/modules",
 							"host": [
 								"{{MOOVE_PATH}}"
 							],
 							"path": [
 								"workspaces",
 								"{{workspace_id}}",
-								"modules",
-								"{{module_name}}"
+								"modules"
 							]
 						}
 					},
@@ -368,7 +367,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"guestbook-ui\",\n    \"path\": \"guestbook\",\n    \"url\": \"https://github.com/octopipe/charlescd-samples\",\n    \"templateType\": \"simple\" \n}",
+							"raw": "{\n    \"name\": \"guestbook-ui\",\n    \"path\": \"guestbook\",\n    \"url\": \"https://github.com/octopipe/charlescd-samples\",\n    \"templateType\": \"default\" \n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -446,6 +445,51 @@
 					"request": {
 						"method": "GET",
 						"header": [],
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}",
+							"host": [
+								"{{MOOVE_PATH}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspace_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Workspace 1\",\n    \"description\": \"Lorem ipsum asasasas\",\n    \"deployStrategy\": \"circle\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
 							"raw": "{{MOOVE_PATH}}/workspaces/{{workspace_id}}",
 							"host": [
