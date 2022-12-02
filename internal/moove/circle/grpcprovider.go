@@ -2,7 +2,6 @@ package circle
 
 import (
 	"context"
-	"log"
 
 	"github.com/octopipe/charlescd/internal/moove/core/grpcclient"
 	pbv1 "github.com/octopipe/charlescd/pb/v1"
@@ -22,6 +21,5 @@ func (p grpcProvider) Sync(ctx context.Context, namespace string, name string) e
 		CircleNamespace: namespace,
 	}
 	_, err := p.grpcClient.CircleClient.Sync(ctx, req)
-	log.Println(err)
 	return err
 }

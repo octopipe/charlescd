@@ -27,15 +27,15 @@ type ResourceEvent struct {
 }
 
 type ResourceProvider interface {
-	GetTree(ctx context.Context, namespace string, name string) ([]Resource, error)
+	GetTree(ctx context.Context, namespace string, circleId string) ([]Resource, error)
 	GetResource(ctx context.Context, namespace string, resourceName string, group string, kind string) (Resource, error)
-	GetLogs(ctx context.Context, circleName string, resourceName string, group string, kind string) (interface{}, error)
+	GetLogs(ctx context.Context, circleId string, resourceName string, group string, kind string) (interface{}, error)
 	GetEvents(ctx context.Context, namespace string, resourceName string, kind string) ([]ResourceEvent, error)
 }
 
 type ResourceUseCase interface {
 	GetTree(ctx context.Context, workspaceId string, name string) ([]Resource, error)
 	GetResource(ctx context.Context, workspaceId string, resourceName string, group string, kind string) (Resource, error)
-	GetLogs(ctx context.Context, circleName string, resourceName string, group string, kind string) (interface{}, error)
+	GetLogs(ctx context.Context, circleId string, resourceName string, group string, kind string) (interface{}, error)
 	GetEvents(ctx context.Context, workspaceId string, resourceName string, kind string) ([]ResourceEvent, error)
 }

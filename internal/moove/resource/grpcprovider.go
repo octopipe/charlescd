@@ -5,6 +5,7 @@ import (
 
 	"github.com/octopipe/charlescd/internal/moove/core/grpcclient"
 	"github.com/octopipe/charlescd/internal/moove/errs"
+	"github.com/octopipe/charlescd/internal/utils/id"
 	pbv1 "github.com/octopipe/charlescd/pb/v1"
 )
 
@@ -35,7 +36,12 @@ func (r GrpcProvider) messageToResource(resourceMessage *pbv1.Resource) Resource
 	}
 }
 
-func (r GrpcProvider) GetTree(ctx context.Context, namespace string, name string) ([]Resource, error) {
+func (r GrpcProvider) GetTree(ctx context.Context, namespace string, circleId string) ([]Resource, error) {
+	name, err := id.DecodeID(circleId)
+	if err != nil {
+		return nil, err
+	}
+
 	tree, err := r.grpcClient.ResourceClient.Tree(ctx, &pbv1.TreeRequest{
 		CircleName:      name,
 		CircleNamespace: namespace,

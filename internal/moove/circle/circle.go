@@ -33,23 +33,35 @@ type Circle struct {
 	Status       charlescdiov1alpha1.CircleStatus         `json:"status"`
 }
 
+type CircleModel struct {
+	ID        string `json:"id"`
+	CreatedAt string `json:"createdAt"`
+	Circle
+}
+
+type CircleItemModel struct {
+	ID        string `json:"id"`
+	CreatedAt string `json:"createdAt"`
+	CircleItem
+}
+
 type CircleProvider interface {
 	Sync(ctx context.Context, namespace string, name string) error
 }
 
 type CircleRepository interface {
 	FindAll(ctx context.Context, namespace string, listoptions listoptions.Request) (listoptions.Response, error)
-	FindByName(ctx context.Context, namespace string, name string) (Circle, error)
-	Create(ctx context.Context, namespace string, circle Circle) (Circle, error)
-	Update(ctx context.Context, namespace string, name string, circle Circle) (Circle, error)
-	Delete(ctx context.Context, namespace string, name string) error
+	FindById(ctx context.Context, namespace string, circleId string) (CircleModel, error)
+	Create(ctx context.Context, namespace string, circle Circle) (CircleModel, error)
+	Update(ctx context.Context, namespace string, circleId string, circle Circle) (CircleModel, error)
+	Delete(ctx context.Context, namespace string, circleId string) error
 }
 
 type CircleUseCase interface {
 	FindAll(ctx context.Context, workspaceId string, listoptions listoptions.Request) (listoptions.Response, error)
-	FindByName(ctx context.Context, workspaceId string, name string) (Circle, error)
-	Sync(ctx context.Context, workspaceId string, name string) error
-	Create(ctx context.Context, workspaceId string, circle Circle) (Circle, error)
-	Update(ctx context.Context, workspaceId string, name string, circle Circle) (Circle, error)
-	Delete(ctx context.Context, workspaceId string, name string) error
+	FindById(ctx context.Context, workspaceId string, circleId string) (CircleModel, error)
+	Sync(ctx context.Context, workspaceId string, circleId string) error
+	Create(ctx context.Context, workspaceId string, circle Circle) (CircleModel, error)
+	Update(ctx context.Context, workspaceId string, circleId string, circle Circle) (CircleModel, error)
+	Delete(ctx context.Context, workspaceId string, circleId string) error
 }

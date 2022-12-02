@@ -26,10 +26,10 @@ func NewEchohandler(e *echo.Echo, logger *zap.Logger, circleUseCase CircleUseCas
 	s := e.Group("/workspaces/:workspaceId/circles")
 	s.GET("", handler.FindAll)
 	s.POST("", handler.Create)
-	s.POST("/:circleName/sync", handler.Sync)
-	s.GET("/:circleName", handler.FindById)
-	s.PUT("/:circleName", handler.Update)
-	s.DELETE("/:circleName", handler.Delete)
+	s.POST("/:circleId/sync", handler.Sync)
+	s.GET("/:circleId", handler.FindById)
+	s.PUT("/:circleId", handler.Update)
+	s.DELETE("/:circleId", handler.Delete)
 
 	return handler
 }
@@ -60,14 +60,28 @@ func (h EchoHandler) FindAll(c echo.Context) error {
 	return c.JSON(200, circles)
 }
 
+func (h EchoHandler) bindAndValidateBody(c echo.Context) (Circle, error) {
+	body := Circle{}
+	if err := c.Bind(&body); err != nil {
+		return Circle{}, err
+	}
+
+	if err := h.validator.Validate(body); err != nil {
+		validateErr := errs.E(errs.Validation, errs.Code("CIRCLE_HTTP_VALIDATIONS"), err)
+		return Circle{}, validateErr
+	}
+
+	return body, nil
+}
+
 func (h EchoHandler) Create(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
-	w := Circle{}
-	if err := c.Bind(&w); err != nil {
+	body, err := h.bindAndValidateBody(c)
+	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
 
-	newCircle, err := h.circleUseCase.Create(c.Request().Context(), workspaceId, w)
+	newCircle, err := h.circleUseCase.Create(c.Request().Context(), workspaceId, body)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -77,8 +91,8 @@ func (h EchoHandler) Create(c echo.Context) error {
 
 func (h EchoHandler) FindById(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
-	circleName := c.Param("circleName")
-	circle, err := h.circleUseCase.FindByName(c.Request().Context(), workspaceId, circleName)
+	circleId := c.Param("circleId")
+	circle, err := h.circleUseCase.FindById(c.Request().Context(), workspaceId, circleId)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -87,8 +101,8 @@ func (h EchoHandler) FindById(c echo.Context) error {
 
 func (h EchoHandler) Sync(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
-	circleName := c.Param("circleName")
-	err := h.circleUseCase.Sync(c.Request().Context(), workspaceId, circleName)
+	circleId := c.Param("circleId")
+	err := h.circleUseCase.Sync(c.Request().Context(), workspaceId, circleId)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -97,14 +111,14 @@ func (h EchoHandler) Sync(c echo.Context) error {
 
 func (h EchoHandler) Update(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
-	circleName := c.Param("circleName")
+	circleId := c.Param("circleId")
 
-	newCircle := Circle{}
-	if err := c.Bind(&newCircle); err != nil {
+	body, err := h.bindAndValidateBody(c)
+	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
 
-	updatedCircle, err := h.circleUseCase.Update(c.Request().Context(), workspaceId, circleName, newCircle)
+	updatedCircle, err := h.circleUseCase.Update(c.Request().Context(), workspaceId, circleId, body)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -113,8 +127,8 @@ func (h EchoHandler) Update(c echo.Context) error {
 
 func (h EchoHandler) Delete(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
-	circleName := c.Param("circleName")
-	err := h.circleUseCase.Delete(c.Request().Context(), workspaceId, circleName)
+	circleId := c.Param("circleId")
+	err := h.circleUseCase.Delete(c.Request().Context(), workspaceId, circleId)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}

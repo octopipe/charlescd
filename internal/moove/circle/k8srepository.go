@@ -2,11 +2,17 @@ package circle
 
 import (
 	"context"
+	"fmt"
+	"time"
 
+	"github.com/iancoleman/strcase"
 	"github.com/octopipe/charlescd/internal/moove/core/listoptions"
+	"github.com/octopipe/charlescd/internal/moove/errs"
+	"github.com/octopipe/charlescd/internal/utils/id"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -18,9 +24,61 @@ func NewK8sRepository(clientset client.Client) CircleRepository {
 	return k8sRepository{clientset: clientset}
 }
 
-func (r k8sRepository) toCircle(c charlescdiov1alpha1.Circle) Circle {
+func (r k8sRepository) findById(circleId string, namespace string) (charlescdiov1alpha1.Circle, error) {
+	name, err := id.DecodeID(circleId)
+	if err != nil {
+		return charlescdiov1alpha1.Circle{}, err
+	}
+
+	circle := charlescdiov1alpha1.Circle{}
+	err = r.clientset.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, &circle)
+	if err != nil {
+		if k8sErrors.IsNotFound(err) {
+			return charlescdiov1alpha1.Circle{}, errs.E(errs.NotExist, errs.Code("CIRCLE_NOT_FOUND"), fmt.Errorf("circle %s not found", circleId))
+		}
+
+		return charlescdiov1alpha1.Circle{}, errs.E(errs.Internal, errs.Code("CIRCLE_FIND_BY_ID_FAILED"), err)
+	}
+
+	return circle, nil
+}
+
+func (r k8sRepository) fillCircle(target charlescdiov1alpha1.Circle, namespace string, circle Circle) charlescdiov1alpha1.Circle {
+	labels := map[string]string{
+		"managed-by": "moove",
+	}
+
+	target.SetLabels(labels)
+	target.SetAnnotations(map[string]string{
+		"id":   id.ToID(target.Name),
+		"name": circle.Name,
+	})
+	modules := []charlescdiov1alpha1.CircleModule{}
+	for _, m := range circle.Modules {
+		modules = append(modules, charlescdiov1alpha1.CircleModule{
+			Name:      m.Name,
+			Revision:  m.Revision,
+			Overrides: m.Overrides,
+			Namespace: namespace,
+		})
+	}
+
+	target.Spec = charlescdiov1alpha1.CircleSpec{
+		Author:       circle.Author,
+		Description:  circle.Description,
+		IsDefault:    circle.IsDefault,
+		Routing:      circle.Routing,
+		Environments: circle.Environments,
+		Modules:      modules,
+		Namespace:    namespace,
+	}
+	return target
+}
+
+func (r k8sRepository) toCircleModel(circle charlescdiov1alpha1.Circle) CircleModel {
+	annotations := circle.GetAnnotations()
 	modules := []CircleModule{}
-	for _, m := range c.Spec.Modules {
+	for _, m := range circle.Spec.Modules {
 		modules = append(modules, CircleModule{
 			Name:      m.Name,
 			Revision:  m.Revision,
@@ -28,158 +86,125 @@ func (r k8sRepository) toCircle(c charlescdiov1alpha1.Circle) Circle {
 		})
 	}
 
-	circle := Circle{
-		Name:         c.Name,
-		Author:       c.Spec.Author,
-		Description:  c.Spec.Description,
-		IsDefault:    c.Spec.IsDefault,
-		Environments: c.Spec.Environments,
-		Routing:      c.Spec.Routing,
-		Status:       c.Status,
-		Modules:      modules,
-	}
-	return circle
-}
-
-func (r k8sRepository) toK8sCircle(workspace string, c Circle) charlescdiov1alpha1.Circle {
-	circle := charlescdiov1alpha1.Circle{}
-	circle.SetName(c.Name)
-	circle.SetNamespace(workspace)
-
-	modules := []charlescdiov1alpha1.CircleModule{}
-	for _, m := range c.Modules {
-		modules = append(modules, charlescdiov1alpha1.CircleModule{
-			Name:      m.Name,
-			Revision:  m.Revision,
-			Overrides: m.Overrides,
-			Namespace: workspace,
-		})
-	}
-
-	circle.Spec = charlescdiov1alpha1.CircleSpec{
-		Author:       c.Author,
-		Description:  c.Description,
-		IsDefault:    c.IsDefault,
-		Routing:      c.Routing,
-		Environments: c.Environments,
-		Modules:      modules,
-		Namespace:    workspace,
-	}
-	return circle
-}
-
-// Create implements CircleRepository
-func (r k8sRepository) Create(ctx context.Context, workspace string, circle Circle) (Circle, error) {
-	newCircle := r.toK8sCircle(workspace, circle)
-	err := r.clientset.Create(ctx, &newCircle)
-	return r.toCircle(newCircle), err
-}
-
-func (r k8sRepository) Update(ctx context.Context, workspace string, name string, circle Circle) (Circle, error) {
-	circleObject := &charlescdiov1alpha1.Circle{}
-
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		// Retrieve the latest version of Deployment before attempting update
-		// RetryOnConflict uses exponential backoff to avoid exhausting the apiserver
-		namespacedName := types.NamespacedName{
-			Name:      name,
-			Namespace: workspace,
-		}
-		err := r.clientset.Get(ctx, namespacedName, circleObject)
-		if err != nil {
-			return err
-		}
-
-		modules := []charlescdiov1alpha1.CircleModule{}
-		for _, m := range circle.Modules {
-			modules = append(modules, charlescdiov1alpha1.CircleModule{
-				Name:      m.Name,
-				Revision:  m.Revision,
-				Overrides: m.Overrides,
-				Namespace: workspace,
-			})
-		}
-
-		circleObject.Spec = charlescdiov1alpha1.CircleSpec{
-			Author:       circle.Author,
-			Description:  circle.Description,
-			IsDefault:    circle.IsDefault,
-			Routing:      circle.Routing,
-			Environments: circle.Environments,
+	return CircleModel{
+		ID: annotations["id"],
+		Circle: Circle{
+			Name:         annotations["name"],
+			Author:       circle.Spec.Author,
+			Description:  circle.Spec.Description,
+			IsDefault:    circle.Spec.IsDefault,
+			Environments: circle.Spec.Environments,
+			Routing:      circle.Spec.Routing,
+			Status:       circle.Status,
 			Modules:      modules,
-		}
-
-		err = r.clientset.Update(context.TODO(), circleObject)
-		return err
-	})
-
-	return r.toCircle(*circleObject), retryErr
+		},
+		CreatedAt: circle.CreationTimestamp.Format(time.RFC3339),
+	}
 }
 
-// FindAll implements CircleRepository
-func (r k8sRepository) FindAll(ctx context.Context, namespace string, request listoptions.Request) (listoptions.Response, error) {
-	list := charlescdiov1alpha1.CircleList{}
-	listOptions := &client.ListOptions{
-		Namespace: namespace,
-		Limit:     request.Limit,
-		Continue:  request.Continue,
-	}
+// Create implements CircleModelRepository
+func (r k8sRepository) Create(ctx context.Context, namespace string, circle Circle) (CircleModel, error) {
+	newCircle := charlescdiov1alpha1.Circle{}
+	circleName := strcase.ToKebab(circle.Name)
+	newCircle.SetName(circleName)
+	newCircle.SetNamespace(namespace)
 
-	err := r.clientset.List(ctx, &list, listOptions)
+	newCircle = r.fillCircle(newCircle, namespace, circle)
+
+	err := r.clientset.Create(context.Background(), &newCircle)
 	if err != nil {
-		return listoptions.Response{}, err
-	}
-
-	circleItems := []CircleItem{}
-	for _, i := range list.Items {
-		modules := []CircleModule{}
-
-		for _, m := range i.Spec.Modules {
-			modules = append(modules, CircleModule{
-				Name:      m.Name,
-				Revision:  m.Revision,
-				Overrides: m.Overrides,
-			})
+		if k8sErrors.IsAlreadyExists(err) {
+			return CircleModel{}, errs.E(errs.Exist, errs.Code("CIRCLE_ALREADY_EXIST"), fmt.Sprintf("%s circle already exist", circle.Name))
 		}
 
-		circleItems = append(circleItems, CircleItem{
-			Name:        i.GetName(),
-			Description: i.GetNamespace(),
-			Modules:     modules,
-			Status:      i.Status,
-		})
+		return CircleModel{}, errs.E(errs.Internal, errs.Code("CIRCLE_CREATE_ERROR"), err)
+	}
+
+	return r.toCircleModel(newCircle), nil
+}
+
+// Delete implements CircleModelRepository
+func (r k8sRepository) Delete(ctx context.Context, namespace string, circleId string) error {
+	circle, err := r.findById(circleId, namespace)
+	if err != nil {
+		return err
+	}
+
+	err = r.clientset.Delete(context.Background(), &circle)
+	if err != nil {
+		return errs.E(errs.Internal, errs.Code("CIRCLE_DELETE_FAILED"), err)
+	}
+
+	return nil
+}
+
+// FindAll implements CircleModelRepository
+func (r k8sRepository) FindAll(ctx context.Context, namespace string, options listoptions.Request) (listoptions.Response, error) {
+	list := &charlescdiov1alpha1.CircleList{}
+	labelSelector := labels.SelectorFromSet(labels.Set{"managed-by": "moove"})
+	err := r.clientset.List(context.Background(), list, &client.ListOptions{
+		LabelSelector: labelSelector,
+		Namespace:     namespace,
+	})
+	if err != nil {
+		return listoptions.Response{}, errs.E(errs.Internal, errs.Code("CIRCLE_LIST_ERROR"), err)
+	}
+
+	models := []CircleItemModel{}
+	for _, i := range list.Items {
+		if i.DeletionTimestamp == nil {
+			modules := []CircleModule{}
+			for _, m := range i.Spec.Modules {
+				modules = append(modules, CircleModule{
+					Name:      m.Name,
+					Revision:  m.Revision,
+					Overrides: m.Overrides,
+				})
+			}
+
+			annotations := i.GetAnnotations()
+			models = append(models, CircleItemModel{
+				ID: annotations["id"],
+				CircleItem: CircleItem{
+					Name:        annotations["name"],
+					Description: i.Spec.Description,
+					IsDefault:   i.Spec.IsDefault,
+					Status:      i.Status,
+					Modules:     modules,
+				},
+				CreatedAt: i.CreationTimestamp.Format(time.RFC3339),
+			})
+		}
 	}
 
 	return listoptions.Response{
 		Continue: list.Continue,
-		Items:    circleItems,
+		Items:    models,
 	}, nil
 }
 
-// FindByName implements CircleRepository
-func (r k8sRepository) FindByName(ctx context.Context, namespace string, name string) (Circle, error) {
-	ref := types.NamespacedName{
-		Name:      name,
-		Namespace: namespace,
+// FindById implements CircleModelRepository
+func (r k8sRepository) FindById(ctx context.Context, namespace string, circleId string) (CircleModel, error) {
+	circle, err := r.findById(circleId, namespace)
+	if err != nil {
+		return CircleModel{}, err
 	}
-	circle := charlescdiov1alpha1.Circle{}
-	err := r.clientset.Get(ctx, ref, &circle)
 
-	return r.toCircle(circle), err
+	return r.toCircleModel(circle), nil
 }
 
-// Delete implements CircleRepository
-func (r k8sRepository) Delete(ctx context.Context, namespace string, name string) error {
-	ref := types.NamespacedName{
-		Name:      name,
-		Namespace: namespace,
-	}
-	circle := charlescdiov1alpha1.Circle{}
-	err := r.clientset.Get(ctx, ref, &circle)
+// Update implements CircleModelRepository
+func (r k8sRepository) Update(ctx context.Context, namespace string, circleId string, circle Circle) (CircleModel, error) {
+	circleObject, err := r.findById(circleId, namespace)
 	if err != nil {
-		return err
+		return CircleModel{}, err
 	}
 
-	err = r.clientset.Delete(ctx, &circle)
-	return err
+	circleObject = r.fillCircle(circleObject, namespace, circle)
+	err = r.clientset.Update(context.Background(), &circleObject)
+	if err != nil {
+		return CircleModel{}, errs.E(errs.Internal, errs.Code("CIRCLE_UPDATE_FAILED"), err)
+	}
+
+	return r.toCircleModel(circleObject), nil
 }

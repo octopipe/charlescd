@@ -5,6 +5,7 @@ import (
 
 	"github.com/octopipe/charlescd/internal/moove/core/listoptions"
 	"github.com/octopipe/charlescd/internal/moove/workspace"
+	"github.com/octopipe/charlescd/internal/utils/id"
 )
 
 type UseCase struct {
@@ -22,28 +23,28 @@ func NewUseCase(workspaceUseCase workspace.WorkspaceUseCase, circleProvider Circ
 }
 
 // Create implements CircleUseCase
-func (u UseCase) Create(ctx context.Context, workspaceId string, circle Circle) (Circle, error) {
+func (u UseCase) Create(ctx context.Context, workspaceId string, circle Circle) (CircleModel, error) {
 	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
 	if err != nil {
-		return Circle{}, err
+		return CircleModel{}, err
 	}
 
 	createdCircle, err := u.circleRepository.Create(ctx, namespace, circle)
 	if err != nil {
-		return Circle{}, err
+		return CircleModel{}, err
 	}
 
 	return createdCircle, nil
 }
 
 // Delete implements CircleUseCase
-func (u UseCase) Delete(ctx context.Context, workspaceId string, name string) error {
+func (u UseCase) Delete(ctx context.Context, workspaceId string, circleId string) error {
 	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
 	if err != nil {
 		return err
 	}
 
-	err = u.circleRepository.Delete(ctx, namespace, name)
+	err = u.circleRepository.Delete(ctx, namespace, circleId)
 	if err != nil {
 		return err
 	}
@@ -67,22 +68,32 @@ func (u UseCase) FindAll(ctx context.Context, workspaceId string, options listop
 }
 
 // FindByName implements CircleUseCase
-func (u UseCase) FindByName(ctx context.Context, workspaceId string, name string) (Circle, error) {
+func (u UseCase) FindById(ctx context.Context, workspaceId string, circleId string) (CircleModel, error) {
 	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
 	if err != nil {
-		return Circle{}, err
+		return CircleModel{}, err
 	}
 
-	circle, err := u.circleRepository.FindByName(ctx, namespace, name)
+	circle, err := u.circleRepository.FindById(ctx, namespace, circleId)
 	if err != nil {
-		return Circle{}, err
+		return CircleModel{}, err
 	}
 
 	return circle, nil
 }
 
-func (u UseCase) Sync(ctx context.Context, workspaceId string, name string) error {
+func (u UseCase) Sync(ctx context.Context, workspaceId string, circleId string) error {
 	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
+	if err != nil {
+		return err
+	}
+
+	_, err = u.circleRepository.FindById(ctx, namespace, circleId)
+	if err != nil {
+		return err
+	}
+
+	name, err := id.DecodeID(circleId)
 	if err != nil {
 		return err
 	}
@@ -92,15 +103,15 @@ func (u UseCase) Sync(ctx context.Context, workspaceId string, name string) erro
 }
 
 // Update implements CircleUseCase
-func (u UseCase) Update(ctx context.Context, workspaceId string, name string, circle Circle) (Circle, error) {
+func (u UseCase) Update(ctx context.Context, workspaceId string, circleId string, circle Circle) (CircleModel, error) {
 	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
 	if err != nil {
-		return Circle{}, err
+		return CircleModel{}, err
 	}
 
-	updatedCircle, err := u.circleRepository.Update(ctx, namespace, name, circle)
+	updatedCircle, err := u.circleRepository.Update(ctx, namespace, circleId, circle)
 	if err != nil {
-		return Circle{}, err
+		return CircleModel{}, err
 	}
 
 	return updatedCircle, nil
