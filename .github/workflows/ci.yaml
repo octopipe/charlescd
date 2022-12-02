@@ -18,7 +18,7 @@ jobs:
           minikube version: 'v1.26.1'
           kubernetes version: 'v1.25.0'
           github token: ${{ secrets.GITHUB_TOKEN }}
-          start args: --cpu=max --memory=max
+          start args: --cpus=max --memory=max
       - name: Build proto
         run: |
           make proto
