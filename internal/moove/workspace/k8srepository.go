@@ -2,7 +2,6 @@ package workspace
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -34,10 +33,10 @@ func (r k8sRepository) findNamespaceById(workspaceId string) (v1.Namespace, erro
 	err = r.clientset.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ""}, &namespace)
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
-			return v1.Namespace{}, errs.E(errs.NotExist, errs.Code("WORKSPACE_NOT_FOUND"), errors.New(fmt.Sprintf("workspace %s not found", workspaceId)))
+			return v1.Namespace{}, errs.E(errs.NotExist, errs.Code("WORKSPACE_NOT_FOUND"), fmt.Errorf("workspace %s not found", workspaceId))
 		}
 
-		return v1.Namespace{}, err
+		return v1.Namespace{}, errs.E(errs.Internal, errs.Code("WORKSPACE_FIND_BY_ID_FAILED"), err)
 	}
 
 	return namespace, nil
@@ -101,7 +100,11 @@ func (r k8sRepository) Delete(id string) error {
 	}
 
 	err = r.clientset.Delete(context.Background(), &namespace)
-	return err
+	if err != nil {
+		return errs.E(errs.Internal, errs.Code("WORKSPACE_DELETE_FAILED"), err)
+	}
+
+	return nil
 }
 
 // FindAll implements WorkspaceModelRepository
@@ -112,7 +115,7 @@ func (r k8sRepository) FindAll() ([]WorkspaceModel, error) {
 		LabelSelector: labelSelector,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errs.E(errs.Internal, errs.Code("WORKSPACE_LIST_ERROR"), err)
 	}
 
 	models := []WorkspaceModel{}
