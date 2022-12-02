@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,8 +10,7 @@ import (
 	"github.com/octopipe/charlescd/internal/moove/errs"
 	"github.com/octopipe/charlescd/internal/utils/id"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/fields"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -24,58 +24,78 @@ func NewRepository(clientset client.Client) WorkspaceRepository {
 	return k8sRepository{clientset: clientset}
 }
 
-func (r k8sRepository) getObjectByUID(uid string) (v1.Namespace, error) {
-	list := &v1.NamespaceList{}
-	err := r.clientset.List(context.Background(), list, &client.ListOptions{
-		FieldSelector: fields.SelectorFromSet(fields.Set{"metadata.name": uid}),
-	})
+func (r k8sRepository) findNamespaceById(workspaceId string) (v1.Namespace, error) {
+	name, err := id.DecodeID(workspaceId)
 	if err != nil {
 		return v1.Namespace{}, err
 	}
 
-	if len(list.Items) <= 0 {
-		return v1.Namespace{}, errs.E(errs.NotExist, errs.Code("WORKSPACE_NOT_EXIST"), err)
+	namespace := v1.Namespace{}
+	err = r.clientset.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ""}, &namespace)
+	if err != nil {
+		if k8sErrors.IsNotFound(err) {
+			return v1.Namespace{}, errs.E(errs.NotExist, errs.Code("WORKSPACE_NOT_FOUND"), errors.New(fmt.Sprintf("workspace %s not found", workspaceId)))
+		}
+
+		return v1.Namespace{}, err
 	}
 
-	return list.Items[0], nil
+	return namespace, nil
 }
 
-// Create implements WorkspaceModelRepository
-func (r k8sRepository) Create(workspace Workspace) (WorkspaceModel, error) {
+func (r k8sRepository) fillNamespace(target v1.Namespace, workspace Workspace) v1.Namespace {
 	labels := map[string]string{
 		"managed-by": "moove",
 	}
 
-	newNamespace := v1.Namespace{}
-	newNamespace.SetName(strcase.ToKebab(workspace.Name))
-	newNamespace.SetLabels(labels)
-	newNamespace.SetAnnotations(map[string]string{
+	target.SetLabels(labels)
+	target.SetAnnotations(map[string]string{
+		"id":             id.ToID(target.Name),
 		"name":           workspace.Name,
 		"description":    workspace.Description,
 		"deployStrategy": workspace.DeployStrategy,
 	})
 
+	return target
+}
+
+func (r k8sRepository) toWorkspaceModel(namespace v1.Namespace) WorkspaceModel {
+	annotations := namespace.GetAnnotations()
+	return WorkspaceModel{
+		ID: annotations["id"],
+		Workspace: Workspace{
+			Name:           annotations["name"],
+			Description:    annotations["description"],
+			DeployStrategy: annotations["deployStrategy"],
+		},
+		CreatedAt: namespace.CreationTimestamp.Format(time.RFC3339),
+	}
+}
+
+// Create implements WorkspaceModelRepository
+func (r k8sRepository) Create(workspace Workspace) (WorkspaceModel, error) {
+	newNamespace := v1.Namespace{}
+
+	workspaceName := strcase.ToKebab(workspace.Name)
+	newNamespace.SetName(workspaceName)
+
+	newNamespace = r.fillNamespace(newNamespace, workspace)
+
 	err := r.clientset.Create(context.Background(), &newNamespace)
 	if err != nil {
-		if errors.IsAlreadyExists(err) {
+		if k8sErrors.IsAlreadyExists(err) {
 			return WorkspaceModel{}, errs.E(errs.Exist, errs.Code("WORKSPACE_ALREADY_EXIST"), fmt.Sprintf("%s workspace already exist", workspace.Name))
 		}
 
 		return WorkspaceModel{}, errs.E(errs.Internal, errs.Code("WORKSPACE_CREATE_ERROR"), err)
 	}
 
-	model := WorkspaceModel{
-		ID:        id.ToID(newNamespace.Name),
-		Workspace: workspace,
-		CreatedAt: newNamespace.CreationTimestamp.Format(time.RFC3339),
-	}
-
-	return model, nil
+	return r.toWorkspaceModel(newNamespace), nil
 }
 
 // Delete implements WorkspaceModelRepository
 func (r k8sRepository) Delete(id string) error {
-	namespace, err := r.getObjectByUID(id)
+	namespace, err := r.findNamespaceById(id)
 	if err != nil {
 		return err
 	}
@@ -98,16 +118,7 @@ func (r k8sRepository) FindAll() ([]WorkspaceModel, error) {
 	models := []WorkspaceModel{}
 	for _, i := range list.Items {
 		if i.DeletionTimestamp == nil {
-			info := i.GetAnnotations()
-			models = append(models, WorkspaceModel{
-				ID: id.ToID(i.Name),
-				Workspace: Workspace{
-					Name:           info["name"],
-					Description:    info["description"],
-					DeployStrategy: info["deployStrategy"],
-				},
-				CreatedAt: i.CreationTimestamp.Format(time.RFC3339),
-			})
+			models = append(models, r.toWorkspaceModel(i))
 		}
 	}
 
@@ -116,30 +127,26 @@ func (r k8sRepository) FindAll() ([]WorkspaceModel, error) {
 
 // FindById implements WorkspaceModelRepository
 func (r k8sRepository) FindById(workspaceId string) (WorkspaceModel, error) {
-	name, err := id.DecodeID(workspaceId)
+	namespace, err := r.findNamespaceById(workspaceId)
 	if err != nil {
 		return WorkspaceModel{}, err
 	}
 
-	namespace := v1.Namespace{}
-	err = r.clientset.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ""}, &namespace)
-	if err != nil {
-		return WorkspaceModel{}, err
-	}
-
-	annotations := namespace.GetAnnotations()
-	return WorkspaceModel{
-		ID: workspaceId,
-		Workspace: Workspace{
-			Name:           annotations["name"],
-			Description:    annotations["description"],
-			DeployStrategy: annotations["deployStrategy"],
-		},
-		CreatedAt: namespace.CreationTimestamp.Format(time.RFC3339),
-	}, nil
+	return r.toWorkspaceModel(namespace), nil
 }
 
 // Update implements WorkspaceModelRepository
 func (r k8sRepository) Update(id string, workspace Workspace) (WorkspaceModel, error) {
-	return WorkspaceModel{}, nil
+	namespace, err := r.findNamespaceById(id)
+	if err != nil {
+		return WorkspaceModel{}, err
+	}
+
+	namespace = r.fillNamespace(namespace, workspace)
+	err = r.clientset.Update(context.Background(), &namespace)
+	if err != nil {
+		return WorkspaceModel{}, errs.E(errs.Internal, errs.Code("WORKSPACE_UPDATE_FAILED"), err)
+	}
+
+	return r.toWorkspaceModel(namespace), nil
 }

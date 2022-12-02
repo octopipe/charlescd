@@ -2,18 +2,19 @@ package id
 
 import (
 	b64 "encoding/base64"
+	"fmt"
 
-	"github.com/octopipe/charlescd/internal/butler/errs"
+	"github.com/octopipe/charlescd/internal/moove/errs"
 )
 
 func ToID(name string) string {
-	return b64.StdEncoding.EncodeToString([]byte(name))
+	return b64.RawURLEncoding.EncodeToString([]byte(name))
 }
 
 func DecodeID(id string) (string, error) {
-	res, err := b64.StdEncoding.DecodeString(id)
+	res, err := b64.RawURLEncoding.DecodeString(id)
 	if err != nil {
-		return "", errs.E(errs.Code("INVALID_ID"), err)
+		return "", errs.E(errs.Invalid, errs.Code("INVALID_ID"), fmt.Errorf("invalid id %s", id))
 	}
 
 	return string(res), nil

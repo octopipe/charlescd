@@ -56,7 +56,9 @@ func httpErrorStatusCode(k Kind) int {
 	switch k {
 	case NotExist:
 		return http.StatusNotFound
-	case Invalid, Exist, Private, BrokenLink, Validation, InvalidRequest:
+	case Exist:
+		return http.StatusConflict
+	case Invalid, Private, BrokenLink, Validation, InvalidRequest:
 		return http.StatusBadRequest
 	case Other, IO, Internal, Database, Unanticipated:
 		return http.StatusInternalServerError

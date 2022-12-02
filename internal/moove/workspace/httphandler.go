@@ -37,18 +37,27 @@ func (h EchoHandler) FindAll(c echo.Context) error {
 	return c.JSON(200, workspaces)
 }
 
+func (h EchoHandler) bindAndValidateBody(c echo.Context) (Workspace, error) {
+	body := Workspace{}
+	if err := c.Bind(&body); err != nil {
+		return Workspace{}, err
+	}
+
+	if err := h.validator.Validate(body); err != nil {
+		validateErr := errs.E(errs.Validation, errs.Code("WORKSPACE_HTTP_VALIDATIONS"), err)
+		return Workspace{}, validateErr
+	}
+
+	return body, nil
+}
+
 func (h EchoHandler) Create(c echo.Context) error {
-	w := new(Workspace)
-	if err := c.Bind(w); err != nil {
+	w, err := h.bindAndValidateBody(c)
+	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
 
-	if err := h.validator.Validate(w); err != nil {
-		validateErr := errs.E(errs.Validation, errs.Code("WORKSPACE_HTTP_VALIDATIONS"), err)
-		return errs.NewHTTPResponse(c, h.logger, validateErr)
-	}
-
-	newWorkspace, err := h.workspaceUseCase.Create(*w)
+	newWorkspace, err := h.workspaceUseCase.Create(w)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -66,9 +75,24 @@ func (h EchoHandler) FindById(c echo.Context) error {
 }
 
 func (h EchoHandler) Update(c echo.Context) error {
-	return c.JSON(200, Workspace{})
+	workspaceId := c.Param("workspaceId")
+	body, err := h.bindAndValidateBody(c)
+	if err != nil {
+		return errs.NewHTTPResponse(c, h.logger, err)
+	}
+	workspace, err := h.workspaceUseCase.Update(workspaceId, body)
+	if err != nil {
+		return errs.NewHTTPResponse(c, h.logger, err)
+	}
+	return c.JSON(200, workspace)
 }
 
 func (h EchoHandler) Delete(c echo.Context) error {
-	return c.JSON(204, Workspace{})
+	workspaceId := c.Param("workspaceId")
+	err := h.workspaceUseCase.Delete(workspaceId)
+	if err != nil {
+		return errs.NewHTTPResponse(c, h.logger, err)
+	}
+
+	return c.JSON(204, nil)
 }
