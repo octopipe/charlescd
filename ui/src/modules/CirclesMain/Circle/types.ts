@@ -1,5 +1,3 @@
-import { CircleItem } from "../Circles/types";
-
 export interface CircleRouting {
   strategy: string
 }
@@ -33,7 +31,9 @@ export interface CircleEnrivonment {
 }
 
 export interface Circle {
-  metadata: CircleItem
+  id: string
+  name: string
+  createdAt: string
   routing: CircleRouting
   modules: CircleModule[]
   status: CircleStatus

@@ -32,6 +32,11 @@
       border-left: 15px solid #43a047;
     }
 
+    &--FAILED {
+      @extend .circle-modules__item;
+      border-left: 15px solid #e53935;
+    }
+
     &__menu {
       background-color: transparent;
       border: none;

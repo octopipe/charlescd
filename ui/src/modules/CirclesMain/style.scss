@@ -1,5 +1,6 @@
 .circles {
   width: 100%;
+  
 
   &__navbar {
     background-color: #424242 ;
@@ -14,18 +15,9 @@
   }
 
   &__content {
-    padding: 2rem;
-    &__item {
-      border: 1px solid #757575;
-      background-color: transparent;
-      color: #fff;
-      height: 450px;
-
-      .card-body {
-        background-color: transparent;
-      }
-    }
-
+    margin-left: 300px;
+    display: inline-flex;
+    height: calc(100vh - 100px);
   }
 
 

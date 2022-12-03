@@ -2,6 +2,7 @@ import { CircleItemModule } from "../CircleModules/types"
 
 
 export interface CircleItem {
+  id: string
   name: string
   namespace: string
   isDefault: boolean

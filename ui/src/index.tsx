@@ -9,14 +9,13 @@ import Login from './modules/Login';
 import './core/components/icons/library'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.scss'
-import Circles from './modules/Circles';
 import Modules from './modules/Modules';
 import Home from './modules/Home';
 import store from './store'
-import Circle from './modules/Circle';
-import Diagram from './modules/Circle/Diagram';
+import Diagram from './modules/CirclesMain/Diagram';
 import CreateCircle from './modules/CreateCircle';
 import Error from './modules/Error';
+import CirclesMain from './modules/CirclesMain';
 
 
 const root = ReactDOM.createRoot(
@@ -49,12 +48,10 @@ const App = () => {
               <Route path='/login' element={<Login />} />
               <Route path='' element={<Main />}>
                 <Route path='workspaces/:workspaceId' element={<Home />} />
-                <Route path='workspaces/:workspaceId/circles' element={<Circles />} />
+                <Route path='workspaces/:workspaceId/circles' element={<CirclesMain />}>
+                </Route>
                 <Route path='workspaces/:workspaceId/circles/create' element={<CreateCircle />} />
                 <Route path='workspaces/:workspaceId/modules' element={<Modules />} />
-              </Route>
-              <Route path='workspaces/:workspaceId/circles/:circleName' element={<Circle />}>
-                <Route path='' element={<Diagram />} />
               </Route>
               <Route path='/error' element={<Error />} />
             </Routes>

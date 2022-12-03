@@ -8,7 +8,8 @@ import './style.scss'
 import { CircleItem } from "../CreateCircle/types";
 import useFetch from "use-http";
 import { useParams } from "react-router-dom";
-import { CirclePagination } from "../Circles/types";
+import { CirclePagination } from "../CirclesMain/types";
+import { CircleModule, ModuleStatus } from "../CirclesMain/Circle/types";
 
 
 const ModalMoveTo = ({ show, onClose }: ModalProps) => {
@@ -46,7 +47,7 @@ const ModalMoveTo = ({ show, onClose }: ModalProps) => {
 }
 
 export interface Props {
-  modules: CircleItemModule[]
+  modules: ModuleStatus
 }
 
 const CustomToggle = React.forwardRef<any, any>(({ children, onClick }, ref) => (
@@ -73,9 +74,9 @@ const CircleModules = ({ modules }: Props) => {
         <div className="circle-modules__title">
           Modules
         </div>
-        { modules?.map(module => (
-          <div className={module.status ? `circle-modules__item--${module.status}` : `circle-modules__item`} key={module.name}>
-            {module.name}
+        { Object.keys(modules)?.map(moduleName => (
+          <div className={modules[moduleName].status ? `circle-modules__item--${modules[moduleName].status}` : `circle-modules__item`} key={moduleName}>
+            {moduleName}
             <Dropdown>
               <Dropdown.Toggle as={CustomToggle}>
                 <FontAwesomeIcon icon="ellipsis-vertical" />

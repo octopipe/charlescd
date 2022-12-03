@@ -1,0 +1,24 @@
+.circle {
+  width: 600px;
+  border-right: 1px solid #2C2C2E;
+  display: inline-block;
+  padding: 30px;
+
+  &__content {
+    &__title {
+      font-weight: 700;
+      font-size: 18px;
+
+    }
+
+    &__section {
+      margin-top: 30px;
+
+      &__title {
+        font-weight: 700;
+        font-size: 18px;
+        margin-bottom: 20px;
+      }
+    }
+  }
+}
