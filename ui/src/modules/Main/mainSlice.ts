@@ -4,14 +4,14 @@ export const mainSlice = createSlice({
   name: 'main',
   initialState: {
     currentWorkspace: '',
-    deployStrategy: '',
+    routingStrategy: '',
   },
   reducers: {
     setCurrentWorkspace: (state, action) => {
       state.currentWorkspace = action.payload
     },
     setDeployStrategy: (state, action) => {
-      state.deployStrategy = action.payload
+      state.routingStrategy = action.payload
     }
   }
 })

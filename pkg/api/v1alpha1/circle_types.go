@@ -59,10 +59,13 @@ type MatchRouteStrategy struct {
 	Segments    []*CircleSegment `json:"segments,omitempty"`
 }
 
+const MatchRoutingStrategy = "match"
+const CanaryRoutingStrategy = "canary"
+
 type CircleRouting struct {
 	Strategy string                `json:"strategy,omitempty"`
 	Canary   *CanaryDeployStrategy `json:"canary,omitempty"`
-	Match    *MatchRouteStrategy   `json:"default,omitempty"`
+	Match    *MatchRouteStrategy   `json:"match,omitempty"`
 }
 
 // CircleSpec defines the desired state of Circle

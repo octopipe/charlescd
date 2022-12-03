@@ -4,9 +4,11 @@ import './style.scss'
 import { CircleItem, CirclePagination } from './types'
 import Placeholder from '../../core/components/Placeholder'
 import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CirclesSidebar from './Sidebar';
 import Circle from './Circle';
+import { Circle as CircleType } from './Circle/types'
+
+const createCircleId = 'untitled'
 
 const CirclesMain = () => {
   const navigate = useNavigate()
@@ -15,10 +17,9 @@ const CirclesMain = () => {
   const { workspaceId } = useParams()
   const [circles, setCircles] = useState<CirclePagination>({continue: '', items: []})
   const [activeCircleIds, setActiveCirclesIds] = useState<string[]>([])
-  const { response, get } = useFetch()
+  const { response, get, post } = useFetch()
 
   const loadCircles = async () => {
-    
     const circles = await get(`/workspaces/${workspaceId}/circles`)
     if (response.ok) setCircles(circles || [])
   }
@@ -29,7 +30,7 @@ const CirclesMain = () => {
 
   useEffect(() => {
     let currentActiveCirclesIds: string[] = []
-    const keys = searchParams.forEach((value, key) => currentActiveCirclesIds.push(key))
+    searchParams.forEach((value, key) => currentActiveCirclesIds.push(key))
     setActiveCirclesIds(currentActiveCirclesIds)
   }, [location])
 
@@ -37,7 +38,7 @@ const CirclesMain = () => {
   const handleCircleClick = (circleId: string) => {
     setSearchParams(i => {
       if (!i.has(circleId)) {
-        i.append(circleId, "1")
+        i.append(circleId, "R")
       } else {
         i.delete(circleId)
       }
@@ -46,14 +47,64 @@ const CirclesMain = () => {
     })
   }
 
+  const handleCircleCreateClick = () => {
+    
+    setSearchParams(i => {
+      if (!i.has(createCircleId)) {
+        i.append(createCircleId, "C")
+      }
+
+      return i
+    })
+  }
+
+  const handleCloseCircle = (circleId: string) => {
+    setSearchParams(i => {
+      i.delete(circleId)
+      return i
+    })
+  }
+
+  const handleUpdateCircle = (circleId: string) => {
+    setSearchParams(i => {
+      i.set(circleId, "U")
+      return i
+    })
+  }
+
+  const handleSaveCircle = async (circle: CircleType) => {
+    const newCircle = await post(`/workspaces/${workspaceId}/circles`, circle)
+    if (response.ok) {
+      setSearchParams(i => {
+        if (!i.has(newCircle.id)) {
+          i.append(newCircle.id, "R")
+        }
+
+        i.delete(createCircleId)
+  
+        return i
+      })
+    }
+  }
+
   return (
     <div className='circles'>
-      <CirclesSidebar circles={circles} onCircleClick={handleCircleClick} />
+      <CirclesSidebar
+        circles={circles}
+        onCircleClick={handleCircleClick}
+        onCircleCreateClick={handleCircleCreateClick}
+      />
       <div className='circles__content'>
         {activeCircleIds.map(id => (
-          <Circle circleId={id} />
+          <Circle
+            key={id}
+            circleId={id}
+            circleOp={searchParams.get(id) || 'R'}
+            onClose={handleCloseCircle}
+            onUpdate={handleUpdateCircle}
+            onSave={handleSaveCircle}
+          />
         ))}
-     
       </div>
     </div>
   )

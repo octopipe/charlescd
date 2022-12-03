@@ -11,9 +11,9 @@ const (
 )
 
 type Workspace struct {
-	Name           string `json:"name" validate:"required"`
-	Description    string `json:"description" validate:"required"`
-	DeployStrategy string `json:"deployStrategy" validate:"required"`
+	Name            string `json:"name" validate:"required"`
+	Description     string `json:"description" validate:"required"`
+	RoutingStrategy string `json:"routingStrategy" validate:"required"`
 }
 
 type WorkspaceModel struct {

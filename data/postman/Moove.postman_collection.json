@@ -483,7 +483,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Workspace 1\",\n    \"description\": \"Lorem ipsum asasasas\",\n    \"deployStrategy\": \"circle\"\n}",
+							"raw": "{\n    \"name\": \"Workspace 1\",\n    \"description\": \"Lorem ipsum asasasas\",\n    \"routingStrategy\": \"circle\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -522,7 +522,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Workspace test 1\",\n    \"description\": \"Lorem ipsum\",\n    \"deployStrategy\": \"circle\"\n}",
+							"raw": "{\n    \"name\": \"Workspace test 1\",\n    \"description\": \"Lorem ipsum\",\n    \"routingStrategy\": \"circle\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"

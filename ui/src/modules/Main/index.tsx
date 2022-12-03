@@ -13,7 +13,8 @@ import { setDeployStrategy } from './mainSlice';
 const routes = [
   { path: '' },
   { path: '/workspaces/:workspaceId' },
-  { path: '/workspaces/:workspaceId/circles' }
+  { path: '/workspaces/:workspaceId/circles' },
+  { path: '/workspaces/:workspaceId/circles/:circleId' }
 ]
 
 const EmptyWorkspacesPlaceholser = () => (
@@ -42,7 +43,7 @@ const Main = () => {
 
   const goToWorkspacePage = (workspace: any) => {
     const matches = matchRoutes(routes, location) || []
-    dispatch(setDeployStrategy(workspace.deployStrategy))
+    dispatch(setDeployStrategy(workspace.routingStrategy))
 
     if (matches?.length > 0 && matches[0].pathname !== '/') {
       navigate(matches[0].pathname)

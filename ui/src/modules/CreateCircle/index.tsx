@@ -32,7 +32,7 @@ const initialEnviroments = {
 
 const CreateCircle = () => {
   const { workspaceId } = useParams()
-  const { deployStrategy } = useAppSelector(store => store.main)
+  const { routingStrategy } = useAppSelector(store => store.main)
   const navigate = useNavigate()
   const [moduleStep, setModuleStep] = useState(MODULE_STEPS.LIST)
   const [currentTemplate, setCurrentTemplate] = useState<Template>()
@@ -66,7 +66,7 @@ const CreateCircle = () => {
             <Form.Control as="textarea" rows={3} />
           </Form.Group>
           <div className='create-circle__routing'>
-            {deployStrategy == 'default' && (
+            {routingStrategy == 'default' && (
               <>
                 <Form.Group>
                   <Form.Label>Routing</Form.Label>
@@ -96,7 +96,7 @@ const CreateCircle = () => {
                 </div>
               </>
             )}
-            {deployStrategy == 'canary' && (
+            {routingStrategy == 'canary' && (
               <></>
             )}
           </div>

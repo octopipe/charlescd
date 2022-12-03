@@ -49,10 +49,10 @@ func (r k8sRepository) fillNamespace(target v1.Namespace, workspace Workspace) v
 
 	target.SetLabels(labels)
 	target.SetAnnotations(map[string]string{
-		"id":             id.ToID(target.Name),
-		"name":           workspace.Name,
-		"description":    workspace.Description,
-		"deployStrategy": workspace.DeployStrategy,
+		"id":              id.ToID(target.Name),
+		"name":            workspace.Name,
+		"description":     workspace.Description,
+		"routingStrategy": workspace.RoutingStrategy,
 	})
 
 	return target
@@ -63,9 +63,9 @@ func (r k8sRepository) toWorkspaceModel(namespace v1.Namespace) WorkspaceModel {
 	return WorkspaceModel{
 		ID: annotations["id"],
 		Workspace: Workspace{
-			Name:           annotations["name"],
-			Description:    annotations["description"],
-			DeployStrategy: annotations["deployStrategy"],
+			Name:            annotations["name"],
+			Description:     annotations["description"],
+			RoutingStrategy: annotations["routingStrategy"],
 		},
 		CreatedAt: namespace.CreationTimestamp.Format(time.RFC3339),
 	}

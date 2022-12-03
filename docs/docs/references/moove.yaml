@@ -402,7 +402,7 @@ paths:
               example:
                 name: Workspace test 1
                 description: Lorem ipsum
-                deployStrategy: circle
+                routingStrategy: circle
       responses:
         '200':
           description: Successful response

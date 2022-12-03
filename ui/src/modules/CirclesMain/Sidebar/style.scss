@@ -5,6 +5,8 @@
   height: calc(100vh - 80px);
   position: fixed;
   background: #2C2C2E;
+  padding: 10px;
+  z-index: 10;
   
 
   &__logo {
@@ -16,10 +18,19 @@
   }
 
 
+  &__header {
+    padding: 10px 0 10px 0;
+    color: #98989E;
+    font-size: 14px;
+    font-weight: 400;
+    border-bottom: 1px solid #757575;
+  }
+
+
   &__list {
     display: flex;
     flex-direction: column;
-    padding: 5px;
+    padding-top: 10px;
 
     &__item {
       padding: 10px;

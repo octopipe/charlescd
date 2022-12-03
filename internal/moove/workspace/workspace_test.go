@@ -83,7 +83,7 @@ func (s *WorkspaceTestSuite) AfterTest(_, _ string) {
 
 func (s *WorkspaceTestSuite) TestCreateWorkspace() {
 	e := echo.New()
-	newWorkspace := `{"name": "Workspace 123", "description": "lorem ipsum", "deployStrategy": "canary"}`
+	newWorkspace := `{"name": "Workspace 123", "description": "lorem ipsum", "routingStrategy": "canary"}`
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(newWorkspace))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
@@ -114,19 +114,19 @@ func (s *WorkspaceTestSuite) TestListWorkspaces() {
 	h := NewEchohandler(e, s.logger, s.workspacerUseCase)
 	fakeWorkspaces := []Workspace{
 		{
-			Name:           "Workspace 1",
-			Description:    "Lorem ipsum",
-			DeployStrategy: "canary",
+			Name:            "Workspace 1",
+			Description:     "Lorem ipsum",
+			RoutingStrategy: "canary",
 		},
 		{
-			Name:           "Workspace 2",
-			Description:    "Lorem ipsum 1",
-			DeployStrategy: "canary",
+			Name:            "Workspace 2",
+			Description:     "Lorem ipsum 1",
+			RoutingStrategy: "canary",
 		},
 		{
-			Name:           "Workspace 3",
-			Description:    "Lorem ipsum 2",
-			DeployStrategy: "circle",
+			Name:            "Workspace 3",
+			Description:     "Lorem ipsum 2",
+			RoutingStrategy: "circle",
 		},
 	}
 
@@ -138,9 +138,9 @@ func (s *WorkspaceTestSuite) TestListWorkspaces() {
 		})
 
 		newNamespace.SetAnnotations(map[string]string{
-			"name":           w.Name,
-			"description":    w.Description,
-			"deployStrategy": w.DeployStrategy,
+			"name":            w.Name,
+			"description":     w.Description,
+			"routingStrategy": w.RoutingStrategy,
 		})
 
 		err := s.clientset.Create(context.Background(), &newNamespace)
@@ -167,9 +167,9 @@ func (s *WorkspaceTestSuite) TestGetWorkspace() {
 	})
 
 	newNamespace.SetAnnotations(map[string]string{
-		"name":           workspaceName,
-		"description":    "Lorem ipsum",
-		"deployStrategy": "circle",
+		"name":            workspaceName,
+		"description":     "Lorem ipsum",
+		"routingStrategy": "circle",
 	})
 
 	err := s.clientset.Create(context.Background(), &newNamespace)

@@ -9,7 +9,7 @@ import { CircleItem } from "../CreateCircle/types";
 import useFetch from "use-http";
 import { useParams } from "react-router-dom";
 import { CirclePagination } from "../CirclesMain/types";
-import { CircleModule, ModuleStatus } from "../CirclesMain/Circle/types";
+import { Circle, CircleModel, CircleModule, ModuleStatus } from "../CirclesMain/Circle/types";
 
 
 const ModalMoveTo = ({ show, onClose }: ModalProps) => {
@@ -47,7 +47,7 @@ const ModalMoveTo = ({ show, onClose }: ModalProps) => {
 }
 
 export interface Props {
-  modules: ModuleStatus
+  circle: CircleModel
 }
 
 const CustomToggle = React.forwardRef<any, any>(({ children, onClick }, ref) => (
@@ -63,7 +63,7 @@ const CustomToggle = React.forwardRef<any, any>(({ children, onClick }, ref) => 
   </a>
 ));
 
-const CircleModules = ({ modules }: Props) => {
+const CircleModules = ({ circle }: Props) => {
   const [moveTo, toggleMoveTo] = useState(false)
   const [remove, toggleRemove] = useState(false)
   const [form, toggleForm] = useState(false)
@@ -74,9 +74,9 @@ const CircleModules = ({ modules }: Props) => {
         <div className="circle-modules__title">
           Modules
         </div>
-        { Object.keys(modules)?.map(moduleName => (
-          <div className={modules[moduleName].status ? `circle-modules__item--${modules[moduleName].status}` : `circle-modules__item`} key={moduleName}>
-            {moduleName}
+        { circle?.modules?.map(module => (
+          <div className={circle.status.modules[module.name] ? `circle-modules__item--${circle.status.modules[module.name].status}` : `circle-modules__item`} key={module.name}>
+            {module.name}
             <Dropdown>
               <Dropdown.Toggle as={CustomToggle}>
                 <FontAwesomeIcon icon="ellipsis-vertical" />

@@ -81,7 +81,7 @@ spec:
                     required:
                     - weight
                     type: object
-                  default:
+                  match:
                     properties:
                       customMatch:
                         properties:
