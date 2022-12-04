@@ -59,11 +59,11 @@ type MatchRouteStrategy struct {
 	Segments    []*CircleSegment `json:"segments,omitempty"`
 }
 
-const MatchRoutingStrategy = "match"
-const CanaryRoutingStrategy = "canary"
+const MatchRoutingStrategy = "MATCH"
+const CanaryRoutingStrategy = "CANARY"
 
 type CircleRouting struct {
-	Strategy string                `json:"strategy,omitempty"`
+	Strategy string                `json:"strategy,omitempty" validate:"oneof=MATCH CANARY"`
 	Canary   *CanaryDeployStrategy `json:"canary,omitempty"`
 	Match    *MatchRouteStrategy   `json:"match,omitempty"`
 }

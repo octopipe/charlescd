@@ -145,6 +145,7 @@ func (r k8sRepository) FindAll(ctx context.Context, namespace string, options li
 	err := r.clientset.List(context.Background(), list, &client.ListOptions{
 		LabelSelector: labelSelector,
 		Namespace:     namespace,
+		Limit:         options.Limit,
 	})
 	if err != nil {
 		return listoptions.Response{}, errs.E(errs.Internal, errs.Code("CIRCLE_LIST_ERROR"), err)

@@ -8,7 +8,6 @@ import (
 	"github.com/octopipe/charlescd/internal/moove/circle"
 	"github.com/octopipe/charlescd/internal/moove/core/grpcclient"
 	"github.com/octopipe/charlescd/internal/moove/module"
-	moduleHandler "github.com/octopipe/charlescd/internal/moove/module/handler"
 	"github.com/octopipe/charlescd/internal/moove/resource"
 	resourceHandler "github.com/octopipe/charlescd/internal/moove/resource/handler"
 	"github.com/octopipe/charlescd/internal/moove/workspace"
@@ -65,7 +64,7 @@ func main() {
 	e.Use(middleware.CORS())
 	workspace.NewEchohandler(e, logger, workspaceUseCase)
 	circle.NewEchohandler(e, logger, circleUseCase)
-	moduleHandler.NewEchohandler(e, logger, moduleUseCase)
+	module.NewEchohandler(e, logger, moduleUseCase)
 	resourceHandler.NewEchohandler(e, logger, resourceUseCase)
 	e.Logger.Fatal(e.Start(":8080"))
 }

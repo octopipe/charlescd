@@ -1,4 +1,4 @@
-package handler
+package module
 
 import (
 	"errors"
@@ -8,17 +8,16 @@ import (
 	"github.com/octopipe/charlescd/internal/moove/core/customvalidator"
 	"github.com/octopipe/charlescd/internal/moove/core/listoptions"
 	"github.com/octopipe/charlescd/internal/moove/errs"
-	"github.com/octopipe/charlescd/internal/moove/module"
 	"go.uber.org/zap"
 )
 
 type EchoHandler struct {
 	logger        *zap.Logger
-	moduleUseCase module.ModuleUseCase
+	moduleUseCase ModuleUseCase
 	validator     customvalidator.CustomValidator
 }
 
-func NewEchohandler(e *echo.Echo, logger *zap.Logger, moduleUseCase module.ModuleUseCase) {
+func NewEchohandler(e *echo.Echo, logger *zap.Logger, moduleUseCase ModuleUseCase) {
 	handler := EchoHandler{
 		logger:        logger,
 		moduleUseCase: moduleUseCase,
@@ -58,14 +57,33 @@ func (h EchoHandler) FindAll(c echo.Context) error {
 	return c.JSON(200, modules)
 }
 
+func (h EchoHandler) bindAndValidateBody(c echo.Context) (Module, error) {
+	body := Module{}
+	if err := c.Bind(&body); err != nil {
+		return Module{}, err
+	}
+
+	if err := h.validator.Validate(body); err != nil {
+		validateErr := errs.E(errs.Validation, errs.Code("CIRCLE_HTTP_VALIDATIONS"), err)
+		return Module{}, validateErr
+	}
+
+	if body.Visibility == PrivateModule && body.Auth == nil && body.SecretRef == nil {
+		validateErr := errs.E(errs.Validation, errs.Code("CIRCLE_HTTP_VALIDATIONS"), errors.New("private repository without authentication"))
+		return Module{}, validateErr
+	}
+
+	return body, nil
+}
+
 func (h EchoHandler) Create(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
-	w := module.Module{}
-	if err := c.Bind(&w); err != nil {
+	body, err := h.bindAndValidateBody(c)
+	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
 
-	newModule, err := h.moduleUseCase.Create(c.Request().Context(), workspaceId, w)
+	newModule, err := h.moduleUseCase.Create(c.Request().Context(), workspaceId, body)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -76,7 +94,7 @@ func (h EchoHandler) Create(c echo.Context) error {
 func (h EchoHandler) FindById(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	moduleName := c.Param("moduleName")
-	module, err := h.moduleUseCase.FindByName(c.Request().Context(), workspaceId, moduleName)
+	module, err := h.moduleUseCase.FindById(c.Request().Context(), workspaceId, moduleName)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -87,12 +105,12 @@ func (h EchoHandler) Update(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	moduleName := c.Param("moduleName")
 
-	newModule := module.Module{}
-	if err := c.Bind(&newModule); err != nil {
+	body, err := h.bindAndValidateBody(c)
+	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
 
-	updatedModule, err := h.moduleUseCase.Update(c.Request().Context(), workspaceId, moduleName, newModule)
+	updatedModule, err := h.moduleUseCase.Update(c.Request().Context(), workspaceId, moduleName, body)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
@@ -106,5 +124,5 @@ func (h EchoHandler) Delete(c echo.Context) error {
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
-	return c.JSON(204, module.Module{})
+	return c.JSON(204, Module{})
 }

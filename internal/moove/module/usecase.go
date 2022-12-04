@@ -20,15 +20,15 @@ func NewUseCase(workspaceUseCase workspace.WorkspaceUseCase, moduleRepository Mo
 }
 
 // Create implements ModuleUseCase
-func (u UseCase) Create(ctx context.Context, workspaceId string, module Module) (Module, error) {
+func (u UseCase) Create(ctx context.Context, workspaceId string, module Module) (ModuleModel, error) {
 	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
 	if err != nil {
-		return Module{}, err
+		return ModuleModel{}, err
 	}
 
 	createdModule, err := u.moduleRepository.Create(ctx, namespace, module)
 	if err != nil {
-		return Module{}, err
+		return ModuleModel{}, err
 	}
 
 	return createdModule, nil
@@ -65,30 +65,30 @@ func (u UseCase) FindAll(ctx context.Context, workspaceId string, options listop
 }
 
 // FindByName implements ModuleUseCase
-func (u UseCase) FindByName(ctx context.Context, workspaceId string, name string) (Module, error) {
+func (u UseCase) FindById(ctx context.Context, workspaceId string, name string) (ModuleModel, error) {
 	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
 	if err != nil {
-		return Module{}, err
+		return ModuleModel{}, err
 	}
 
-	module, err := u.moduleRepository.FindByName(ctx, namespace, name)
+	module, err := u.moduleRepository.FindById(ctx, namespace, name)
 	if err != nil {
-		return Module{}, err
+		return ModuleModel{}, err
 	}
 
 	return module, nil
 }
 
 // Update implements ModuleUseCase
-func (u UseCase) Update(ctx context.Context, workspaceId string, name string, module Module) (Module, error) {
+func (u UseCase) Update(ctx context.Context, workspaceId string, name string, module Module) (ModuleModel, error) {
 	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
 	if err != nil {
-		return Module{}, err
+		return ModuleModel{}, err
 	}
 
 	updatedModule, err := u.moduleRepository.Update(ctx, namespace, name, module)
 	if err != nil {
-		return Module{}, err
+		return ModuleModel{}, err
 	}
 
 	return updatedModule, nil
