@@ -49,6 +49,8 @@ spec:
                 type: object
               author:
                 type: string
+              description:
+                type: string
               path:
                 type: string
               secretRef:

@@ -11,7 +11,7 @@ export interface ResourceMetadata {
   group: string
   owner?: ResourceOwner
   status?: string
-  error?: string
+  message?: string
 }
 
 export interface Resource {

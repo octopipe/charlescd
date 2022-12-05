@@ -12,7 +12,7 @@ import "ace-builds/src-noconflict/theme-monokai";
 
 export interface ResourceModalProps extends ModalProps {
   circleId: string
-  node?: Node<ResourceMetadata>
+  selectedResource?: ResourceMetadata
 }
 
 enum EVENT_KEYS {
@@ -29,7 +29,7 @@ const getAlertStatus = (resourceStatus: string) => {
 }
 
 
-const ResourceModal = ({ circleId, show, onClose, node }: ResourceModalProps) => {
+const ResourceModal = ({ circleId, show, onClose, selectedResource }: ResourceModalProps) => {
   const { workspaceId, circleName } = useParams()
   const { response, get } = useFetch()
   const [ activeKey, setActiveKey ] = useState<EVENT_KEYS>(EVENT_KEYS.OVERVIEW)
@@ -38,17 +38,17 @@ const ResourceModal = ({ circleId, show, onClose, node }: ResourceModalProps) =>
   const [manifest, setManifest] = useState<any>({})
 
   const getResource = async () => {
-    const resource = await get(`/workspaces/${workspaceId}/circles/${circleName}/resources/${node?.data.name}?group=${node?.data.group || ''}&kind=${node?.data.kind}`)
+    const resource = await get(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}?group=${selectedResource?.group || ''}&kind=${selectedResource?.kind}`)
     if (response.ok) setResource(resource || {})
   }
 
   const getManifest = async () => {
-    const manifest = await get(`/workspaces/${workspaceId}/circles/${circleName}/resources/${node?.data.name}/manifest?group=${node?.data.group || ''}&kind=${node?.data.kind}`)
+    const manifest = await get(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}/manifest?group=${selectedResource?.group || ''}&kind=${selectedResource?.kind}`)
     if (response.ok) setManifest(manifest || {})
   }
 
   const getEvents = async () => {
-    const events = await get(`/workspaces/${workspaceId}/circles/${circleName}/resources/${node?.data.name}/events?kind=${node?.data.kind}`)
+    const events = await get(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}/events?kind=${selectedResource?.kind}`)
     if (response.ok) setEvents(events || [])
   }
 
@@ -75,7 +75,7 @@ const ResourceModal = ({ circleId, show, onClose, node }: ResourceModalProps) =>
       </div>
       {resource?.metadata?.status && (
         <Alert variant={getAlertStatus(resource?.metadata?.status || 'Default')}>
-          <strong>{resource?.metadata?.status}.</strong> {resource?.metadata?.error && <p>{resource?.metadata?.error}</p>}
+          <strong>{resource?.metadata?.status}.</strong> {resource?.metadata?.message && <p>{resource?.metadata?.message}</p>}
         </Alert>
       )}
       
@@ -122,7 +122,7 @@ const ResourceModal = ({ circleId, show, onClose, node }: ResourceModalProps) =>
   return (
     <Modal show={show} onHide={onClose} size="xl" className="resource-modal">
       <Modal.Header closeButton>
-        <Modal.Title>{node?.data.name}</Modal.Title>
+        <Modal.Title>{selectedResource?.name}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <div className="resource-modal__header py-2">

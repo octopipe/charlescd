@@ -17,6 +17,7 @@ import Error from './modules/Error';
 import CirclesMain from './modules/CirclesMain';
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import ModulesMain from './modules/ModulesMain';
 
 
 const root = ReactDOM.createRoot(
@@ -59,7 +60,7 @@ const App = () => {
                 <Route path='workspaces/:workspaceId/circles' element={<CirclesMain />}>
                 </Route>
                 <Route path='workspaces/:workspaceId/circles/create' element={<CreateCircle />} />
-                <Route path='workspaces/:workspaceId/modules' element={<Modules />} />
+                <Route path='workspaces/:workspaceId/modules' element={<ModulesMain />} />
               </Route>
               <Route path='/error' element={<Error />} />
             </Routes>

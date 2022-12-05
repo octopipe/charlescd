@@ -69,35 +69,6 @@ const Circle = ({ circleId, circleOp, onClose, onSave, onDelete }: Props) => {
     setEnvironments(circle?.environments || initialEnviroments)
   }, [circle])
 
-  const handleClickSave = () => {
-    let routing: CircleRouting = { strategy: routingStrategy }
-    if (routingStrategy === 'match') {
-      if (matchStrategy === 'customMatch') {
-        routing = {
-          ...routing,
-          match: { customMatch} ,
-        }
-      } else {
-        routing = {
-          ...routing,
-          match: { segments }
-        }
-      }
-    }
-
-    const newCircle = {
-      name,
-      description,
-      environments,
-      modules: [],
-      routing,
-    }
-
-    console.log(newCircle)
-
-    onSave(newCircle)
-  }
-
   const handleDelete = (circleId: string) => {
     onDelete(circleId)
     toggleDeleteAlert(false)
@@ -127,8 +98,8 @@ const Circle = ({ circleId, circleOp, onClose, onSave, onDelete }: Props) => {
         onChange={tab => setActiveTab(tab)}
         onDelete={handleDelete}
       />
-      {activeTab === TABS.CONTENT && <CircleContent circleId={circleId} circleOp={circleOp} onSave={handleClickSave} />}
-      {activeTab === TABS.TREE && <CircleTree show={true} circleId={circleId} onClose={() => setActiveTab(TABS.CONTENT)} /> }
+      {activeTab === TABS.CONTENT && <CircleContent circleId={circleId} circleOp={circleOp} onSave={onSave} />}
+      {activeTab === TABS.TREE && <CircleTree circleId={circleId} /> }
       <Alert show={showDeleteAlert} action={() => handleDelete(circleId)} onClose={() => toggleDeleteAlert(false)} />
     </div>
   )

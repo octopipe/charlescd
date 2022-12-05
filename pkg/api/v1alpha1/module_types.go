@@ -40,6 +40,7 @@ type SecretRef struct {
 
 type ModuleSpec struct {
 	Author       string      `json:"author,omitempty"`
+	Description  string      `json:"description,omitempty"`
 	SecretRef    *SecretRef  `json:"secretRef,omitempty"`
 	Path         string      `json:"path,omitempty"`
 	Url          string      `json:"url,omitempty"`

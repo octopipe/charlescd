@@ -57,6 +57,16 @@ body {
   }
 }
 
+.btn-outline-primary {
+  border: 1px solid #f15c23;
+  color: #f15c23;
+}
+
+.btn-check:checked+.btn {
+  background-color: #f15c23;
+  border: 1px solid #f15c23;
+}
+
 .card {
   border: none;
 

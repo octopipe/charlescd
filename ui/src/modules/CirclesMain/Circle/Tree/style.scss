@@ -1,4 +1,12 @@
 .circle-tree {
+  &__buttons {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+  }
+}
+
+.circle-diagram {
   width: 100vw;
   height: 100vh;
 
@@ -23,7 +31,7 @@
     }
 
     &__project {
-      @extend .circle-tree__item;
+      @extend .circle-diagram__item;
       font-size: 12px;
       border-image: 
         linear-gradient(
@@ -34,18 +42,71 @@
     }
 
     &--Healthy {
-      @extend .circle-tree__item;
+      @extend .circle-diagram__item;
       border-color: #43a047;
     }
 
     &--Progressing {
-      @extend .circle-tree__item;
+      @extend .circle-diagram__item;
       border-color: #039be5;
     }
 
     &--Degraded {
-      @extend .circle-tree__item;
+      @extend .circle-diagram__item;
       border-color: #e53935;
+    }
+  }
+}
+
+.circle-list {
+  padding: 0 2rem 0 2rem;
+
+
+  &__filters {
+    display: flex;
+    justify-content: center;
+    background-color: #424242;
+  }
+  
+
+  &__item {
+    background-color: #424242;
+    cursor: pointer;
+    color: white;
+    border-left: 12px solid #757575;
+    height: 100%;
+    margin: 10px 0 10px 0;
+    padding: 1rem;
+    border-radius: 10px;
+
+    &--Healthy {
+      @extend .circle-list__item;
+      border-color: #43a047;
+    }
+
+    &--Progressing {
+      @extend .circle-list__item;
+      border-color: #039be5;
+    }
+
+    &--Degraded {
+      @extend .circle-list__item;
+      border-color: #e53935;
+    }
+
+    &--SYNCED {
+      @extend .circle-list__item;
+      border-color: #f15c23;
+    }
+    
+
+    &__owner {
+      margin-top: 10px;
+      &__content {
+        border-radius: 10px;
+        padding: .5rem;
+        background-color: rgba(0, 0, 0, .3);
+      }
     }
   }
 }

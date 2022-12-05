@@ -106,8 +106,9 @@ const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
       )}
       <div className='circle__content'>
         <div className='circle__content__title'>
-          <FontAwesomeIcon icon={["far", "circle"]} className="me-2" />
           <ViewInput
+            icon={["far", "circle"]}
+            label='Name'
             value={name}
             edit={isCreate()}
             canEdit={isCreate()}
@@ -116,8 +117,9 @@ const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
           />
         </div>
         <div className='circle__content__description'>
-          <FontAwesomeIcon icon="align-justify" className="me-2" />
           <ViewInput
+            icon="align-justify"
+            label='Description'
             value={description}
             edit={isCreate()}
             onChange={setDescription}

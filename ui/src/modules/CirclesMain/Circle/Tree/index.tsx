@@ -8,7 +8,9 @@ import { Resource, ResourceMetadata } from "./types";
 import DefaultNode from "./DefaultNode";
 import ResourceModal from "./ResourceModal";
 import ProjectNode from "./ProjectNode";
-import { Modal } from "react-bootstrap";
+import { ButtonGroup, Modal, ToggleButton } from "react-bootstrap";
+import TreeDiagram from "./Diagram";
+import TreeList from "./List";
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -49,46 +51,26 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
   return { nodes, edges };
 };
 
-const getNodeAndEdgesByResources = (resources: ResourceMetadata[]) => {
-  const nodes = resources
-    .map(resource => ({
-      id: `${resource.name}${resource.kind}`,
-      type: resource.kind !== "Circle" && resource.kind !== "Module" ? 'default' : 'project',
-      data: resource,
-      position,
-    }))
-
-  const edges = resources
-    .filter(resource => resource?.owner?.name !== '')
-    .map(resource => ({
-      id: `${resource.name}${resource.kind}-${resource.owner?.name}${resource.owner?.kind}`,
-      source: `${resource.owner?.name}${resource.owner?.kind}`,
-      target: `${resource.name}${resource.kind}`,
-      type: edgeType,
-    }))
- 
- 
-  return {nodes, edges: [...edges]}
-} 
-
-const nodeTypes = {
-  default: DefaultNode,
-  project: ProjectNode,
-};
-
 interface Props {
   circleId: string
-  show: boolean
-  onClose: () => void
 }
 
-const CircleTree = ({ circleId, show, onClose }: Props) => {
+enum VIEWS {
+  LIST = 'LIST',
+  DIAGRAM = 'DIAGRAM'
+}
+
+const viewsOptions = [
+  { name: 'List', icon: '', value: VIEWS.LIST },
+  { name: 'Diagram', icon: '', value: VIEWS.DIAGRAM },
+]
+
+const CircleTree = ({ circleId }: Props) => {
   const { response, get } = useFetch({ cachePolicy: CachePolicies.NO_CACHE })
   const { workspaceId } = useParams()
   const [tree, setTree] = useState<ResourceMetadata[]>([])
-  const [nodes, setNodes] = useNodesState([])
-  const [edges, setedges] = useEdgesState([])
-  const [selectedNode, setSelectedNode] = useState<Node<ResourceMetadata> | undefined>(undefined)
+  const [currentView, setCurrentView] = useState(VIEWS.LIST)
+  const [selectedResource, setSelectedResource] = useState<ResourceMetadata | undefined>()
 
   const loadTree = async () => {
     const tree = await get(`/workspaces/${workspaceId}/circles/${circleId}/resources/tree`)
@@ -106,44 +88,31 @@ const CircleTree = ({ circleId, show, onClose }: Props) => {
     return () => clearInterval(interval)
   }, [])
 
-  useEffect(() => {
-    if (tree.length <= 0) {
-      return
-    }
-
-    const {nodes: treeNodes, edges: treeEdges} = getNodeAndEdgesByResources(tree)
-    console.log('NODES', treeNodes, treeEdges)
-    const {nodes: layoutedNodes, edges: layoutedEdges} = getLayoutedElements(treeNodes, treeEdges)
-    
-    setNodes([...layoutedNodes])
-    setedges([...layoutedEdges])
-  }, [tree])
-
-  const handleNodeClick = (ev: any, node: Node<ResourceMetadata>) => {
-    setSelectedNode(node)
-  }
 
   return (
-    <Modal show={show} fullscreen={true} onHide={() => onClose()} className="circle-tree">
-      <Modal.Header closeButton style={{backgroundColor: "#1C1C1E"}}>
-        <Modal.Title>Modal</Modal.Title>
-      </Modal.Header>
-      <Modal.Body style={{backgroundColor: "#1C1C1E"}}>
-        <ReactFlow
-          nodeTypes={nodeTypes}
-          nodes={nodes}
-          edges={edges}
-          connectionLineType={ConnectionLineType.SmoothStep}
-          nodesDraggable={false}
-          nodesConnectable={false}
-          onNodeClick={handleNodeClick}
-          fitView
-        >
-          <Background/>
-        </ReactFlow>
-        {selectedNode && <ResourceModal show={!!selectedNode} circleId={circleId} node={selectedNode} onClose={() => setSelectedNode(undefined)}/>}
-      </Modal.Body>
-    </Modal>
+    <div className="circle-tree">
+      <div className="circle-tree__buttons">
+        <ButtonGroup>
+          {viewsOptions.map((option, idx) => (
+            <ToggleButton
+              key={idx}
+              id={`radio-${idx}`}
+              type="radio"
+              variant='outline-primary'
+              name="radio"
+              value={option.value}
+              checked={currentView === option.value}
+              onChange={(e) => setCurrentView(e.currentTarget.value as VIEWS)}
+            >
+              {option.name}
+            </ToggleButton>
+          ))}
+        </ButtonGroup>
+      </div>
+      <TreeList tree={tree} onSelectResource={setSelectedResource} />
+      {currentView === VIEWS.DIAGRAM && <TreeDiagram show={true} tree={tree} onClose={() => setCurrentView(VIEWS.LIST)} onSelectResource={setSelectedResource} /> }
+      {selectedResource && <ResourceModal show={!!selectedResource} circleId={circleId} selectedResource={selectedResource} onClose={() => setSelectedResource(undefined)}/>}
+    </div>
   )
 }
 
