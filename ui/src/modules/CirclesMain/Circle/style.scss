@@ -3,11 +3,15 @@
   border-right: 1px solid #2C2C2E;
   display: inline-block;
   overflow-y: auto;
+  position: relative;
   
 
   &__tabs {
     background: #2C2C2E;
     height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
     &__item {
       display: flex;
@@ -53,12 +57,14 @@
         margin-bottom: 20px;
       }
     }
+  }
 
-    &__footer {
-      display: flex;
-      justify-content: center;
-      padding: 30px;
-    }
+  &__save {
+    display: flex;
+    justify-content: end;
+    padding: 5px 30px 5px 5px;
+    z-index: 10;
+    cursor: pointer;
   }
 
   

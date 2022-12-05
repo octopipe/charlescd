@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Button, Card, Col, Container, Form, FormControl, Nav, Row } from 'react-bootstrap'
+import { Button, Card, Col, Container, Dropdown, Form, FormControl, Nav, Row } from 'react-bootstrap'
 import { useSelector } from 'react-redux'
 import useFetch from 'use-http'
 import './style.scss'
-import { Circle as CircleType, CircleModel, CircleRouting, CircleRoutingCustomMatch, CircleRoutingSegment } from './types'
+import { Circle as CircleType, CircleEnrivonment, CircleModel, CircleRouting, CircleRoutingCustomMatch, CircleRoutingSegment } from './types'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CircleModules from '../../CircleModules'
@@ -13,6 +13,7 @@ import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-monokai";
 import ViewInput from '../../../core/components/ViewInput'
 import { useAppSelector } from '../../../core/hooks/redux'
+import Alert from '../../../core/components/Alert'
 
 interface Props {
   circleId: string
@@ -20,6 +21,7 @@ interface Props {
   onClose: (id: string) => void
   onUpdate: (id: string) => void
   onSave: (circle: CircleType) => void
+  onDelete: (circleId: string) => void
 }
 
 const initialEnviroments = [
@@ -33,8 +35,7 @@ const initialSegments = [
 ]
 
 
-const Circle = ({ circleId, circleOp, onClose, onSave }: Props) => {
-  const navigate = useNavigate()
+const Circle = ({ circleId, circleOp, onClose, onSave, onDelete }: Props) => {
   const [searchParams] = useSearchParams();
   const { routingStrategy } = useAppSelector(state => state.main)
   const { workspaceId } = useParams()
@@ -45,7 +46,8 @@ const Circle = ({ circleId, circleOp, onClose, onSave }: Props) => {
   const [matchStrategy, setMatchStrategy] = useState('customMatch')
   const [customMatch, setCustomMatch] = useState<CircleRoutingCustomMatch>(initialCustomMatch)
   const [segments, setSegments] = useState<CircleRoutingSegment[]>(initialSegments)
-  const [environments, setEnvironments] = useState(initialEnviroments)
+  const [environments, setEnvironments] = useState<CircleEnrivonment[]>(initialEnviroments)
+  const [ showDeleteAlert, toggleDeleteAlert ] = useState(false)
   const [modules, setModules] = useState([])
 
   const loadCircle = async () => {
@@ -62,7 +64,7 @@ const Circle = ({ circleId, circleOp, onClose, onSave }: Props) => {
     setName(circle?.name || '')
     setDescription(circle?.description || '')
     setCustomMatch(circle?.routing?.match?.customMatch || initialCustomMatch)
-    setEnvironments(circle?.environments || [])
+    setEnvironments(circle?.environments || initialEnviroments)
   }, [circle])
 
   const isCreate = () => {
@@ -93,8 +95,28 @@ const Circle = ({ circleId, circleOp, onClose, onSave }: Props) => {
       routing,
     }
 
+    console.log(newCircle)
+
     onSave(newCircle)
   }
+
+  const handleDelete = (circleId: string) => {
+    onDelete(circleId)
+    toggleDeleteAlert(false)
+  }
+
+  const CustomToggle = React.forwardRef<any, any>(({ children, onClick }, ref) => (
+    <a
+      ref={ref}
+      onClick={(e) => {
+        e.preventDefault();
+        onClick(e);
+      }}
+      className="circle-modules__item__menu"
+    >
+      {children}
+    </a>
+  ));
 
   return (
     <div className='circle'>
@@ -107,7 +129,26 @@ const Circle = ({ circleId, circleOp, onClose, onSave }: Props) => {
             <FontAwesomeIcon icon="close" />
           </div>
         </div>
+        <div className='me-2'>
+          <Dropdown>
+            <Dropdown.Toggle as={CustomToggle}>
+              <FontAwesomeIcon icon="ellipsis-vertical" />
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Item onClick={() => toggleDeleteAlert(true)}>
+                Remove
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        </div>
       </div>
+      {circleOp === 'C' && (
+        <div className='circle__save'>
+          <div onClick={handleClickSave}>
+            <FontAwesomeIcon icon="check" color='#4caf50' className="me-1" /> Save circle
+          </div>
+        </div>
+      )}
       <div className='circle__content'>
         <div className='circle__content__title'>
           <FontAwesomeIcon icon={["far", "circle"]} className="me-2" />
@@ -182,14 +223,11 @@ const Circle = ({ circleId, circleOp, onClose, onSave }: Props) => {
             mode="json"
             theme="monokai"
             value={JSON.stringify(environments, null, 2)}
+            onChange={value => setEnvironments(JSON.parse(value))}
           />
         </div>
-        <div className='circle__content__footer'>
-          <div onClick={handleClickSave}>
-            <FontAwesomeIcon icon="check" color='#4caf50' className="me-1" /> Save circle
-          </div>
-        </div>
       </div>
+      <Alert show={showDeleteAlert} action={() => handleDelete(circleId)} onClose={() => toggleDeleteAlert(false)} />
     </div>
   )
 }

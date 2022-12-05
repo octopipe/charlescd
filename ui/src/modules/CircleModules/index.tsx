@@ -97,7 +97,7 @@ const CircleModules = ({ circle }: Props) => {
       </div>
       <ModalForm show={form} onClose={() => toggleForm(false)} />
       <ModalMoveTo show={moveTo} onClose={() => toggleMoveTo(false)}/>
-      <Alert show={remove} onClose={() => toggleRemove(false)}/>
+      <Alert action={() => ({})} show={remove} onClose={() => toggleRemove(false)}/>
     </>
   )
 

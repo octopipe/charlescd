@@ -8,8 +8,8 @@ import (
 )
 
 type CircleModule struct {
-	Name      string                         `json:"name,omitempty"`
-	Revision  string                         `json:"revision,omitempty"`
+	Name      string                         `json:"name,omitempty" validate:"required"`
+	Revision  string                         `json:"revision,omitempty" validate:"required"`
 	Overrides []charlescdiov1alpha1.Override `json:"overrides,omitempty"`
 }
 
@@ -22,10 +22,9 @@ type CircleItem struct {
 }
 
 type Circle struct {
-	Name         string                                   `json:"name"`
+	Name         string                                   `json:"name" validate:"required"`
 	Author       string                                   `json:"author,omitempty"`
 	Description  string                                   `json:"description,omitempty"`
-	Namespace    string                                   `json:"namespace,omitempty"`
 	IsDefault    bool                                     `json:"isDefault,omitempty"`
 	Routing      charlescdiov1alpha1.CircleRouting        `json:"routing,omitempty"`
 	Modules      []CircleModule                           `json:"modules,omitempty"`

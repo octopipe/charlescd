@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import useFetch from 'use-http'
+import useFetch, { CachePolicies } from 'use-http'
 import './style.scss'
 import { CircleItem, CirclePagination } from './types'
 import Placeholder from '../../core/components/Placeholder'
@@ -17,7 +17,7 @@ const CirclesMain = () => {
   const { workspaceId } = useParams()
   const [circles, setCircles] = useState<CirclePagination>({continue: '', items: []})
   const [activeCircleIds, setActiveCirclesIds] = useState<string[]>([])
-  const { response, get, post } = useFetch()
+  const { response, get, post, delete: deleteMethod } = useFetch({cachePolicy: CachePolicies.NO_CACHE})
 
   const loadCircles = async () => {
     const circles = await get(`/workspaces/${workspaceId}/circles`)
@@ -72,6 +72,17 @@ const CirclesMain = () => {
     })
   }
 
+  const handleDeleteCircle = async (circleId: string) => {
+    await deleteMethod(`/workspaces/${workspaceId}/circles/${circleId}`)
+    await loadCircles()
+    if (response.ok) {
+      setSearchParams(i => {
+        i.delete(circleId)
+        return i
+      })
+    }
+  }
+
   const handleSaveCircle = async (circle: CircleType) => {
     const newCircle = await post(`/workspaces/${workspaceId}/circles`, circle)
     if (response.ok) {
@@ -84,6 +95,7 @@ const CirclesMain = () => {
   
         return i
       })
+      await loadCircles()
     }
   }
 
@@ -103,6 +115,7 @@ const CirclesMain = () => {
             onClose={handleCloseCircle}
             onUpdate={handleUpdateCircle}
             onSave={handleSaveCircle}
+            onDelete={handleDeleteCircle}
           />
         ))}
       </div>

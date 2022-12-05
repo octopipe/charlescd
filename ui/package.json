@@ -28,6 +28,7 @@
     "react-router-dom": "^6.4.1",
     "react-scripts": "5.0.1",
     "react-svg": "^15.1.10",
+    "react-toastify": "^9.1.1",
     "reaflow": "^5.0.7",
     "recharts": "^2.1.16",
     "sass": "^1.55.0",

@@ -16,6 +16,8 @@ import Diagram from './modules/CirclesMain/Diagram';
 import CreateCircle from './modules/CreateCircle';
 import Error from './modules/Error';
 import CirclesMain from './modules/CirclesMain';
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const root = ReactDOM.createRoot(
@@ -34,6 +36,12 @@ const App = () => {
         if (response.status >= 500) {
           window.location.href = '/error'
         }
+
+        if (!response.ok) {
+          console.log("ERRORS", response)
+          toast.error(response.data?.message)
+        }
+
         return res
       }
     }
@@ -44,6 +52,7 @@ const App = () => {
       <ReduxProvider store={store}>
         <FetchProvider url='http://localhost:8080' options={options}>
           <BrowserRouter>
+            <ToastContainer autoClose={2000} hideProgressBar theme='dark'/>
             <Routes>
               <Route path='/login' element={<Login />} />
               <Route path='' element={<Main />}>
