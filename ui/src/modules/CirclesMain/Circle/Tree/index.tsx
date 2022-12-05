@@ -8,11 +8,12 @@ import { Resource, ResourceMetadata } from "./types";
 import DefaultNode from "./DefaultNode";
 import ResourceModal from "./ResourceModal";
 import ProjectNode from "./ProjectNode";
+import { Modal } from "react-bootstrap";
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-const nodeWidth = 180;
+const nodeWidth = 170;
 const nodeHeight = 60;
 const position = { x: 0, y: 0 }
 const edgeType = 'smoothstep'
@@ -58,7 +59,7 @@ const getNodeAndEdgesByResources = (resources: ResourceMetadata[]) => {
     }))
 
   const edges = resources
-    .filter(resource => resource?.owner && resource.owner.kind !== 'Circle')
+    .filter(resource => resource?.owner?.name !== '')
     .map(resource => ({
       id: `${resource.name}${resource.kind}-${resource.owner?.name}${resource.owner?.kind}`,
       source: `${resource.owner?.name}${resource.owner?.kind}`,
@@ -66,15 +67,8 @@ const getNodeAndEdgesByResources = (resources: ResourceMetadata[]) => {
       type: edgeType,
     }))
  
-  const circleEdges = resources
-    .filter(resource => resource?.owner && resource.owner.kind === 'Circle')
-    .map(resource => ({
-      id: `${resource.name}${resource.kind}-${resource.owner?.name}${resource.owner?.kind}`,
-      source: `${resource.owner?.name}${resource.owner?.kind}`,
-      target: `${resource.name}${resource.kind}`,
-      type: edgeType,
-    }))
-  return {nodes, edges: [...edges, ...circleEdges]}
+ 
+  return {nodes, edges: [...edges]}
 } 
 
 const nodeTypes = {
@@ -82,56 +76,75 @@ const nodeTypes = {
   project: ProjectNode,
 };
 
-const Diagram = () => {
+interface Props {
+  circleId: string
+  show: boolean
+  onClose: () => void
+}
+
+const CircleTree = ({ circleId, show, onClose }: Props) => {
   const { response, get } = useFetch({ cachePolicy: CachePolicies.NO_CACHE })
-  const { workspaceId, circleName } = useParams()
-  const [diagram, setDiagram] = useState<ResourceMetadata[]>([])
+  const { workspaceId } = useParams()
+  const [tree, setTree] = useState<ResourceMetadata[]>([])
   const [nodes, setNodes] = useNodesState([])
   const [edges, setedges] = useEdgesState([])
   const [selectedNode, setSelectedNode] = useState<Node<ResourceMetadata> | undefined>(undefined)
 
-  const loadDiagram = async () => {
-    const circles = await get(`/workspaces/${workspaceId}/circles/${circleName}/resources/tree`)
-    if (response.ok) setDiagram(circles || [])
+  const loadTree = async () => {
+    const tree = await get(`/workspaces/${workspaceId}/circles/${circleId}/resources/tree`)
+    if (response.ok) {
+      setTree(tree || [])
+    }
   }
 
   useEffect(() => {
-    loadDiagram()
+    loadTree()
     const interval = setInterval(() => {
-      loadDiagram()
+      loadTree()
     }, 3000)
     
     return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
-    const {nodes: diagramNodes, edges: diagramEdges} = getNodeAndEdgesByResources(diagram)
-    const {nodes: layoutedNodes, edges: layoutedEdges} = getLayoutedElements(diagramNodes, diagramEdges)
+    if (tree.length <= 0) {
+      return
+    }
+
+    const {nodes: treeNodes, edges: treeEdges} = getNodeAndEdgesByResources(tree)
+    console.log('NODES', treeNodes, treeEdges)
+    const {nodes: layoutedNodes, edges: layoutedEdges} = getLayoutedElements(treeNodes, treeEdges)
+    
     setNodes([...layoutedNodes])
     setedges([...layoutedEdges])
-  }, [diagram])
+  }, [tree])
 
   const handleNodeClick = (ev: any, node: Node<ResourceMetadata>) => {
     setSelectedNode(node)
   }
 
   return (
-    <div className="circle-diagram">
-      <ReactFlow
-        nodeTypes={nodeTypes}
-        nodes={nodes}
-        edges={edges}
-        connectionLineType={ConnectionLineType.SmoothStep}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        onNodeClick={handleNodeClick}
-        fitView
-      >
-        <Background />
-      </ReactFlow>
-      {selectedNode && <ResourceModal show={!!selectedNode} node={selectedNode} onClose={() => setSelectedNode(undefined)}/>}
-    </div>
+    <Modal show={show} fullscreen={true} onHide={() => onClose()} className="circle-tree">
+      <Modal.Header closeButton style={{backgroundColor: "#1C1C1E"}}>
+        <Modal.Title>Modal</Modal.Title>
+      </Modal.Header>
+      <Modal.Body style={{backgroundColor: "#1C1C1E"}}>
+        <ReactFlow
+          nodeTypes={nodeTypes}
+          nodes={nodes}
+          edges={edges}
+          connectionLineType={ConnectionLineType.SmoothStep}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          onNodeClick={handleNodeClick}
+          fitView
+        >
+          <Background/>
+        </ReactFlow>
+        {selectedNode && <ResourceModal show={!!selectedNode} circleId={circleId} node={selectedNode} onClose={() => setSelectedNode(undefined)}/>}
+      </Modal.Body>
+    </Modal>
   )
 }
 
-export default Diagram
+export default CircleTree

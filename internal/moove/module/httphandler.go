@@ -2,6 +2,7 @@ package module
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -68,6 +69,7 @@ func (h EchoHandler) bindAndValidateBody(c echo.Context) (Module, error) {
 		return Module{}, validateErr
 	}
 
+	fmt.Println(body)
 	if body.Visibility == PrivateModule && body.Auth == nil && body.SecretRef == nil {
 		validateErr := errs.E(errs.Validation, errs.Code("CIRCLE_HTTP_VALIDATIONS"), errors.New("private repository without authentication"))
 		return Module{}, validateErr

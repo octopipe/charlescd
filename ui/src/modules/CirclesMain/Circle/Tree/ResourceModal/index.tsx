@@ -11,6 +11,7 @@ import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-monokai";
 
 export interface ResourceModalProps extends ModalProps {
+  circleId: string
   node?: Node<ResourceMetadata>
 }
 
@@ -28,16 +29,22 @@ const getAlertStatus = (resourceStatus: string) => {
 }
 
 
-const ResourceModal = ({ show, onClose, node }: ResourceModalProps) => {
+const ResourceModal = ({ circleId, show, onClose, node }: ResourceModalProps) => {
   const { workspaceId, circleName } = useParams()
   const { response, get } = useFetch()
   const [ activeKey, setActiveKey ] = useState<EVENT_KEYS>(EVENT_KEYS.OVERVIEW)
   const [resource, setResource] = useState<Resource>()
   const [events, setEvents] = useState<any>([])
+  const [manifest, setManifest] = useState<any>({})
 
   const getResource = async () => {
     const resource = await get(`/workspaces/${workspaceId}/circles/${circleName}/resources/${node?.data.name}?group=${node?.data.group || ''}&kind=${node?.data.kind}`)
     if (response.ok) setResource(resource || {})
+  }
+
+  const getManifest = async () => {
+    const manifest = await get(`/workspaces/${workspaceId}/circles/${circleName}/resources/${node?.data.name}/manifest?group=${node?.data.group || ''}&kind=${node?.data.kind}`)
+    if (response.ok) setManifest(manifest || {})
   }
 
   const getEvents = async () => {
@@ -50,6 +57,7 @@ const ResourceModal = ({ show, onClose, node }: ResourceModalProps) => {
   useEffect(() => {
     if (activeKey === EVENT_KEYS.OVERVIEW) {
       getResource()
+      getManifest()
       return
     }
 
@@ -72,7 +80,7 @@ const ResourceModal = ({ show, onClose, node }: ResourceModalProps) => {
       )}
       
       <AceEditor
-        value={JSON.stringify(resource?.manifest, null, 2)}
+        value={JSON.stringify(manifest, null, 2)}
         width="100%"
         height='500px'
         mode="json"

@@ -25,14 +25,14 @@ func NewK8sRepository(clientset client.Client) ModuleRepository {
 	return k8sRepository{clientset: clientset}
 }
 
-func (r k8sRepository) findModuleById(moduleId string) (charlescdiov1alpha1.Module, error) {
+func (r k8sRepository) findModuleById(moduleId string, namespace string) (charlescdiov1alpha1.Module, error) {
 	name, err := id.DecodeID(moduleId)
 	if err != nil {
 		return charlescdiov1alpha1.Module{}, err
 	}
 
-	namespace := charlescdiov1alpha1.Module{}
-	err = r.clientset.Get(context.Background(), types.NamespacedName{Name: name, Namespace: ""}, &namespace)
+	moduleObject := charlescdiov1alpha1.Module{}
+	err = r.clientset.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, &moduleObject)
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
 			return charlescdiov1alpha1.Module{}, errs.E(errs.NotExist, errs.Code("MODULE_NOT_FOUND"), fmt.Errorf("module %s not found", moduleId))
@@ -41,7 +41,7 @@ func (r k8sRepository) findModuleById(moduleId string) (charlescdiov1alpha1.Modu
 		return charlescdiov1alpha1.Module{}, errs.E(errs.Internal, errs.Code("MODULE_FIND_BY_ID_FAILED"), err)
 	}
 
-	return namespace, nil
+	return moduleObject, nil
 }
 
 func (r k8sRepository) fillModuleObject(target charlescdiov1alpha1.Module, module Module) charlescdiov1alpha1.Module {
@@ -116,7 +116,8 @@ func (r k8sRepository) Create(ctx context.Context, namespace string, module Modu
 	newModuleObject.SetNamespace(namespace)
 
 	newModuleObject = r.fillModuleObject(newModuleObject, module)
-	if module.SecretRef == nil {
+
+	if module.Visibility == PrivateModule && module.SecretRef == nil {
 		secretRef, err := r.SaveSecret(ctx, namespace, moduleName, *module.Auth)
 		if err != nil {
 			return ModuleModel{}, errs.E(errs.Internal, errs.Code("MODULE_SAVE_SECRET_ERROR"), err)
@@ -138,12 +139,12 @@ func (r k8sRepository) Create(ctx context.Context, namespace string, module Modu
 
 // Delete implements ModuleModelRepository
 func (r k8sRepository) Delete(ctx context.Context, namespace string, moduleId string) error {
-	workspaceObject, err := r.findModuleById(moduleId)
+	moduleObject, err := r.findModuleById(moduleId, namespace)
 	if err != nil {
 		return err
 	}
 
-	err = r.clientset.Delete(context.Background(), &workspaceObject)
+	err = r.clientset.Delete(context.Background(), &moduleObject)
 	if err != nil {
 		return errs.E(errs.Internal, errs.Code("MODULE_DELETE_FAILED"), err)
 	}
@@ -179,7 +180,7 @@ func (r k8sRepository) FindAll(ctx context.Context, namespace string, options li
 
 // FindById implements ModuleModelRepository
 func (r k8sRepository) FindById(ctx context.Context, namespace string, moduleId string) (ModuleModel, error) {
-	moduleObject, err := r.findModuleById(moduleId)
+	moduleObject, err := r.findModuleById(moduleId, namespace)
 	if err != nil {
 		return ModuleModel{}, err
 	}
@@ -189,7 +190,7 @@ func (r k8sRepository) FindById(ctx context.Context, namespace string, moduleId 
 
 // Update implements ModuleModelRepository
 func (r k8sRepository) Update(ctx context.Context, namespace string, moduleId string, module Module) (ModuleModel, error) {
-	workspaceObject, err := r.findModuleById(moduleId)
+	workspaceObject, err := r.findModuleById(moduleId, namespace)
 	if err != nil {
 		return ModuleModel{}, err
 	}

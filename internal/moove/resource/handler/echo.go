@@ -23,6 +23,7 @@ func NewEchohandler(e *echo.Echo, logger *zap.Logger, resourceUseCase resource.R
 	s := e.Group("/workspaces/:workspaceId/circles/:circleName/resources")
 	s.GET("/tree", handler.Tree)
 	s.GET("/:resource", handler.Resource)
+	s.GET("/:resource/manifest", handler.ResourceManifest)
 	s.GET("/:resource/logs", handler.ResourceLogs)
 	s.GET("/:resource/events", handler.ResourceEvents)
 }
@@ -50,6 +51,21 @@ func (h EchoHandler) Resource(c echo.Context) error {
 	}
 	return c.JSON(200, map[string]interface{}{
 		"metadata": resource,
+	})
+}
+
+func (h EchoHandler) ResourceManifest(c echo.Context) error {
+	workspaceId := c.Param("workspaceId")
+	resourceName := c.Param("resource")
+	group := c.QueryParam("group")
+	kind := c.QueryParam("kind")
+
+	manifest, err := h.resourceUseCase.GetManifest(c.Request().Context(), workspaceId, resourceName, group, kind)
+	if err != nil {
+		return errs.NewHTTPResponse(c, h.logger, err)
+	}
+	return c.JSON(200, map[string]interface{}{
+		"content": manifest,
 	})
 }
 

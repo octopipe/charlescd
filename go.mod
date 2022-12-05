@@ -15,17 +15,15 @@ require (
 	github.com/imroc/req/v3 v3.25.0
 	github.com/joho/godotenv v1.4.0
 	github.com/labstack/echo/v4 v4.9.1
-	github.com/onsi/ginkgo v1.16.5
 	github.com/pkg/errors v0.9.1
 	go.uber.org/zap v1.23.0
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	google.golang.org/genproto v0.0.0-20221018160656-63c7b68cfc55
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
-	gorm.io/driver/sqlite v1.4.3
 	gorm.io/gorm v1.24.2
 	helm.sh/helm/v3 v3.10.2
-	istio.io/api v0.0.0-20221123151324-030674c61a8b
+	istio.io/api v0.0.0-20221128172210-2df01fb1b9e4
 	istio.io/client-go v1.16.0
 	k8s.io/apimachinery v0.25.4
 	k8s.io/client-go v0.25.4
@@ -33,7 +31,6 @@ require (
 )
 
 require (
-	github.com/onsi/gomega v1.20.1
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 )
@@ -163,6 +160,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
+	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect

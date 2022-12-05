@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/octopipe/charlescd/internal/moove/workspace"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 type UseCase struct {
@@ -58,4 +59,14 @@ func (u UseCase) GetResource(ctx context.Context, workspaceId string, resourceNa
 
 	resource, err := u.resourceProvider.GetResource(ctx, namespace, resourceName, group, kind)
 	return resource, err
+}
+
+func (u UseCase) GetManifest(ctx context.Context, workspaceId string, resourceName string, group string, kind string) (*unstructured.Unstructured, error) {
+	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
+	if err != nil {
+		return nil, err
+	}
+
+	manifest, err := u.resourceProvider.GetManifest(ctx, namespace, resourceName, group, kind)
+	return manifest, err
 }

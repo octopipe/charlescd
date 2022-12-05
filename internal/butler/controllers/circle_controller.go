@@ -27,14 +27,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	circlemanager "github.com/octopipe/charlescd/internal/butler/circle_manager"
-	"github.com/octopipe/charlescd/internal/butler/networking"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 )
 
 // CircleReconciler reconciles a Circle object
 type CircleReconciler struct {
 	client.Client
-	NetworkClient networking.NetworkingLayer
 	Scheme        *runtime.Scheme
 	CircleManager circlemanager.CircleManager
 }
@@ -82,14 +80,6 @@ func (r *CircleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	if err != nil {
 		logger.Error(err, "failed to sync circle", "error", err)
 		return ctrl.Result{}, nil
-	}
-
-	if r.NetworkClient != nil {
-		err = r.NetworkClient.Sync(*circle)
-		if err != nil {
-			logger.Error(err, "cannot resync network layer")
-			return ctrl.Result{}, nil
-		}
 	}
 
 	return ctrl.Result{}, nil

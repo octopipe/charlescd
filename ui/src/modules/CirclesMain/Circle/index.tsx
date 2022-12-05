@@ -1,19 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Button, Card, Col, Container, Dropdown, Form, FormControl, Nav, Row } from 'react-bootstrap'
-import { useSelector } from 'react-redux'
 import useFetch from 'use-http'
 import './style.scss'
 import { Circle as CircleType, CircleEnrivonment, CircleModel, CircleRouting, CircleRoutingCustomMatch, CircleRoutingSegment } from './types'
-import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import CircleModules from '../../CircleModules'
-import AceEditor from "react-ace";
+import { useParams, useSearchParams } from 'react-router-dom'
 
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-monokai";
-import ViewInput from '../../../core/components/ViewInput'
 import { useAppSelector } from '../../../core/hooks/redux'
 import Alert from '../../../core/components/Alert'
+import CircleContent from './Content'
+import CircleTree from './Tree'
+import CircleTabs from './Tabs'
 
 interface Props {
   circleId: string
@@ -34,6 +31,10 @@ const initialSegments = [
   { key: 'email', op: 'EQUAL', value: 'email@mail.com' }
 ]
 
+enum TABS {
+  CONTENT = 'content',
+  TREE = 'tree'
+}
 
 const Circle = ({ circleId, circleOp, onClose, onSave, onDelete }: Props) => {
   const [searchParams] = useSearchParams();
@@ -48,6 +49,7 @@ const Circle = ({ circleId, circleOp, onClose, onSave, onDelete }: Props) => {
   const [segments, setSegments] = useState<CircleRoutingSegment[]>(initialSegments)
   const [environments, setEnvironments] = useState<CircleEnrivonment[]>(initialEnviroments)
   const [ showDeleteAlert, toggleDeleteAlert ] = useState(false)
+  const [activeTab, setActiveTab] = useState(TABS.CONTENT)
   const [modules, setModules] = useState([])
 
   const loadCircle = async () => {
@@ -66,10 +68,6 @@ const Circle = ({ circleId, circleOp, onClose, onSave, onDelete }: Props) => {
     setCustomMatch(circle?.routing?.match?.customMatch || initialCustomMatch)
     setEnvironments(circle?.environments || initialEnviroments)
   }, [circle])
-
-  const isCreate = () => {
-    return searchParams.get(circleId) === 'C'
-  }
 
   const handleClickSave = () => {
     let routing: CircleRouting = { strategy: routingStrategy }
@@ -120,113 +118,17 @@ const Circle = ({ circleId, circleOp, onClose, onSave, onDelete }: Props) => {
 
   return (
     <div className='circle'>
-      <div className='circle__tabs'>
-        <div className='circle__tabs__item'>
-          <div>
-            <FontAwesomeIcon icon={["far", "circle"]} className="me-2" /> {circleOp === 'C' ? 'Untitled' : circle?.name}
-          </div>
-          <div onClick={() => onClose(circleId)} className="circle__tabs__item__close">
-            <FontAwesomeIcon icon="close" />
-          </div>
-        </div>
-        <div className='me-2'>
-          <Dropdown>
-            <Dropdown.Toggle as={CustomToggle}>
-              <FontAwesomeIcon icon="ellipsis-vertical" />
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item onClick={() => toggleDeleteAlert(true)}>
-                Remove
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-        </div>
-      </div>
-      {circleOp === 'C' && (
-        <div className='circle__save'>
-          <div onClick={handleClickSave}>
-            <FontAwesomeIcon icon="check" color='#4caf50' className="me-1" /> Save circle
-          </div>
-        </div>
-      )}
-      <div className='circle__content'>
-        <div className='circle__content__title'>
-          <FontAwesomeIcon icon={["far", "circle"]} className="me-2" />
-          <ViewInput
-            value={name}
-            edit={isCreate()}
-            canEdit={isCreate()}
-            onChange={setName}
-            placeholder="Circle name"
-          />
-        </div>
-        <div className='circle__content__description'>
-          <FontAwesomeIcon icon="align-justify" className="me-2" />
-          <ViewInput
-            value={description}
-            edit={isCreate()}
-            onChange={setDescription}
-            as="textarea"
-            placeholder="Circle description"
-          />
-        </div>
-        <div className='circle__content__section'>
-          <div className='circle__content__section__title'>
-            <FontAwesomeIcon icon="route" className="me-2" /> Routing
-          </div>
-          <Nav variant='pills' defaultActiveKey={matchStrategy} onSelect={key => setMatchStrategy(key || 'customMatch')} className='mb-3'>
-            <Nav.Item><Nav.Link eventKey="customMatch">Custom match</Nav.Link></Nav.Item>
-            <Nav.Item><Nav.Link eventKey="segments">Segments</Nav.Link></Nav.Item>
-          </Nav>
-          {matchStrategy === 'customMatch' ? (
-            <div className='circle__content__section__custom-match'>
-              <AceEditor
-                width='100%'
-                height='200px'
-                fontSize={14}
-                mode="json"
-                theme="monokai"
-                value={JSON.stringify(customMatch, null, 2)}
-                onChange={value => setCustomMatch(JSON.parse(value))}
-              />
-            </div>
-          ) : (
-            <div className='circle__content__section__segments'>
-              <AceEditor
-                width='100%'
-                height='200px'
-                fontSize={14}
-                mode="json"
-                theme="monokai"
-                value={JSON.stringify(segments, null, 2)}
-                onChange={value => setSegments(JSON.parse(value))}
-              />
-            </div>
-          )}
-          
-          
-        </div>
-        <div className='circle__content__section'>
-          <div className='circle__content__section__title'>
-            <FontAwesomeIcon icon="folder" className="me-2" /> Modules
-          </div>
-          {circle && <CircleModules circle={circle} />}
-        </div>
-        <div className='circle__content__section'>
-          <div className='circle__content__section__title'>
-            <FontAwesomeIcon icon="folder" className="me-2" /> Environments
-          </div>
-          <AceEditor
-            width='100%'
-            height='200px'
-            fontSize={14}
-            mode="json"
-            theme="monokai"
-            value={JSON.stringify(environments, null, 2)}
-            onChange={value => setEnvironments(JSON.parse(value))}
-          />
-        </div>
-      </div>
+      <CircleTabs
+        circleId={circleId}
+        activeTab={activeTab}
+        circleOp={circleOp}
+        circle={circle}
+        onClose={onClose}
+        onChange={tab => setActiveTab(tab)}
+        onDelete={handleDelete}
+      />
+      {activeTab === TABS.CONTENT && <CircleContent circleId={circleId} circleOp={circleOp} onSave={handleClickSave} />}
+      {activeTab === TABS.TREE && <CircleTree show={true} circleId={circleId} onClose={() => setActiveTab(TABS.CONTENT)} /> }
       <Alert show={showDeleteAlert} action={() => handleDelete(circleId)} onClose={() => toggleDeleteAlert(false)} />
     </div>
   )

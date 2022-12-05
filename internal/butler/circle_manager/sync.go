@@ -59,6 +59,15 @@ func (c CircleManager) syncResourcesByCircleModule(circle *charlescdiov1alpha1.C
 		return nil, err
 	}
 
+	if c.networkClient != nil {
+		networkingResources, err := c.networkClient.Sync(circle, circleModule)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, networkingResources...)
+	}
+
 	return res, nil
 }
 

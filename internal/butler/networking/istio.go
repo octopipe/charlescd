@@ -83,7 +83,6 @@ func newVirtualService(module charlescdiov1alpha1.CircleModule, circle charlescd
 			Namespace: circle.Spec.Namespace,
 			Labels: map[string]string{
 				utils.AnnotationManagedBy: utils.ManagedBy,
-				utils.AnnotationCircles:   utils.AddCircleToLabels(string(circle.UID), map[string]string{}),
 			},
 		},
 		Spec: networkingv1alpha3.VirtualService{
@@ -110,38 +109,34 @@ func mergeVirtualServices(module charlescdiov1alpha1.CircleModule, circle charle
 		}
 	}
 
-	labels := virtualService.GetLabels()
-	circlesLabel := utils.AddCircleToLabels(string(circle.UID), labels)
-	labels[utils.AnnotationCircles] = circlesLabel
-	virtualService.SetLabels(circle.Labels)
 	virtualService.Spec.Http = currentRoutes
 
 	return virtualService
 }
 
-func (n networkingLayer) createOrUpdateVirtualService(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.CircleModule, namespace string) error {
+func (n networkingLayer) createOrUpdateVirtualService(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.CircleModule, namespace string) (*v1alpha3.VirtualService, error) {
 	currVirtualService, err := n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Get(context.TODO(), module.Name, metav1.GetOptions{})
-
 	if errors.IsNotFound(err) {
 		newVirtualService := newVirtualService(module, circle)
-
-		_, err = n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Create(context.TODO(), newVirtualService, metav1.CreateOptions{})
+		newVirtualService, err = n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Create(context.TODO(), newVirtualService, metav1.CreateOptions{})
+		return newVirtualService, err
 	}
 
-	if err != nil && !errors.IsNotFound(err) {
-		return err
+	if err != nil {
+		return nil, err
 	}
 
 	currVirtualService = mergeVirtualServices(module, circle, currVirtualService)
+
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		_, err = n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Update(context.TODO(), currVirtualService, metav1.UpdateOptions{})
+		currVirtualService, err = n.istioClient.NetworkingV1alpha3().VirtualServices(namespace).Update(context.TODO(), currVirtualService, metav1.UpdateOptions{})
 		return err
 	})
 	if retryErr != nil {
-		return retryErr
+		return nil, retryErr
 	}
 
-	return nil
+	return currVirtualService, nil
 }
 
 func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlescdiov1alpha1.Circle) *v1alpha3.DestinationRule {
@@ -152,7 +147,6 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 			Namespace: circle.Spec.Namespace,
 			Annotations: map[string]string{
 				utils.AnnotationManagedBy: utils.ManagedBy,
-				utils.AnnotationCircles:   utils.AddCircleToLabels(string(circle.UID), map[string]string{}),
 			},
 		},
 		Spec: networkingv1alpha3.DestinationRule{
@@ -188,69 +182,73 @@ func mergeDestionRules(module charlescdiov1alpha1.CircleModule, circle charlescd
 		}
 	}
 
-	labels := destinationRule.GetLabels()
-	circlesLabel := utils.AddCircleToLabels(string(circle.UID), labels)
-	labels[utils.AnnotationCircles] = circlesLabel
-	destinationRule.SetLabels(circle.Labels)
 	destinationRule.Spec.Subsets = subsets
 
 	return destinationRule
 }
 
-func (n networkingLayer) createOrUpdateDestinationRules(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.CircleModule, namespace string) error {
+func (n networkingLayer) createOrUpdateDestinationRules(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.CircleModule, namespace string) (*v1alpha3.DestinationRule, error) {
 	currDestinationRules, err := n.istioClient.NetworkingV1alpha3().DestinationRules(namespace).Get(context.TODO(), module.Name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		newDestinationRule := newDestinationRule(module, circle)
 
-		_, err = n.istioClient.NetworkingV1alpha3().DestinationRules(namespace).Create(context.TODO(), newDestinationRule, metav1.CreateOptions{})
+		newDestinationRule, err = n.istioClient.NetworkingV1alpha3().DestinationRules(namespace).Create(context.TODO(), newDestinationRule, metav1.CreateOptions{})
+		return newDestinationRule, err
 	}
 
 	if err != nil && !errors.IsNotFound(err) {
-		return err
+		return nil, err
 	}
 
 	currDestinationRules = mergeDestionRules(module, circle, currDestinationRules)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		_, err = n.istioClient.NetworkingV1alpha3().DestinationRules(namespace).Update(context.TODO(), currDestinationRules, metav1.UpdateOptions{})
+		currDestinationRules, err = n.istioClient.NetworkingV1alpha3().DestinationRules(namespace).Update(context.TODO(), currDestinationRules, metav1.UpdateOptions{})
 		return err
 	})
 	if retryErr != nil {
-		return retryErr
+		return nil, retryErr
 	}
 
-	return nil
+	return currDestinationRules, nil
 }
 
-func (n networkingLayer) SyncIstio(circle charlescdiov1alpha1.Circle) error {
-	namespace := "default"
-	if circle.Spec.Namespace != "" {
-		namespace = circle.Spec.Namespace
+func (n networkingLayer) SyncIstio(circle charlescdiov1alpha1.Circle, circleModule charlescdiov1alpha1.CircleModule) ([]charlescdiov1alpha1.CircleModuleResource, error) {
+	namespace := circle.Spec.Namespace
+	res := []charlescdiov1alpha1.CircleModuleResource{}
+
+	currentModule := circle.Status.Modules[circleModule.Name]
+	// if currentModule.Status != string(health.HealthStatusHealthy) {
+	// 	return nil, nil
+	// }
+
+	service := getModuleService(currentModule)
+	if service == nil {
+		return nil, nil
 	}
 
-	for _, module := range circle.Spec.Modules {
-		currentModule := circle.Status.Modules[module.Name]
-		// if currentModule.Status != string(health.HealthStatusHealthy) {
-
-		//	continue
-		// }
-
-		service := getModuleService(currentModule)
-		if service == nil {
-			continue
-		}
-
-		err := n.createOrUpdateVirtualService(circle, module, namespace)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-
-		err = n.createOrUpdateDestinationRules(circle, module, namespace)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
+	virtualService, err := n.createOrUpdateVirtualService(circle, circleModule, namespace)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	destinationRule, err := n.createOrUpdateDestinationRules(circle, circleModule, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	res = append(res, charlescdiov1alpha1.CircleModuleResource{
+		Group:     v1alpha3.SchemeGroupVersion.Group,
+		Kind:      "VirtualService",
+		Name:      virtualService.Name,
+		Namespace: virtualService.Namespace,
+	})
+
+	res = append(res, charlescdiov1alpha1.CircleModuleResource{
+		Group:     v1alpha3.SchemeGroupVersion.Group,
+		Kind:      "DestinationRule",
+		Name:      destinationRule.Name,
+		Namespace: destinationRule.Namespace,
+	})
+
+	return res, nil
 }

@@ -12,7 +12,6 @@ import './index.scss'
 import Modules from './modules/Modules';
 import Home from './modules/Home';
 import store from './store'
-import Diagram from './modules/CirclesMain/Diagram';
 import CreateCircle from './modules/CreateCircle';
 import Error from './modules/Error';
 import CirclesMain from './modules/CirclesMain';

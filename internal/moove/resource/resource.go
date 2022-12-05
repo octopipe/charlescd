@@ -1,6 +1,10 @@
 package resource
 
-import "context"
+import (
+	"context"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+)
 
 type ResourceOwner struct {
 	Name      string `json:"name"`
@@ -29,6 +33,7 @@ type ResourceEvent struct {
 type ResourceProvider interface {
 	GetTree(ctx context.Context, namespace string, circleId string) ([]Resource, error)
 	GetResource(ctx context.Context, namespace string, resourceName string, group string, kind string) (Resource, error)
+	GetManifest(ctx context.Context, namespace string, resourceName string, group string, kind string) (*unstructured.Unstructured, error)
 	GetLogs(ctx context.Context, circleId string, resourceName string, group string, kind string) (interface{}, error)
 	GetEvents(ctx context.Context, namespace string, resourceName string, kind string) ([]ResourceEvent, error)
 }
@@ -36,6 +41,7 @@ type ResourceProvider interface {
 type ResourceUseCase interface {
 	GetTree(ctx context.Context, workspaceId string, name string) ([]Resource, error)
 	GetResource(ctx context.Context, workspaceId string, resourceName string, group string, kind string) (Resource, error)
+	GetManifest(ctx context.Context, workspaceId string, resourceName string, group string, kind string) (*unstructured.Unstructured, error)
 	GetLogs(ctx context.Context, circleId string, resourceName string, group string, kind string) (interface{}, error)
 	GetEvents(ctx context.Context, workspaceId string, resourceName string, kind string) ([]ResourceEvent, error)
 }

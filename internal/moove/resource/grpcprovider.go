@@ -2,11 +2,13 @@ package resource
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/octopipe/charlescd/internal/moove/core/grpcclient"
 	"github.com/octopipe/charlescd/internal/moove/errs"
 	"github.com/octopipe/charlescd/internal/utils/id"
 	pbv1 "github.com/octopipe/charlescd/pb/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 type GrpcProvider struct {
@@ -21,8 +23,8 @@ func (r GrpcProvider) messageToResource(resourceMessage *pbv1.Resource) Resource
 
 	owner := ResourceOwner{}
 	if resourceMessage.Owner != nil {
-		owner.Name = resourceMessage.Name
-		owner.Kind = resourceMessage.Kind
+		owner.Name = resourceMessage.Owner.Name
+		owner.Kind = resourceMessage.Owner.Kind
 	}
 
 	return Resource{
@@ -101,4 +103,24 @@ func (r GrpcProvider) GetResource(ctx context.Context, namespace string, resourc
 	}
 
 	return r.messageToResource(resourceMessage), nil
+}
+
+func (r GrpcProvider) GetManifest(ctx context.Context, namespace string, resourceName string, group string, kind string) (*unstructured.Unstructured, error) {
+	resourceMessage, err := r.grpcClient.ResourceClient.Manifest(ctx, &pbv1.GetResourceRequest{
+		Namespace: namespace,
+		Name:      resourceName,
+		Group:     group,
+		Kind:      kind,
+	})
+	if err != nil {
+		return nil, errs.ParseGrpcError(err)
+	}
+
+	manifest := &unstructured.Unstructured{}
+	err = json.Unmarshal(resourceMessage.Content, manifest)
+	if err != nil {
+		return nil, err
+	}
+
+	return manifest, nil
 }

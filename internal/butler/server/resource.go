@@ -180,6 +180,11 @@ func (r ResourceServer) Tree(ctx context.Context, request *pbv1.TreeRequest) (*p
 						Name: resource.OwnerRefs[0].Name,
 						Kind: resource.OwnerRefs[0].Kind,
 					}
+				} else {
+					currentOwner = &pbv1.ResourceOwner{
+						Name: moduleName,
+						Kind: "Module",
+					}
 				}
 
 				healthStatus, healthMessage := r.GetResourceHealthAndMessage(resource)

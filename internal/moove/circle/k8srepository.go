@@ -43,7 +43,7 @@ func (r k8sRepository) findById(circleId string, namespace string) (charlescdiov
 	return circle, nil
 }
 
-func (r k8sRepository) fillCircle(target charlescdiov1alpha1.Circle, namespace string, circle Circle) charlescdiov1alpha1.Circle {
+func (r k8sRepository) fillCircle(target charlescdiov1alpha1.Circle, namespace string, circle Circle) (charlescdiov1alpha1.Circle, error) {
 	labels := map[string]string{
 		"managed-by": "moove",
 	}
@@ -55,8 +55,13 @@ func (r k8sRepository) fillCircle(target charlescdiov1alpha1.Circle, namespace s
 	})
 	modules := []charlescdiov1alpha1.CircleModule{}
 	for _, m := range circle.Modules {
+		name, err := id.DecodeID(m.ModuleID)
+		if err != nil {
+			return charlescdiov1alpha1.Circle{}, err
+		}
+
 		modules = append(modules, charlescdiov1alpha1.CircleModule{
-			Name:      m.Name,
+			Name:      name,
 			Revision:  m.Revision,
 			Overrides: m.Overrides,
 			Namespace: namespace,
@@ -72,7 +77,7 @@ func (r k8sRepository) fillCircle(target charlescdiov1alpha1.Circle, namespace s
 		Modules:      modules,
 		Namespace:    namespace,
 	}
-	return target
+	return target, nil
 }
 
 func (r k8sRepository) toCircleModel(circle charlescdiov1alpha1.Circle) CircleModel {
@@ -80,7 +85,7 @@ func (r k8sRepository) toCircleModel(circle charlescdiov1alpha1.Circle) CircleMo
 	modules := []CircleModule{}
 	for _, m := range circle.Spec.Modules {
 		modules = append(modules, CircleModule{
-			Name:      m.Name,
+			ModuleID:  id.ToID(m.Name),
 			Revision:  m.Revision,
 			Overrides: m.Overrides,
 		})
@@ -109,9 +114,12 @@ func (r k8sRepository) Create(ctx context.Context, namespace string, circle Circ
 	newCircle.SetName(circleName)
 	newCircle.SetNamespace(namespace)
 
-	newCircle = r.fillCircle(newCircle, namespace, circle)
+	newCircle, err := r.fillCircle(newCircle, namespace, circle)
+	if err != nil {
+		return CircleModel{}, err
+	}
 
-	err := r.clientset.Create(context.Background(), &newCircle)
+	err = r.clientset.Create(context.Background(), &newCircle)
 	if err != nil {
 		if k8sErrors.IsAlreadyExists(err) {
 			return CircleModel{}, errs.E(errs.Exist, errs.Code("CIRCLE_ALREADY_EXIST"), fmt.Sprintf("%s circle already exist", circle.Name))
@@ -157,7 +165,7 @@ func (r k8sRepository) FindAll(ctx context.Context, namespace string, options li
 			modules := []CircleModule{}
 			for _, m := range i.Spec.Modules {
 				modules = append(modules, CircleModule{
-					Name:      m.Name,
+					ModuleID:  id.ToID(m.Name),
 					Revision:  m.Revision,
 					Overrides: m.Overrides,
 				})
@@ -201,7 +209,11 @@ func (r k8sRepository) Update(ctx context.Context, namespace string, circleId st
 		return CircleModel{}, err
 	}
 
-	circleObject = r.fillCircle(circleObject, namespace, circle)
+	circleObject, err = r.fillCircle(circleObject, namespace, circle)
+	if err != nil {
+		return CircleModel{}, err
+	}
+
 	err = r.clientset.Update(context.Background(), &circleObject)
 	if err != nil {
 		return CircleModel{}, errs.E(errs.Internal, errs.Code("CIRCLE_UPDATE_FAILED"), err)

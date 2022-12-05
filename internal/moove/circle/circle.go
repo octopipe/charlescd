@@ -8,7 +8,7 @@ import (
 )
 
 type CircleModule struct {
-	Name      string                         `json:"name,omitempty" validate:"required"`
+	ModuleID  string                         `json:"moduleId,omitempty" validate:"required"`
 	Revision  string                         `json:"revision,omitempty" validate:"required"`
 	Overrides []charlescdiov1alpha1.Override `json:"overrides,omitempty"`
 }

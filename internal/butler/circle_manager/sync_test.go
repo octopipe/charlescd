@@ -110,7 +110,7 @@ func (s *SyncCircleTestSuite) newCircleManagerWithDependencies(config *rest.Conf
 	if err != nil {
 		s.T().Fatal(err)
 	}
-	circleManager := NewCircleManager(logger, s.clientset, gitopsEngine, clusterCache)
+	circleManager := NewCircleManager(logger, s.clientset, gitopsEngine, nil, clusterCache)
 
 	return circleManager
 }

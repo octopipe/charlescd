@@ -15,11 +15,11 @@ const ProjectNode = memo(({ data, isConnectable }: Props) => (
       onConnect={(params) => console.log('handle onConnect', params)}
       style={{ background: '#555' }}
     />
-    <div className={'circle-diagram__item__project'}>
-      <div className="circle-diagram__item__header">
+    <div className={'circle-tree__item__project'}>
+      <div className="circle-tree__item__header">
         { data.kind }
       </div>
-      <div className="circle-diagram__item__content">
+      <div className="circle-tree__item__content">
         { data.name }
       </div>
 

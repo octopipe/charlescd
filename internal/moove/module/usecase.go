@@ -35,13 +35,13 @@ func (u UseCase) Create(ctx context.Context, workspaceId string, module Module) 
 }
 
 // Delete implements ModuleUseCase
-func (u UseCase) Delete(ctx context.Context, workspaceId string, name string) error {
+func (u UseCase) Delete(ctx context.Context, workspaceId string, moduleId string) error {
 	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
 	if err != nil {
 		return err
 	}
 
-	err = u.moduleRepository.Delete(ctx, name, namespace)
+	err = u.moduleRepository.Delete(ctx, namespace, moduleId)
 	if err != nil {
 		return err
 	}
@@ -65,13 +65,13 @@ func (u UseCase) FindAll(ctx context.Context, workspaceId string, options listop
 }
 
 // FindByName implements ModuleUseCase
-func (u UseCase) FindById(ctx context.Context, workspaceId string, name string) (ModuleModel, error) {
+func (u UseCase) FindById(ctx context.Context, workspaceId string, moduleId string) (ModuleModel, error) {
 	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
 	if err != nil {
 		return ModuleModel{}, err
 	}
 
-	module, err := u.moduleRepository.FindById(ctx, namespace, name)
+	module, err := u.moduleRepository.FindById(ctx, namespace, moduleId)
 	if err != nil {
 		return ModuleModel{}, err
 	}

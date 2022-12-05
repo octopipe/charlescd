@@ -1,5 +1,5 @@
-.circle-diagram {
-  width: calc(100vw - 400px);
+.circle-tree {
+  width: 100vw;
   height: 100vh;
 
   &__item {
@@ -23,7 +23,7 @@
     }
 
     &__project {
-      @extend .circle-diagram__item;
+      @extend .circle-tree__item;
       font-size: 12px;
       border-image: 
         linear-gradient(
@@ -34,17 +34,17 @@
     }
 
     &--Healthy {
-      @extend .circle-diagram__item;
+      @extend .circle-tree__item;
       border-color: #43a047;
     }
 
     &--Progressing {
-      @extend .circle-diagram__item;
+      @extend .circle-tree__item;
       border-color: #039be5;
     }
 
     &--Degraded {
-      @extend .circle-diagram__item;
+      @extend .circle-tree__item;
       border-color: #e53935;
     }
   }

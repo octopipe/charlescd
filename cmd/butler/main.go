@@ -138,10 +138,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	circleManager := circlemanager.NewCircleManager(logger, client, gitOpsEngine, clusterCache)
+	circleManager := circlemanager.NewCircleManager(logger, client, gitOpsEngine, networkingLayer, clusterCache)
 	if err = (&controllers.CircleReconciler{
 		CircleManager: circleManager,
-		NetworkClient: networkingLayer,
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {

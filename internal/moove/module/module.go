@@ -16,8 +16,8 @@ type ModuleAuth struct {
 }
 
 const (
-	PrivateModule = "private"
-	PublicModule  = "public"
+	PrivateModule = "PRIVATE"
+	PublicModule  = "PUBLIC"
 )
 
 type Module struct {
