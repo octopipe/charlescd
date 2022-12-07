@@ -1,11 +1,8 @@
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useState } from 'react';
-import { Link, NavLink, useMatch, useParams, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { ModulePagination } from '../types';
-import { ReactComponent as EmptyModulesSVG } from '../../../core/assets/svg/empty-modules.svg'
 import './style.scss'
-import Placeholder from '../../../core/components/Placeholder';
 import { Nav } from 'react-bootstrap';
 
 interface Props {

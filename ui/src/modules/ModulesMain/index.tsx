@@ -1,16 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import useFetch, { CachePolicies } from 'use-http'
 import './style.scss'
 import { Module as ModuleType, ModulePagination } from './types'
-import Placeholder from '../../core/components/Placeholder'
-import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useParams, useSearchParams } from 'react-router-dom'
 import ModulesSidebar from './Sidebar';
 import Module from './Module'
 
 const createModuleId = 'untitled'
 
 const ModulesMain = () => {
-  const navigate = useNavigate()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams();
   const { workspaceId } = useParams()

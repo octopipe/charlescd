@@ -1,15 +1,13 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Dropdown, Modal, Form, Button, ModalProps } from "react-bootstrap";
 import ModalForm from './ModalForm'
-import { CircleItemModule } from "./types";
 import Alert from "../../core/components/Alert";
 import './style.scss'
-import { CircleItem } from "../CreateCircle/types";
 import useFetch from "use-http";
 import { useParams } from "react-router-dom";
 import { CirclePagination } from "../CirclesMain/types";
-import { Circle, CircleModel, CircleModule, ModuleStatus } from "../CirclesMain/Circle/types";
+import { CircleModel } from "../CirclesMain/Circle/types";
 
 
 const ModalMoveTo = ({ show, onClose }: ModalProps) => {
@@ -17,14 +15,14 @@ const ModalMoveTo = ({ show, onClose }: ModalProps) => {
   const { response, get } = useFetch()
   const { workspaceId } = useParams()
 
-  const loadCircles = async () => {
+  const loadCircles = useCallback(async () => {
     const circle = await get(`/workspaces/${workspaceId}/circles`)
     if (response.ok) setCircles(circle)
-  }
+  }, [get, response, setCircles, workspaceId])
 
   useEffect(() => {
     loadCircles()
-  }, [])
+  }, [loadCircles])
 
   return (
     <Modal size="sm" show={show} onHide={onClose}>

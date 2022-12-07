@@ -4,7 +4,6 @@ import useFetch from 'use-http'
 import './style.scss'
 import { Circle as CircleType, CircleEnrivonment, CircleModel, CircleRouting, CircleRoutingCustomMatch, CircleRoutingSegment } from './types'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CircleModules from '../../CircleModules'
 import AceEditor from "react-ace";
 
@@ -43,7 +42,6 @@ const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
   const [customMatch, setCustomMatch] = useState<CircleRoutingCustomMatch>(initialCustomMatch)
   const [segments, setSegments] = useState<CircleRoutingSegment[]>(initialSegments)
   const [environments, setEnvironments] = useState<CircleEnrivonment[]>(initialEnviroments)
-  const [modules, setModules] = useState([])
 
   const loadCircle = async () => {
     const circle = await get(`/workspaces/${workspaceId}/circles/${circleId}`)
@@ -53,7 +51,7 @@ const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
   useEffect(() => {
     if (circleOp !== "C")
       loadCircle()
-  }, [workspaceId])
+  }, [workspaceId, circleOp, loadCircle])
 
   useEffect(() => {
     setName(circle?.name || '')

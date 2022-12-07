@@ -1,16 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { Nav } from 'react-bootstrap'
 import useFetch from 'use-http'
 import './style.scss'
 import { Module as ModuleType, ModuleModel } from '../types'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import AceEditor from "react-ace";
 
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-monokai";
 import ViewInput from '../../../core/components/ViewInput'
-import { useAppSelector } from '../../../core/hooks/redux'
 import FloatingButton from '../../../core/components/FloatingButton'
 
 interface Props {

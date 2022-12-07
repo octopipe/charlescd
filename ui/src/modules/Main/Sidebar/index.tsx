@@ -1,7 +1,7 @@
+import React from 'react';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useState } from 'react';
-import { Link, NavLink, useMatch, useParams } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import './style.scss'
 
 const items = [
