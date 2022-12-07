@@ -9,7 +9,6 @@ import Login from './modules/Login';
 import './core/components/icons/library'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.scss'
-import Modules from './modules/Modules';
 import Home from './modules/Home';
 import store from './store'
 import CreateCircle from './modules/CreateCircle';

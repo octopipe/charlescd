@@ -4,21 +4,13 @@ import React, { ElementType, useEffect, useState } from "react";
 import Form from 'react-bootstrap/Form';
 import './style.scss'
 
-interface Props {
-  value: string
-  edit?: boolean
-  only?: boolean
-  canEdit?: boolean
-  placeholder: string
+interface PropsViewInput {
   label: string
-  as?: string
   icon: IconProp
-  onChange: (value: string) => void
+  children: React.ReactNode
 }
 
-const ViewInput = (props: Props) => {
-  const [isEdit, setEdit] = useState(props.edit)
-
+const ViewInput = (props: PropsViewInput) => {
   return (
     <div className="view-input mt-2 mb-4">
       <Form.Group>
@@ -26,20 +18,48 @@ const ViewInput = (props: Props) => {
           <FontAwesomeIcon icon={props.icon} />
           <span>{props.label}</span>
         </Form.Label>
-        <Form.Control
-          className="view-input__input px-2"
-          value={props.value}
-          as={(props?.as) as any}
-          onChange={e => props.onChange(e.target.value)}
-          placeholder={props?.placeholder || ''}
-          plaintext={!isEdit || props.value !== ''}
-          readOnly={!isEdit || props.value !== ''}
-        />
+        <div className="view-input__content">
+          {props.children}
+        </div>
       </Form.Group>
-    
     </div>
   )
 }
 
+interface PropsViewInputText {
+  value: string
+  edit?: boolean
+  canEdit?: boolean
+  placeholder: string
+  label: string
+  as?: string
+  icon: IconProp
+  onChange: (value: string) => void
+  
+}
+
+const ViewInputText = ({ label, icon, edit, value, as, placeholder, canEdit = true,  onChange }: PropsViewInputText) => {
+  const [isEdit, setEdit] = useState(edit)
+
+  return (
+    <ViewInput
+      label={label}
+      icon={icon}
+    >
+      <Form.Control
+        className="view-input__content__input px-2"
+        value={value}
+        as={as as any}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder || ''}
+        plaintext={!isEdit}
+        readOnly={!isEdit}
+        onClick={() => canEdit && setEdit(true)}
+      />
+    </ViewInput>
+  )
+}
+
+ViewInput.Text = ViewInputText
 
 export default ViewInput

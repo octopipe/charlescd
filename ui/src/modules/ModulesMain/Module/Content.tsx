@@ -11,6 +11,7 @@ import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-monokai";
 import ViewInput from '../../../core/components/ViewInput'
 import { useAppSelector } from '../../../core/hooks/redux'
+import FloatingButton from '../../../core/components/FloatingButton'
 
 interface Props {
   moduleId: string
@@ -82,57 +83,48 @@ const ModuleContent = ({ moduleId, moduleOp, onSave }: Props) => {
   return (
     <div className='module__content'>
       {moduleOp === 'C' && (
-        <div className='module__save'>
-          <div onClick={handleClickSave}>
-            <FontAwesomeIcon icon="check" color='#4caf50' className="me-1" /> Save module
-          </div>
-        </div>
+        <FloatingButton
+          icon="check"
+          iconColor='#4caf50'
+          text="Save module"
+          onClick={handleClickSave}
+        />
       )}
       <div className='module__content'>
-        <div className='module__content__title'>
-          <ViewInput
-            icon="folder"
-            label='Name'
-            value={name}
-            edit={isCreate()}
-            canEdit={isCreate()}
-            onChange={setName}
-            placeholder="Module name"
-          />
-        </div>
-        <div className='module__content__description'>
-          <ViewInput
-            icon="align-justify"
-            label='Description'
-            value={description}
-            edit={isCreate()}
-            onChange={setDescription}
-            as="textarea"
-            placeholder="Module description"
-          />
-        </div>
-        <div className='module__content__title'>
-          <ViewInput
-            icon={["fab", "git-alt"]}
-            label='Url'
-            value={url}
-            edit={isCreate()}
-            canEdit={isCreate()}
-            onChange={setUrl}
-            placeholder="Module name"
-          />
-        </div>
-        <div className='module__content__title'>
-          <ViewInput
-            icon="folder"
-            label='Path'
-            value={path}
-            edit={isCreate()}
-            canEdit={isCreate()}
-            onChange={setPath}
-            placeholder="Module name"
-          />
-        </div>
+        <ViewInput.Text
+          icon="folder"
+          label='Name'
+          value={name}
+          edit={isCreate()}
+          canEdit={false}
+          onChange={setName}
+          placeholder="Module name"
+        />
+        <ViewInput.Text
+          icon="align-justify"
+          label='Description'
+          value={description}
+          edit={isCreate()}
+          onChange={setDescription}
+          as="textarea"
+          placeholder="Module description"
+        />
+        <ViewInput.Text
+          icon={["fab", "git-alt"]}
+          label='Url'
+          value={url}
+          edit={isCreate()}
+          onChange={setUrl}
+          placeholder="Module name"
+        />
+        <ViewInput.Text
+          icon="folder"
+          label='Path'
+          value={path}
+          edit={isCreate()}
+          onChange={setPath}
+          placeholder="Module name"
+        />
       </div>
     </div>
   )

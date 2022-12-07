@@ -11,14 +11,16 @@
     span {
       margin-left: 1rem;
     }
-
-    
   }
 
-  &__input {
-    background: #2C2C2E;
-    color: #F2F2F9;
+  &__content {
+    
     margin-left: 30px;
+
+    &__input {
+      background: #2C2C2E;
+      color: #F2F2F9;
+    }
   }
 
   .form-control-plaintext {

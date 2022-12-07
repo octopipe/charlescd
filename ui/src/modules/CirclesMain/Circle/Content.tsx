@@ -12,6 +12,7 @@ import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-monokai";
 import ViewInput from '../../../core/components/ViewInput'
 import { useAppSelector } from '../../../core/hooks/redux'
+import FloatingButton from '../../../core/components/FloatingButton'
 
 interface Props {
   circleId: string
@@ -89,8 +90,6 @@ const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
       routing,
     }
 
-    console.log(newCircle)
-
     onSave(newCircle)
   }
 
@@ -98,92 +97,85 @@ const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
   return (
     <div className='circle__content'>
       {circleOp === 'C' && (
-        <div className='circle__save'>
-          <div onClick={handleClickSave}>
-            <FontAwesomeIcon icon="check" color='#4caf50' className="me-1" /> Save circle
-          </div>
-        </div>
+        <FloatingButton
+          icon="check"
+          iconColor='#4caf50'
+          text="Save circle"
+          onClick={handleClickSave}
+        />
       )}
-      <div className='circle__content'>
-        <div className='circle__content__title'>
-          <ViewInput
-            icon={["far", "circle"]}
-            label='Name'
-            value={name}
-            edit={isCreate()}
-            canEdit={isCreate()}
-            onChange={setName}
-            placeholder="Circle name"
-          />
-        </div>
-        <div className='circle__content__description'>
-          <ViewInput
-            icon="align-justify"
-            label='Description'
-            value={description}
-            edit={isCreate()}
-            onChange={setDescription}
-            as="textarea"
-            placeholder="Circle description"
-          />
-        </div>
-        <div className='circle__content__section'>
-          <div className='circle__content__section__title'>
-            <FontAwesomeIcon icon="route" className="me-2" /> Routing
+      <ViewInput.Text
+        icon={["far", "circle"]}
+        label='Name'
+        value={name}
+        edit={isCreate()}
+        canEdit={false}
+        onChange={setName}
+        placeholder="Circle name"
+      />
+      <ViewInput.Text
+        icon="align-justify"
+        label='Description'
+        value={description}
+        edit={isCreate()}
+        onChange={setDescription}
+        as="textarea"
+        placeholder="Circle description"
+      />
+      <ViewInput
+        label="Routing"
+        icon="route"
+      >
+        <Nav variant='pills' defaultActiveKey={matchStrategy} onSelect={key => setMatchStrategy(key || 'customMatch')} className='mb-3'>
+          <Nav.Item><Nav.Link eventKey="customMatch">Custom match</Nav.Link></Nav.Item>
+          <Nav.Item><Nav.Link eventKey="segments">Segments</Nav.Link></Nav.Item>
+        </Nav>
+        {matchStrategy === 'customMatch' ? (
+          <div className='circle__content__section__custom-match'>
+            <AceEditor
+              width='100%'
+              height='200px'
+              fontSize={14}
+              mode="json"
+              theme="monokai"
+              value={JSON.stringify(customMatch, null, 2)}
+              onChange={value => setCustomMatch(JSON.parse(value))}
+            />
           </div>
-          <Nav variant='pills' defaultActiveKey={matchStrategy} onSelect={key => setMatchStrategy(key || 'customMatch')} className='mb-3'>
-            <Nav.Item><Nav.Link eventKey="customMatch">Custom match</Nav.Link></Nav.Item>
-            <Nav.Item><Nav.Link eventKey="segments">Segments</Nav.Link></Nav.Item>
-          </Nav>
-          {matchStrategy === 'customMatch' ? (
-            <div className='circle__content__section__custom-match'>
-              <AceEditor
-                width='100%'
-                height='200px'
-                fontSize={14}
-                mode="json"
-                theme="monokai"
-                value={JSON.stringify(customMatch, null, 2)}
-                onChange={value => setCustomMatch(JSON.parse(value))}
-              />
-            </div>
-          ) : (
-            <div className='circle__content__section__segments'>
-              <AceEditor
-                width='100%'
-                height='200px'
-                fontSize={14}
-                mode="json"
-                theme="monokai"
-                value={JSON.stringify(segments, null, 2)}
-                onChange={value => setSegments(JSON.parse(value))}
-              />
-            </div>
-          )}
-          
-          
-        </div>
-        <div className='circle__content__section'>
-          <div className='circle__content__section__title'>
-            <FontAwesomeIcon icon="folder" className="me-2" /> Modules
+        ) : (
+          <div className='circle__content__section__segments'>
+            <AceEditor
+              width='100%'
+              height='200px'
+              fontSize={14}
+              mode="json"
+              theme="monokai"
+              value={JSON.stringify(segments, null, 2)}
+              onChange={value => setSegments(JSON.parse(value))}
+            />
           </div>
-          {circle && <CircleModules circle={circle} />}
-        </div>
-        <div className='circle__content__section'>
-          <div className='circle__content__section__title'>
-            <FontAwesomeIcon icon="folder" className="me-2" /> Environments
-          </div>
-          <AceEditor
-            width='100%'
-            height='200px'
-            fontSize={14}
-            mode="json"
-            theme="monokai"
-            value={JSON.stringify(environments, null, 2)}
-            onChange={value => setEnvironments(JSON.parse(value))}
-          />
-        </div>
-      </div>
+        )}
+      </ViewInput>
+      <ViewInput
+        label="Modules"
+        icon="folder"
+      >
+        {circle && <CircleModules circle={circle} />}
+      </ViewInput>
+      <ViewInput
+        label="Modules"
+        icon="folder"
+      >
+        <AceEditor
+          width='100%'
+          height='200px'
+          fontSize={14}
+          mode="json"
+          theme="monokai"
+          value={JSON.stringify(environments, null, 2)}
+          onChange={value => setEnvironments(JSON.parse(value))}
+        />
+      </ViewInput>
     </div>
   )
 }

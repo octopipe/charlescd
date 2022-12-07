@@ -118,14 +118,20 @@ func (r ResourceServer) Manifest(ctx context.Context, req *pbv1.GetResourceReque
 		return nil, errs.E(errs.Other, errs.Code("get_resource"), errors.New("resource not found"))
 	}
 
-	manifest := res.Resource
-	b, err := manifest.MarshalJSON()
-	if err != nil {
-		return nil, errs.E(errs.Other, errs.Code("parse_manifest"), err)
+	if res.Resource != nil {
+		manifest := res.Resource
+		b, err := manifest.MarshalJSON()
+		if err != nil {
+			return nil, errs.E(errs.Other, errs.Code("parse_manifest"), err)
+		}
+
+		return &pbv1.ManifestResponse{
+			Content: b,
+		}, nil
 	}
 
 	return &pbv1.ManifestResponse{
-		Content: b,
+		Content: []byte{},
 	}, nil
 }
 
