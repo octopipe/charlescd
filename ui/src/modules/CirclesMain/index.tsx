@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import useFetch, { CachePolicies } from 'use-http'
 import './style.scss'
-import { CircleItem, CirclePagination } from './types'
-import Placeholder from '../../core/components/Placeholder'
-import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { CirclePagination } from './types'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import CirclesSidebar from './Sidebar';
 import Circle from './Circle';
 import { Circle as CircleType } from './Circle/types'
@@ -11,7 +10,6 @@ import { Circle as CircleType } from './Circle/types'
 const createCircleId = 'untitled'
 
 const CirclesMain = () => {
-  const navigate = useNavigate()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams();
   const { workspaceId } = useParams()

@@ -145,7 +145,7 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      module.Name,
 			Namespace: circle.Spec.Namespace,
-			Annotations: map[string]string{
+			Labels: map[string]string{
 				utils.AnnotationManagedBy: utils.ManagedBy,
 			},
 		},
@@ -170,9 +170,6 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 func mergeDestionRules(module charlescdiov1alpha1.CircleModule, circle charlescdiov1alpha1.Circle, destinationRule *v1alpha3.DestinationRule) *v1alpha3.DestinationRule {
 	newSubset := &networkingv1alpha3.Subset{
 		Name: circle.GetName(),
-		Labels: map[string]string{
-			utils.AnnotationCircleMark: string(circle.GetUID()),
-		},
 	}
 
 	subsets := []*networkingv1alpha3.Subset{newSubset}

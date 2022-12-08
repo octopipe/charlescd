@@ -117,10 +117,14 @@ func (r GrpcProvider) GetManifest(ctx context.Context, namespace string, resourc
 	}
 
 	manifest := &unstructured.Unstructured{}
-	err = json.Unmarshal(resourceMessage.Content, manifest)
-	if err != nil {
-		return nil, err
+	if len(resourceMessage.Content) > 0 {
+		err = json.Unmarshal(resourceMessage.Content, manifest)
+		if err != nil {
+			return nil, err
+		}
+
+		return manifest, nil
 	}
 
-	return manifest, nil
+	return nil, nil
 }
