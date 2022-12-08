@@ -9,6 +9,7 @@ import { Container } from 'react-bootstrap';
 import { useAppDispatch } from '../../core/hooks/redux';
 import { setDeployStrategy } from './mainSlice';
 import Navbar from '../../core/components/Navbar';
+import { ROUTES } from '../../core/constants/routes';
 
 const EmptyWorkspacesPlaceholser = () => (
   <Container>
@@ -18,8 +19,20 @@ const EmptyWorkspacesPlaceholser = () => (
   </Container>
 )
 
+const repalacePathParams = (path: string, params: object, prefix = ':') => {
+  let newPath = path
+
+  Object.entries(params).forEach(([key, value]) => {
+    newPath = newPath.replace(prefix + key, value)
+  })
+  return newPath
+}
+
+
 const Main = () => {
   const { workspaceId } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [workspaces, setWorkspaces] = useState<any[]>([])
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(workspaceId)
   const { response, get } = useFetch()
@@ -32,6 +45,15 @@ const Main = () => {
   useEffect(() => {
     loadWorkspaces()
   }, [])
+
+  useEffect(() => {
+    const routeMatches = matchRoutes(Object.values(ROUTES).map(i => ({ path: i })), location)
+    if (routeMatches && routeMatches?.length > 0) {
+      console.log(location)
+      navigate(`${repalacePathParams(routeMatches[0].route?.path, { workspaceId: selectedWorkspaceId })}${location.search}`)
+    }
+    
+  }, [selectedWorkspaceId])
 
 
   return (

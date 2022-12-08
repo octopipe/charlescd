@@ -19,6 +19,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import ModulesMain from './modules/ModulesMain';
 import Root from './modules/Root';
 import Workspaces from './modules/Workspaces';
+import WorkspaceForm from './modules/Workspaces/ModalForm';
+import { ROUTES } from './core/constants/routes';
 
 
 const root = ReactDOM.createRoot(
@@ -55,11 +57,11 @@ const App = () => {
           <BrowserRouter>
             <ToastContainer autoClose={2000} hideProgressBar theme='dark'/>
             <Routes>
-              <Route path='/login' element={<Login />} />
-              <Route path='/' element={<Root />}>
+              <Route path={ROUTES.LOGIN} element={<Login />} />
+              <Route path={ROUTES.ROOT} element={<Root />}>
                 <Route path='' element={<Workspaces />} />
               </Route>
-              <Route path='/workspaces/:workspaceId' element={<Main />}>
+              <Route path={ROUTES.MAIN} element={<Main />}>
                 <Route path='' element={<Home />} />
                 <Route path='circles' element={<CirclesMain />}>
                 </Route>
