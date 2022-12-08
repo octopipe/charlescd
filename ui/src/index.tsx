@@ -18,6 +18,8 @@ import CirclesMain from './modules/CirclesMain';
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import ModulesMain from './modules/ModulesMain';
+import Root from './modules/Root';
+import Workspaces from './modules/Workspaces';
 
 
 const root = ReactDOM.createRoot(
@@ -55,16 +57,18 @@ const App = () => {
             <ToastContainer autoClose={2000} hideProgressBar theme='dark'/>
             <Routes>
               <Route path='/login' element={<Login />} />
-              <Route path='' element={<Main />}>
-                <Route path='workspaces/:workspaceId' element={<Home />} />
-                <Route path='workspaces/:workspaceId/circles' element={<CirclesMain />}>
+              <Route path='/' element={<Root />}>
+                <Route path='' element={<Workspaces />} />
+              </Route>
+              <Route path='/workspaces/:workspaceId' element={<Main />}>
+                <Route path='' element={<Home />} />
+                <Route path='circles' element={<CirclesMain />}>
                 </Route>
-                <Route path='workspaces/:workspaceId/circles/create' element={<CreateCircle />} />
-                <Route path='workspaces/:workspaceId/modules' element={<ModulesMain />} />
+                <Route path='circles/create' element={<CreateCircle />} />
+                <Route path='modules' element={<ModulesMain />} />
               </Route>
               <Route path='/error' element={<Error />} />
             </Routes>
-            
           </BrowserRouter>
         </FetchProvider>
       </ReduxProvider>

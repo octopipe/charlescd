@@ -1,21 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { generatePath, matchRoutes, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { generatePath, matchRoutes, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import useFetch from 'use-http'
 import Placeholder from '../../core/components/Placeholder';
 import { ReactComponent as EmptyWorkspaces } from '../../core/assets/svg/empty-workspaces.svg'
-import MainNavbar from './Navbar';
 import MainSidebar from './Sidebar';
 import './style.scss'
 import { Container } from 'react-bootstrap';
 import { useAppDispatch } from '../../core/hooks/redux';
 import { setDeployStrategy } from './mainSlice';
-
-const routes = [
-  { path: '' },
-  { path: '/workspaces/:workspaceId' },
-  { path: '/workspaces/:workspaceId/circles' },
-  { path: '/workspaces/:workspaceId/circles/:circleId' }
-]
+import Navbar from '../../core/components/Navbar';
 
 const EmptyWorkspacesPlaceholser = () => (
   <Container>
@@ -26,10 +19,9 @@ const EmptyWorkspacesPlaceholser = () => (
 )
 
 const Main = () => {
-  const dispatch = useAppDispatch()
-  const location = useLocation()
-  const navigate = useNavigate()
+  const { workspaceId } = useParams()
   const [workspaces, setWorkspaces] = useState<any[]>([])
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(workspaceId)
   const { response, get } = useFetch()
 
   const loadWorkspaces = useCallback(async () => {
@@ -41,38 +33,13 @@ const Main = () => {
     loadWorkspaces()
   }, [])
 
-  const goToWorkspacePage = (workspace: any) => {
-    const matches = matchRoutes(routes, location) || []
-    dispatch(setDeployStrategy(workspace.routingStrategy))
-
-    if (matches?.length > 0 && matches[0].pathname !== '/') {
-      navigate(matches[0].pathname)
-      return
-    }
-
-    if (matches?.length <= 0 || routes[0]?.path === '') {
-      navigate(`/workspaces/${workspace.id}`)
-      return
-    }
-
-    navigate(generatePath(routes[0]?.path || '' , { workspaceId: workspace.id }))
-  }
-
-  useEffect(() => {
-    if (workspaces?.length <= 0)
-      return
-
-    
-    goToWorkspacePage(workspaces[0])
-  }, [workspaces])
-  
-
 
   return (
     <div className='main'>
-      <MainNavbar
+      <Navbar
         workspaces={workspaces || []}
-        onSelectWorkspace={(workspaceId: any) => goToWorkspacePage(workspaceId)}
+        selectedWorkspaceId={selectedWorkspaceId || ''}
+        onSelectWorkspace={(workspaceId: any) => setSelectedWorkspaceId(workspaceId)}
       />
       <div className='main__content'>
         {workspaces?.length > 0 &&  <MainSidebar />}

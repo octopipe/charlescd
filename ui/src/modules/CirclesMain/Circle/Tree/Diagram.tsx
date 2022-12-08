@@ -14,7 +14,7 @@ const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
 const nodeWidth = 170;
-const nodeHeight = 60;
+const nodeHeight = 80;
 const position = { x: 0, y: 0 }
 const edgeType = 'smoothstep'
 

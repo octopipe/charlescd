@@ -1,0 +1,34 @@
+.workspaces {
+
+  &__content {
+    margin-top: 50px;
+
+    &__item {
+      box-sizing: border-box;
+      padding: 20px 20px 12px;
+      border: 1px solid #757575;
+      border-radius: 20px;
+      height: 200px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      &:hover {
+        background-color: #757575;
+      }
+    }
+
+    &__create {
+      @extend .workspaces__content__item;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  
+
+  
+
+}

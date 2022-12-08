@@ -111,9 +111,19 @@
   }
 }
 
-.react-flow__node {
-  padding: 0;
-  text-align: start;
-  width: 200px;
+.react-flow__node{
+  
+  padding: 0 !important;
+  text-align: start !important;
+  width: 170px;
   height: 80px;
+
+  &-default {
+    @extend .react-flow__node;
+  }
+
+  &-project {
+    @extend .react-flow__node;
+
+  }
 }

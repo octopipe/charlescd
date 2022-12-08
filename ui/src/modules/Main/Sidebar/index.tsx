@@ -34,16 +34,17 @@ const MainSidebar = () => {
     <div className='main__sidebar'>
       <div className='main__sidebar__list'>
         {items.map(item => (
-            <NavLink 
-              key={item.name}
-              className={({ isActive }) => isActive ? 'main__sidebar__list__item--active' : 'main__sidebar__list__item'}
-              to={`/workspaces/${workspaceId}/${item.to}`}
-              end
-            >
-              <FontAwesomeIcon icon={item.icon as IconProp} />
-            </NavLink>
+          <NavLink 
+            key={item.name}
+            className={({ isActive }) => isActive ? 'main__sidebar__list__item--active' : 'main__sidebar__list__item'}
+            to={`/workspaces/${workspaceId}/${item.to}`}
+            end
+          >
+            <FontAwesomeIcon icon={item.icon as IconProp} />
+          </NavLink>
         ))}
       </div>
+      
     </div>
   )
 }
