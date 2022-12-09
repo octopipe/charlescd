@@ -97,7 +97,7 @@ const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
       {circleOp === 'C' && (
         <FloatingButton
           icon="check"
-          iconColor='#4caf50'
+          iconColor='white'
           text="Save circle"
           onClick={handleClickSave}
         />

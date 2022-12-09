@@ -47,8 +47,8 @@ body {
 
 .btn {
   &-primary {
-    background-color: #f15c23;
-    border: 1px solid #f15c23;
+    background-color: #5C37CC;
+    border: 1px solid #5C37CC;
 
     &:hover {
       background-color: rgba(241, 92, 35, .8);
@@ -58,13 +58,13 @@ body {
 }
 
 .btn-outline-primary {
-  border: 1px solid #f15c23;
-  color: #f15c23;
+  border: 1px solid #5C37CC;
+  color: #5C37CC;
 }
 
 .btn-check:checked+.btn {
-  background-color: #f15c23;
-  border: 1px solid #f15c23;
+  background-color: #5C37CC;
+  border: 1px solid #5C37CC;
 }
 
 .card {
@@ -88,11 +88,11 @@ body {
 
 .nav-link.active {
 
-  background-color: #f15c23 !important;
+  background-color: #5C37CC !important;
 }
 
 .bg-primary {
-  background-color: #f15c23 !important;
+  background-color: #5C37CC !important;
 }
 
 .list-group-item {

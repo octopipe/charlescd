@@ -6,11 +6,6 @@ import './style.scss'
 
 const items = [
   {
-    name: 'Home',
-    to: '/',
-    icon: 'home'
-  },
-  {
     name: 'Circles',
     to: 'circles',
     icon: ["far", "circle"]
