@@ -81,7 +81,7 @@ const ModuleContent = ({ moduleId, moduleOp, onSave }: Props) => {
       {moduleOp === 'C' && (
         <FloatingButton
           icon="check"
-          iconColor='#4caf50'
+          iconColor='white'
           text="Save module"
           onClick={handleClickSave}
         />

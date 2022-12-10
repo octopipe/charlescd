@@ -49,7 +49,7 @@ const Workspaces = () => {
           </Col>
           {workspaces?.map(workspace => (
             <Col xs={3}>
-              <div className='workspaces__content__item' onClick={() => navigate(`/workspaces/${workspace.id}`)}>
+              <div className='workspaces__content__item' onClick={() => navigate(`/workspaces/${workspace.id}/circles`)}>
                 <div>
                   <div>{workspace.name}</div>
                   <div className='text-muted'>{workspace.description}</div>

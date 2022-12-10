@@ -6,6 +6,8 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import CirclesSidebar from './Sidebar';
 import Circle from './Circle';
 import { Circle as CircleType } from './Circle/types'
+import Placeholder from '../../core/components/Placeholder'
+import { ReactComponent as EmptyCirclesSVG } from '../../core/assets/svg/empty-circles.svg'
 
 const createCircleId = 'untitled'
 
@@ -15,7 +17,7 @@ const CirclesMain = () => {
   const { workspaceId } = useParams()
   const [circles, setCircles] = useState<CirclePagination>({continue: '', items: []})
   const [activeCircleIds, setActiveCirclesIds] = useState<string[]>([])
-  const { response, get, post, delete: deleteMethod } = useFetch({cachePolicy: CachePolicies.NO_CACHE})
+  const { response, get, post, loading, delete: deleteMethod } = useFetch({cachePolicy: CachePolicies.NO_CACHE, suspense: true})
 
   const loadCircles = async () => {
     const circles = await get(`/workspaces/${workspaceId}/circles`)
@@ -25,6 +27,10 @@ const CirclesMain = () => {
   useEffect(() => {
     loadCircles()
   }, [workspaceId])
+
+  useEffect(() => {
+    console.log(loading)
+  }, [loading])
 
   useEffect(() => {
     let currentActiveCirclesIds: string[] = []
@@ -46,7 +52,6 @@ const CirclesMain = () => {
   }
 
   const handleCircleCreateClick = () => {
-    
     setSearchParams(i => {
       if (!i.has(createCircleId)) {
         i.append(createCircleId, "C")
@@ -101,10 +106,18 @@ const CirclesMain = () => {
     <div className='circles'>
       <CirclesSidebar
         circles={circles}
+        loading={loading}
         onCircleClick={handleCircleClick}
         onCircleCreateClick={handleCircleCreateClick}
       />
-      <div className='circles__content'>
+      <div className={activeCircleIds.length > 0 ? 'circles__content' : 'circles__content-empty'}>
+        {activeCircleIds.length <= 0 && (
+          <div className='container'>
+            <Placeholder text='No circle selected'>
+              <EmptyCirclesSVG />
+            </Placeholder>
+          </div>
+        )}
         {activeCircleIds.map(id => (
           <Circle
             key={id}
