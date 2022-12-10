@@ -8,6 +8,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/octopipe/charlescd/internal/moove/errs"
 	"github.com/octopipe/charlescd/internal/utils/id"
+	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
@@ -58,7 +59,7 @@ func (r k8sRepository) fillNamespace(target v1.Namespace, workspace Workspace) v
 	return target
 }
 
-func (r k8sRepository) toWorkspaceModel(namespace v1.Namespace) WorkspaceModel {
+func (r k8sRepository) toWorkspaceModel(namespace v1.Namespace, circles int, modules int) WorkspaceModel {
 	annotations := namespace.GetAnnotations()
 	return WorkspaceModel{
 		ID: annotations["id"],
@@ -68,6 +69,8 @@ func (r k8sRepository) toWorkspaceModel(namespace v1.Namespace) WorkspaceModel {
 			RoutingStrategy: annotations["routingStrategy"],
 		},
 		CreatedAt: namespace.CreationTimestamp.Format(time.RFC3339),
+		Circles:   circles,
+		Modules:   modules,
 	}
 }
 
@@ -89,7 +92,7 @@ func (r k8sRepository) Create(workspace Workspace) (WorkspaceModel, error) {
 		return WorkspaceModel{}, errs.E(errs.Internal, errs.Code("WORKSPACE_CREATE_ERROR"), err)
 	}
 
-	return r.toWorkspaceModel(newNamespace), nil
+	return r.toWorkspaceModel(newNamespace, 0, 0), nil
 }
 
 // Delete implements WorkspaceModelRepository
@@ -121,11 +124,45 @@ func (r k8sRepository) FindAll() ([]WorkspaceModel, error) {
 	models := []WorkspaceModel{}
 	for _, i := range list.Items {
 		if i.DeletionTimestamp == nil {
-			models = append(models, r.toWorkspaceModel(i))
+			circles, err := r.countCircles(i.Name)
+			if err != nil {
+				return nil, err
+			}
+
+			modules, err := r.countModules(i.Name)
+			if err != nil {
+				return nil, err
+			}
+
+			models = append(models, r.toWorkspaceModel(i, circles, modules))
 		}
 	}
 
 	return models, nil
+}
+
+func (r k8sRepository) countCircles(namespace string) (int, error) {
+	list := &charlescdiov1alpha1.CircleList{}
+	err := r.clientset.List(context.Background(), list, &client.ListOptions{
+		Namespace: namespace,
+	})
+	if err != nil {
+		return 0, errs.E(errs.Internal, errs.Code("WORKSPACE_CIRCLE_LIST_ERROR"), err)
+	}
+
+	return len(list.Items), nil
+}
+
+func (r k8sRepository) countModules(namespace string) (int, error) {
+	list := &charlescdiov1alpha1.ModuleList{}
+	err := r.clientset.List(context.Background(), list, &client.ListOptions{
+		Namespace: namespace,
+	})
+	if err != nil {
+		return 0, errs.E(errs.Internal, errs.Code("WORKSPACE_MODULE_LIST_ERROR"), err)
+	}
+
+	return len(list.Items), nil
 }
 
 // FindById implements WorkspaceModelRepository
@@ -135,7 +172,17 @@ func (r k8sRepository) FindById(workspaceId string) (WorkspaceModel, error) {
 		return WorkspaceModel{}, err
 	}
 
-	return r.toWorkspaceModel(namespace), nil
+	circles, err := r.countCircles(namespace.Name)
+	if err != nil {
+		return WorkspaceModel{}, err
+	}
+
+	modules, err := r.countModules(namespace.Name)
+	if err != nil {
+		return WorkspaceModel{}, err
+	}
+
+	return r.toWorkspaceModel(namespace, circles, modules), nil
 }
 
 // Update implements WorkspaceModelRepository
@@ -151,5 +198,15 @@ func (r k8sRepository) Update(id string, workspace Workspace) (WorkspaceModel, e
 		return WorkspaceModel{}, errs.E(errs.Internal, errs.Code("WORKSPACE_UPDATE_FAILED"), err)
 	}
 
-	return r.toWorkspaceModel(namespace), nil
+	circles, err := r.countCircles(namespace.Name)
+	if err != nil {
+		return WorkspaceModel{}, err
+	}
+
+	modules, err := r.countModules(namespace.Name)
+	if err != nil {
+		return WorkspaceModel{}, err
+	}
+
+	return r.toWorkspaceModel(namespace, circles, modules), nil
 }

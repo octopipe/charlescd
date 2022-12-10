@@ -12,14 +12,10 @@ interface Props {
 }
 
 
-const DynamicContainer = ({ className, loading, children }: Props) => {
-  return (
-    <div className={`dynamic-container ${className}`}>
-      <Suspense fallback={"Loading..."}>
-        {children}
-      </Suspense>
-    </div>
-  )
-}
+const DynamicContainer = ({ className, loading = true, children }: Props) => (
+  <div className={`dynamic-container ${className}`}>
+    {loading ? <Spinner /> : children}
+  </div>
+)
 
 export default DynamicContainer

@@ -1,32 +1,33 @@
-import React, { useEffect, useState } from 'react'
-import useFetch, { CachePolicies } from 'use-http'
-import './style.scss'
+import React, { useCallback, useEffect, useState } from 'react'
 import { CirclePagination } from './types'
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useParams, useSearchParams } from 'react-router-dom'
 import CirclesSidebar from './Sidebar';
 import Circle from './Circle';
 import { Circle as CircleType } from './Circle/types'
 import Placeholder from '../../core/components/Placeholder'
 import { ReactComponent as EmptyCirclesSVG } from '../../core/assets/svg/empty-circles.svg'
+import { setBreadcrumbItems } from '../Main/mainSlice'
+import './style.scss'
+import { useAppDispatch } from '../../core/hooks/redux';
+import useFetch from '../../core/hooks/fetch';
 
 const createCircleId = 'untitled'
 
 const CirclesMain = () => {
-  const location = useLocation()
-  const [searchParams, setSearchParams] = useSearchParams();
+  const dispatch = useAppDispatch()
   const { workspaceId } = useParams()
-  const [circles, setCircles] = useState<CirclePagination>({continue: '', items: []})
+  const [circles, setCircles] = useState<CirclePagination>()
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeCircleIds, setActiveCirclesIds] = useState<string[]>([])
-  const { response, get, post, loading, delete: deleteMethod } = useFetch({cachePolicy: CachePolicies.NO_CACHE, suspense: true})
-
-  const loadCircles = async () => {
-    const circles = await get(`/workspaces/${workspaceId}/circles`)
-    if (response.ok) setCircles(circles || [])
-  }
+  const { loading: loadingCircles, fetch: get } = useFetch<CirclePagination>()
+  const { fetch } = useFetch()
 
   useEffect(() => {
-    loadCircles()
-  }, [workspaceId])
+    get(`/workspaces/${workspaceId}/circles`, 'GET').then(res => setCircles(res))
+    dispatch(setBreadcrumbItems([
+      { name: 'Circles', to: `/workspaces/${workspaceId}/circles` },
+    ]))
+  }, [])
 
   useEffect(() => {
     let currentActiveCirclesIds: string[] = []
@@ -72,37 +73,29 @@ const CirclesMain = () => {
   }
 
   const handleDeleteCircle = async (circleId: string) => {
-    await deleteMethod(`/workspaces/${workspaceId}/circles/${circleId}`)
-    await loadCircles()
-    if (response.ok) {
-      setSearchParams(i => {
-        i.delete(circleId)
-        return i
-      })
-    }
+    await fetch(`/workspaces/${workspaceId}/circles/${circleId}`, 'DELETE')
+    await get(`/workspaces/${workspaceId}/circles`, 'GET')
   }
 
   const handleSaveCircle = async (circle: CircleType) => {
-    const newCircle = await post(`/workspaces/${workspaceId}/circles`, circle)
-    if (response.ok) {
-      setSearchParams(i => {
-        if (!i.has(newCircle.id)) {
-          i.append(newCircle.id, "R")
-        }
+    const newCircle = await fetch(`/workspaces/${workspaceId}/circles`, 'POST', circle)
+    await get(`/workspaces/${workspaceId}/circles`, 'GET')
+    setSearchParams(i => {
+      if (!i.has(newCircle.id)) {
+        i.append(newCircle.id, "R")
+      }
 
-        i.delete(createCircleId)
-  
-        return i
-      })
-      await loadCircles()
-    }
+      i.delete(createCircleId)
+
+      return i
+    })
   }
 
   return (
     <div className='circles'>
       <CirclesSidebar
         circles={circles}
-        loading={loading}
+        loading={loadingCircles}
         onCircleClick={handleCircleClick}
         onCircleCreateClick={handleCircleCreateClick}
       />

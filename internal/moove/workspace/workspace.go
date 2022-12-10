@@ -19,6 +19,8 @@ type Workspace struct {
 type WorkspaceModel struct {
 	ID        string `json:"id"`
 	CreatedAt string `json:"createdAt"`
+	Circles   int    `json:"circles"`
+	Modules   int    `json:"modules"`
 	Workspace
 }
 

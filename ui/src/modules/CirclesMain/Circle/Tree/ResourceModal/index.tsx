@@ -2,12 +2,10 @@ import React, { memo, useEffect, useState } from "react";
 import { Alert, Badge, ListGroup, Modal, ModalProps, Nav } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import useFetch from 'use-http'
-import AceEditor from "react-ace";
+import Editor from "../../../../../core/components/Editor";
 import { Resource, ResourceMetadata } from "../types";
 import './style.scss'
 
-import "ace-builds/src-noconflict/mode-json";
-import "ace-builds/src-noconflict/theme-monokai";
 
 export interface ResourceModalProps extends ModalProps {
   circleId: string
@@ -78,14 +76,9 @@ const ResourceModal = ({ circleId, show, onClose, selectedResource }: ResourceMo
         </Alert>
       )}
       
-      <AceEditor
+      <Editor
         value={JSON.stringify(manifest, null, 2)}
-        width="100%"
-        height='500px'
-        mode="json"
-        readOnly={true}
-        theme="monokai"
-        showGutter={false}
+        onChange={() => {}}
       />
     </>
   )

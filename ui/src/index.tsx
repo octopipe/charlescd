@@ -4,23 +4,23 @@ import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { Provider as ReduxProvider } from 'react-redux'
 import reportWebVitals from './reportWebVitals';
 import Main from './modules/Main';
-import { Provider as FetchProvider, IncomingOptions } from 'use-http'
+import { Provider as FetchProvider, IncomingOptions, CachePolicies } from 'use-http'
 import Login from './modules/Login';
-import './core/components/icons/library'
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './index.scss'
+
 import Home from './modules/Home';
 import store from './store'
-import CreateCircle from './modules/CreateCircle';
 import Error from './modules/Error';
 import CirclesMain from './modules/CirclesMain';
 import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
 import ModulesMain from './modules/ModulesMain';
 import Root from './modules/Root';
 import Workspaces from './modules/Workspaces';
-import WorkspaceForm from './modules/Workspaces/ModalForm';
 import { ROUTES } from './core/constants/routes';
+
+import './core/components/icons/library'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './index.scss'
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const root = ReactDOM.createRoot(
@@ -29,49 +29,28 @@ const root = ReactDOM.createRoot(
 
 const App = () => {
   const options: IncomingOptions = {
-    interceptors: {
-      request: async ({ options, url, path, route }) => {
-        return options
-      },
-      response: async ({ response }) => {
-        const res = response
-
-        if (response.status >= 500) {
-          window.location.href = '/error'
-        }
-
-        if (!response.ok) {
-          console.log("ERRORS", response)
-          toast.error(response.data?.message)
-        }
-
-        return res
-      }
-    }
+    retries: 3,
+    loading: false,
   }
 
   return (
     <React.StrictMode>
       <ReduxProvider store={store}>
-        <FetchProvider url='http://localhost:8080' options={options}>
-          <BrowserRouter>
-            <ToastContainer autoClose={2000} hideProgressBar theme='dark'/>
-            <Routes>
-              <Route path={ROUTES.LOGIN} element={<Login />} />
-              <Route path={ROUTES.ROOT} element={<Root />}>
-                <Route path='' element={<Workspaces />} />
-              </Route>
-              <Route path={ROUTES.MAIN} element={<Main />}>
-                <Route path='' element={<Home />} />
-                <Route path='circles' element={<CirclesMain />}>
-                </Route>
-                <Route path='circles/create' element={<CreateCircle />} />
-                <Route path='modules' element={<ModulesMain />} />
-              </Route>
-              <Route path='/error' element={<Error />} />
-            </Routes>
-          </BrowserRouter>
-        </FetchProvider>
+        <BrowserRouter>
+          <ToastContainer autoClose={2000} hideProgressBar theme='dark'/>
+          <Routes>
+            <Route path={ROUTES.LOGIN} element={<Login />} />
+            <Route path={ROUTES.ROOT} element={<Root />}>
+              <Route path='' element={<Workspaces />} />
+            </Route>
+            <Route path={ROUTES.MAIN} element={<Main />}>
+              <Route path='' element={<Home />} />
+              <Route path='circles' element={<CirclesMain />} />
+              <Route path='modules' element={<ModulesMain />} />
+            </Route>
+            <Route path='/error' element={<Error />} />
+          </Routes>
+        </BrowserRouter>
       </ReduxProvider>
     </React.StrictMode>
   )

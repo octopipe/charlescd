@@ -1,9 +1,6 @@
 import React from 'react'
 import { Button, Form, Modal, ModalProps } from 'react-bootstrap'
-import AceEditor from "react-ace";
-
-import "ace-builds/src-noconflict/mode-json";
-import "ace-builds/src-noconflict/theme-monokai";
+import Editor from '../../core/components/Editor'
 
 const exampleOverridesValue = [
   {
@@ -28,12 +25,9 @@ const ModalForm = ({ show, onClose }: ModalProps) => {
             </Form.Text>
           </Form.Group>
           <div>
-            <AceEditor
-              width='100%'
-              height='300px'
-              mode="json"
-              theme="monokai"
+            <Editor
               value={JSON.stringify(exampleOverridesValue, null, 2)}
+              onChange={() => {}}
             />
           </div>
         </Form>

@@ -6,11 +6,7 @@ import './style.scss'
 const Root = () => {
   return (
     <>
-      <Navbar
-        workspaces={[]}
-        selectedWorkspaceId={''}
-        onSelectWorkspace={() => {}}
-      />
+      <Navbar />
       <Outlet />
     </>
   )

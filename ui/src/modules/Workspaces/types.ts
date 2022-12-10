@@ -7,4 +7,6 @@ export interface Workspace {
 export interface WorkspaceModel extends Workspace {
   id: string
   createdAt: string
+  circles: number
+  modules: number
 }

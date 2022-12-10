@@ -1,17 +1,22 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect, useState } from 'react';
-import { Form } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { Breadcrumb, Form } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
 import { ReactComponent as LogoLight } from '../../../core/assets/svg/logo-light.svg'
+import { WorkspaceModel } from '../../../modules/Workspaces/types';
 import './style.scss'
 
+export interface BreadcrumbItem {
+  name: string
+  to?: string
+} 
+
 export interface Props {
-  workspaces: any[]
-  selectedWorkspaceId: string
-  onSelectWorkspace(workspaceId: string): void
+  workspace?: WorkspaceModel
+  breadcrumbItems?: BreadcrumbItem[]
 }
 
-const Navbar = ({ workspaces, selectedWorkspaceId, onSelectWorkspace }: Props) => {
+const Navbar = ({ workspace, breadcrumbItems }: Props) => {
   const navigate = useNavigate()
 
   return (
@@ -21,14 +26,16 @@ const Navbar = ({ workspaces, selectedWorkspaceId, onSelectWorkspace }: Props) =
           <LogoLight />
         </div>
         <div>
-          {workspaces?.length > 0 && (
-            <Form.Select defaultValue={selectedWorkspaceId} onChange={(e) => onSelectWorkspace(e.target.value)}>
-              <option value="default" disabled>Select a workspace</option>
-              {workspaces?.map((workspace: any) => (
-                <option key={workspace?.id} value={workspace?.id}>{workspace?.name}</option>
-              ))}
-            </Form.Select>
-          )}
+          <Breadcrumb className='ms-3 mt-3'>
+            {breadcrumbItems && breadcrumbItems.map(breadcrumbItem => (
+              <Breadcrumb.Item 
+                linkAs={Link}
+                linkProps={{ to: breadcrumbItem.to }}
+                active={!breadcrumbItem?.to}>
+                {breadcrumbItem.name}
+              </Breadcrumb.Item>
+            ))}
+          </Breadcrumb>
         </div>
       </div>
       <div className='d-flex'>

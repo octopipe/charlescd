@@ -5,16 +5,13 @@ import './style.scss'
 import { Circle as CircleType, CircleEnrivonment, CircleModel, CircleRouting, CircleRoutingCustomMatch, CircleRoutingSegment } from './types'
 import { useParams, useSearchParams } from 'react-router-dom'
 import CircleModules from '../../CircleModules'
-import AceEditor from "react-ace";
-
-import "ace-builds/src-noconflict/mode-json";
-import "ace-builds/src-noconflict/theme-monokai";
 import ViewInput from '../../../core/components/ViewInput'
 import { useAppSelector } from '../../../core/hooks/redux'
 import FloatingButton from '../../../core/components/FloatingButton'
+import Editor from '../../../core/components/Editor'
 
 interface Props {
-  circleId: string
+  circle?: CircleModel
   circleOp: string
   onUpdate?: (id: string) => void
   onSave: (circle: CircleType) => void
@@ -30,28 +27,16 @@ const initialSegments = [
   { key: 'email', op: 'EQUAL', value: 'email@mail.com' }
 ]
 
-const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
+const CircleContent = ({ circle, circleOp, onSave }: Props) => {
   const [searchParams] = useSearchParams();
-  const { routingStrategy } = useAppSelector(state => state.main)
+  const { workspace } = useAppSelector(state => state.main)
   const { workspaceId } = useParams()
-  const [circle, setCircle] = useState<CircleModel>()
-  const { response, get } = useFetch()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [matchStrategy, setMatchStrategy] = useState('customMatch')
   const [customMatch, setCustomMatch] = useState<CircleRoutingCustomMatch>(initialCustomMatch)
   const [segments, setSegments] = useState<CircleRoutingSegment[]>(initialSegments)
   const [environments, setEnvironments] = useState<CircleEnrivonment[]>(initialEnviroments)
-
-  const loadCircle = async () => {
-    const circle = await get(`/workspaces/${workspaceId}/circles/${circleId}`)
-    if (response.ok) setCircle(circle || [])
-  }
-
-  useEffect(() => {
-    if (circleOp !== "C")
-      loadCircle()
-  }, [workspaceId])
 
   useEffect(() => {
     setName(circle?.name || '')
@@ -61,12 +46,12 @@ const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
   }, [circle])
 
   const isCreate = () => {
-    return searchParams.get(circleId) === 'C'
+    return circleOp === 'C'
   }
 
   const handleClickSave = () => {
-    let routing: CircleRouting = { strategy: routingStrategy }
-    if (routingStrategy === 'match') {
+    let routing: CircleRouting = { strategy: workspace.routingStrategy }
+    if (workspace.routingStrategy === 'match') {
       if (matchStrategy === 'customMatch') {
         routing = {
           ...routing,
@@ -130,24 +115,16 @@ const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
         </Nav>
         {matchStrategy === 'customMatch' ? (
           <div className='circle__content__section__custom-match'>
-            <AceEditor
-              width='100%'
+            <Editor
               height='200px'
-              fontSize={14}
-              mode="json"
-              theme="monokai"
               value={JSON.stringify(customMatch, null, 2)}
               onChange={value => setCustomMatch(JSON.parse(value))}
             />
           </div>
         ) : (
           <div className='circle__content__section__segments'>
-            <AceEditor
-              width='100%'
+            <Editor
               height='200px'
-              fontSize={14}
-              mode="json"
-              theme="monokai"
               value={JSON.stringify(segments, null, 2)}
               onChange={value => setSegments(JSON.parse(value))}
             />
@@ -164,12 +141,8 @@ const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
         label="Modules"
         icon="folder"
       >
-        <AceEditor
-          width='100%'
+        <Editor
           height='200px'
-          fontSize={14}
-          mode="json"
-          theme="monokai"
           value={JSON.stringify(environments, null, 2)}
           onChange={value => setEnvironments(JSON.parse(value))}
         />

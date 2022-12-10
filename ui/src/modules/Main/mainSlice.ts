@@ -1,21 +1,29 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { BreadcrumbItem } from '../../core/components/Navbar'
+import { WorkspaceModel } from '../Workspaces/types'
 
 export const mainSlice = createSlice({
   name: 'main',
   initialState: {
-    currentWorkspace: '',
-    routingStrategy: '',
+    workspace: {} as WorkspaceModel,
+    breadcrumbItems: [] as BreadcrumbItem[],
   },
   reducers: {
-    setCurrentWorkspace: (state, action) => {
-      state.currentWorkspace = action.payload
+    setWorkspace: (state, action) => {
+      state.workspace = action.payload
     },
-    setDeployStrategy: (state, action) => {
-      state.routingStrategy = action.payload
+    setBreadcrumbItems: (state, action) => {
+      let breadcrumbItems = [
+        { name: 'Workspaces', to: '/' },
+        { name: state.workspace?.name || '' },
+      ]
+
+      breadcrumbItems = [...breadcrumbItems, ...action.payload]
+      state.breadcrumbItems = breadcrumbItems
     }
   }
 })
 
-export const { setCurrentWorkspace, setDeployStrategy } = mainSlice.actions
+export const { setWorkspace, setBreadcrumbItems } = mainSlice.actions
 
 export default mainSlice.reducer

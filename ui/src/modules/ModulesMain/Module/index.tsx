@@ -1,15 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import useFetch from 'use-http'
-import './style.scss'
 import { Module as ModuleType, ModuleModel } from '../types'
 import { useParams, useSearchParams } from 'react-router-dom'
-
-import "ace-builds/src-noconflict/mode-json";
-import "ace-builds/src-noconflict/theme-monokai";
-import { useAppSelector } from '../../../core/hooks/redux'
 import Alert from '../../../core/components/Alert'
 import ModuleContent from './Content'
 import ModuleTabs from './Tabs'
+import './style.scss'
 
 interface Props {
   moduleId: string
@@ -29,7 +25,6 @@ enum TABS {
 
 const Module = ({ moduleId, moduleOp, onClose, onSave, onDelete }: Props) => {
   const [searchParams] = useSearchParams();
-  const { routingStrategy } = useAppSelector(state => state.main)
   const { workspaceId } = useParams()
   const [module, setModule] = useState<ModuleModel>()
   const { response, get } = useFetch()
@@ -47,7 +42,7 @@ const Module = ({ moduleId, moduleOp, onClose, onSave, onDelete }: Props) => {
   useEffect(() => {
     if (moduleOp !== "C")
       loadModule()
-  }, [workspaceId])
+  }, [])
 
   useEffect(() => {
     setName(module?.name || '')

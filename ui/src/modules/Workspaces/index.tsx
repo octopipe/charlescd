@@ -1,44 +1,32 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { generatePath, matchRoutes, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
-import useFetch from 'use-http'
-import Placeholder from '../../core/components/Placeholder';
-import { ReactComponent as EmptyWorkspaces } from '../../core/assets/svg/empty-workspaces.svg'
-import './style.scss'
+import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Badge } from 'react-bootstrap';
-import { useAppDispatch } from '../../core/hooks/redux';
-import Navbar from '../../core/components/Navbar';
 import { Workspace, WorkspaceModel } from './types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import WorkspaceForm from './ModalForm';
+import './style.scss'
+import useFetch from '../../core/hooks/fetch';
+import DynamicContainer from '../../core/components/DynamicContainer';
 
 
 const Workspaces = () => {
-  const { workspaceId } = useParams()
   const navigate = useNavigate()
   const [show, toggleModal] = useState(false)
   const [workspaces, setWorkspaces] = useState<WorkspaceModel[]>([])
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(workspaceId)
-  const { response, get, post } = useFetch()
+  const { fetch, data, loading } = useFetch<WorkspaceModel[]>()
 
-  const loadWorkspaces = useCallback(async () => {
-    const workspaces = await get('/workspaces')
-    if (response.ok) setWorkspaces(workspaces)
-  }, [get, response])
 
   const saveWorkspace = useCallback(async (workspace: Workspace) => {
-    await post('/workspaces', workspace)
-    const workspaces = await get('/workspaces')
-    
-    if (response.ok) setWorkspaces(workspaces)
-
-  }, [get, post, response])
+    await fetch('/workspaces', "POST", workspace)
+    await fetch('/workspaces', 'GET')
+  }, [fetch])
 
   useEffect(() => {
-    loadWorkspaces()
-  }, [])
+    fetch('/workspaces', "GET").then(res => setWorkspaces(res))
+  }, [])  
 
   return (
-    <div className='workspaces'>
+    <DynamicContainer loading={loading} className='workspaces'>
       <Container className='workspaces__content'>
         <h2 className='mb-4'>Workspaces</h2>
         <Row>
@@ -47,15 +35,17 @@ const Workspaces = () => {
               <FontAwesomeIcon icon="plus" size='2x'/>
             </div>
           </Col>
-          {workspaces?.map(workspace => (
-            <Col xs={3}>
+          {workspaces?.map((workspace, idx) => (
+            <Col xs={3} key={idx}>
               <div className='workspaces__content__item' onClick={() => navigate(`/workspaces/${workspace.id}/circles`)}>
                 <div>
                   <div>{workspace.name}</div>
                   <div className='text-muted'>{workspace.description}</div>
+                  <Badge className='mt-3'>{workspace.routingStrategy}</Badge>
                 </div>
                 <span>
-                  <Badge>{workspace.routingStrategy}</Badge>
+                  <span>{workspace.circles} <FontAwesomeIcon className='ms-1' icon={["far", "circle"]} /></span>
+                  <span className='ms-3'>{workspace.modules} <FontAwesomeIcon className='ms-1' icon="folder" /></span>
                 </span>
               </div>
             </Col>
@@ -63,7 +53,7 @@ const Workspaces = () => {
         </Row>
       </Container>
       <WorkspaceForm show={show} onHide={() => toggleModal(false)} onSave={saveWorkspace}/>
-    </div>
+    </DynamicContainer>
   )
 }
 

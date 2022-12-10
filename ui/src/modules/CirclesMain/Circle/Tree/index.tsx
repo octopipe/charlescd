@@ -1,14 +1,12 @@
-import React, { useEffect, useState, memo } from "react";
-import ReactFlow, { Background, ConnectionLineType, Edge, Handle, Node, Position, useEdgesState, useNodesState } from "react-flow-renderer";
+import React, { useEffect, useState } from "react";
+import { Edge, Node, Position} from "react-flow-renderer";
 import { useParams } from "react-router-dom";
 import useFetch, { CachePolicies } from 'use-http'
 import dagre from 'dagre';
 import './style.scss'
-import { Resource, ResourceMetadata } from "./types";
-import DefaultNode from "./DefaultNode";
+import { ResourceMetadata } from "./types";
 import ResourceModal from "./ResourceModal";
-import ProjectNode from "./ProjectNode";
-import { ButtonGroup, Modal, ToggleButton } from "react-bootstrap";
+import { ButtonGroup, ToggleButton } from "react-bootstrap";
 import TreeDiagram from "./Diagram";
 import TreeList from "./List";
 

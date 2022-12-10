@@ -5,6 +5,8 @@ import { Module as ModuleType, ModulePagination } from './types'
 import { useLocation, useParams, useSearchParams } from 'react-router-dom'
 import ModulesSidebar from './Sidebar';
 import Module from './Module'
+import { useAppDispatch } from '../../core/hooks/redux'
+import { setBreadcrumbItems } from '../Main/mainSlice'
 
 const createModuleId = 'untitled'
 
@@ -14,6 +16,7 @@ const ModulesMain = () => {
   const { workspaceId } = useParams()
   const [modules, setModules] = useState<ModulePagination>({continue: '', items: []})
   const [activeModuleIds, setActiveModulesIds] = useState<string[]>([])
+  const dispatch = useAppDispatch()
   const { response, get, post, delete: deleteMethod } = useFetch({cachePolicy: CachePolicies.NO_CACHE})
 
   const loadModules = async () => {
@@ -23,7 +26,10 @@ const ModulesMain = () => {
 
   useEffect(() => {
     loadModules()
-  }, [workspaceId])
+    dispatch(setBreadcrumbItems([
+      { name: 'Modules', to: `/workspaces/${workspaceId}/modules` },
+    ]))
+  }, [])
 
   useEffect(() => {
     let currentActiveModulesIds: string[] = []

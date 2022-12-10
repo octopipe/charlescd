@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import useFetch from 'use-http'
-import './style.scss'
 import { Module as ModuleType, ModuleModel } from '../types'
 import { useParams, useSearchParams } from 'react-router-dom'
-
-import "ace-builds/src-noconflict/mode-json";
-import "ace-builds/src-noconflict/theme-monokai";
 import ViewInput from '../../../core/components/ViewInput'
 import FloatingButton from '../../../core/components/FloatingButton'
+import './style.scss'
 
 interface Props {
   moduleId: string
@@ -15,16 +12,6 @@ interface Props {
   onUpdate?: (id: string) => void
   onSave: (module: ModuleType) => void
 }
-
-const initialEnviroments = [
-  { key: 'KEY_EXAMPLE', value: 'VALUE_EXAMPLE' }
-]
-
-const initialCustomMatch = { headers: { 'x-header-example': '1111' } }
-
-const initialSegments = [
-  { key: 'email', op: 'EQUAL', value: 'email@mail.com' }
-]
 
 const ModuleContent = ({ moduleId, moduleOp, onSave }: Props) => {
   const [searchParams] = useSearchParams();
@@ -47,7 +34,7 @@ const ModuleContent = ({ moduleId, moduleOp, onSave }: Props) => {
   useEffect(() => {
     if (moduleOp !== "C")
       loadModule()
-  }, [workspaceId])
+  }, [])
 
   useEffect(() => {
     setName(module?.name || '')
@@ -74,7 +61,6 @@ const ModuleContent = ({ moduleId, moduleOp, onSave }: Props) => {
 
     onSave(newModule)
   }
-
 
   return (
     <div className='module__content'>
