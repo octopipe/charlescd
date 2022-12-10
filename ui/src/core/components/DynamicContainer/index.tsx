@@ -13,12 +13,6 @@ interface Props {
 
 
 const DynamicContainer = ({ className, loading, children }: Props) => {
-
-  useEffect(() => {
-    console.log(loading)
-
-  }, [loading])
-
   return (
     <div className={`dynamic-container ${className}`}>
       <Suspense fallback={"Loading..."}>

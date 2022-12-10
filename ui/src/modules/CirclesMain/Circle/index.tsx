@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import useFetch from 'use-http'
+import useFetch, { CachePolicies } from 'use-http'
 import './style.scss'
 import { Circle as CircleType, CircleEnrivonment, CircleModel, CircleRouting, CircleRoutingCustomMatch, CircleRoutingSegment } from './types'
 import { useParams, useSearchParams } from 'react-router-dom'
@@ -11,6 +11,7 @@ import Alert from '../../../core/components/Alert'
 import CircleContent from './Content'
 import CircleTree from './Tree'
 import CircleTabs from './Tabs'
+import DynamicContainer from '../../../core/components/DynamicContainer'
 
 interface Props {
   circleId: string
@@ -41,7 +42,7 @@ const Circle = ({ circleId, circleOp, onClose, onSave, onDelete }: Props) => {
   const { routingStrategy } = useAppSelector(state => state.main)
   const { workspaceId } = useParams()
   const [circle, setCircle] = useState<CircleModel>()
-  const { response, get } = useFetch()
+  const { response, loading, get } = useFetch({ cachePolicy: CachePolicies.NO_CACHE, suspense: true })
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [matchStrategy, setMatchStrategy] = useState('customMatch')
@@ -58,8 +59,10 @@ const Circle = ({ circleId, circleOp, onClose, onSave, onDelete }: Props) => {
   }
 
   useEffect(() => {
-    if (circleOp !== "C")
+    if (circleOp !== "C" && circleId !== "untitled") {
       loadCircle()
+    }
+      
   }, [workspaceId])
 
   useEffect(() => {
@@ -88,20 +91,22 @@ const Circle = ({ circleId, circleOp, onClose, onSave, onDelete }: Props) => {
   ));
 
   return (
-    <div className='circle'>
-      <CircleTabs
-        circleId={circleId}
-        activeTab={activeTab}
-        circleOp={circleOp}
-        circle={circle}
-        onClose={onClose}
-        onChange={tab => setActiveTab(tab)}
-        onDelete={handleDelete}
-      />
-      {activeTab === TABS.CONTENT && <CircleContent circleId={circleId} circleOp={circleOp} onSave={onSave} />}
-      {activeTab === TABS.TREE && <CircleTree circleId={circleId} /> }
-      <Alert show={showDeleteAlert} action={() => handleDelete(circleId)} onClose={() => toggleDeleteAlert(false)} />
-    </div>
+    <DynamicContainer loading={loading} className='circle'>
+      <>
+        <CircleTabs
+          circleId={circleId}
+          activeTab={activeTab}
+          circleOp={circleOp}
+          circle={circle}
+          onClose={id => onClose(id)}
+          onChange={tab => setActiveTab(tab)}
+          onDelete={handleDelete}
+        />
+        {activeTab === TABS.CONTENT && <CircleContent circleId={circleId} circleOp={circleOp} onSave={onSave} />}
+        {activeTab === TABS.TREE && <CircleTree circleId={circleId} /> }
+        <Alert show={showDeleteAlert} action={() => handleDelete(circleId)} onClose={() => toggleDeleteAlert(false)} />
+      </>
+    </DynamicContainer>
   )
 }
 

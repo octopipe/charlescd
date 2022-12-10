@@ -29,14 +29,10 @@ const CirclesMain = () => {
   }, [workspaceId])
 
   useEffect(() => {
-    console.log(loading)
-  }, [loading])
-
-  useEffect(() => {
     let currentActiveCirclesIds: string[] = []
     searchParams.forEach((value, key) => currentActiveCirclesIds.push(key))
     setActiveCirclesIds(currentActiveCirclesIds)
-  }, [location])
+  }, [searchParams])
 
 
   const handleCircleClick = (circleId: string) => {

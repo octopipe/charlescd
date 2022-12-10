@@ -51,7 +51,7 @@ const CircleContent = ({ circleId, circleOp, onSave }: Props) => {
   useEffect(() => {
     if (circleOp !== "C")
       loadCircle()
-  }, [workspaceId, circleOp, loadCircle])
+  }, [workspaceId])
 
   useEffect(() => {
     setName(circle?.name || '')
