@@ -1,7 +1,6 @@
 import React, { useEffect, useState, memo } from "react";
 import ReactFlow, { Background, ConnectionLineType, Edge, Handle, Node, Position, useEdgesState, useNodesState } from "react-flow-renderer";
 import { Form, useParams } from "react-router-dom";
-import useFetch, { CachePolicies } from 'use-http'
 import dagre from 'dagre';
 import './style.scss'
 import { Resource, ResourceMetadata } from "./types";
@@ -96,9 +95,9 @@ const TreeList = memo(({ tree, onSelectResource }: Props) => {
       {filteredTree?.map(item => (
         <div className={item?.status ? `circle-list__item--${item?.status}` : 'circle-list__item'} onClick={() => onSelectResource(item)}>
           <div>{item.name}</div>
-          <Badge className="me-2">{item.kind}</Badge>
-          <Badge className="me-2">{item.status}</Badge>
-          <Badge className="me-2"><strong>Owner</strong> {`${item.owner?.kind} - ${item.owner?.name}`} </Badge>
+          <Badge className="me-2" bg="secondary">{item.kind}</Badge>
+          <Badge className="me-2" bg={alertStatus[item?.status || 'Progressing']}>{item.status}</Badge>
+          <Badge className="me-2" bg="secondary"><strong>Owner</strong> {`${item.owner?.kind} - ${item.owner?.name}`} </Badge>
           {item?.message && item.message !== "" && (
             <Alert variant={alertStatus[item?.status || 'Progressing']} className="mt-3">
               {item.message}

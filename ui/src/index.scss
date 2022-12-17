@@ -3,105 +3,104 @@ body {
   color: #fff;
 }
 
+// .form-select {
+//   background-color: transparent;
+//   color: #fff;
+//   outline: none !important;
+//   box-shadow: none !important;
+// }
 
-.form-select {
-  background-color: transparent;
-  color: #fff;
-  outline: none !important;
-  box-shadow: none !important;
-}
+// .form-control {
+//   background-color: transparent;
+//   color: #fff;
 
-.form-control {
-  background-color: transparent;
-  color: #fff;
+//   &:focus {
+//     color: #fff;
+//     background-color: transparent;
+//   }
+// }
 
-  &:focus {
-    color: #fff;
-    background-color: transparent;
-  }
-}
+// .modal {
+//   &-content {
+//     background-color: #424242;
+//     color: #fff;
+//   }
 
-.modal {
-  &-content {
-    background-color: #424242;
-    color: #fff;
-  }
+//   &-header {
+//     border-bottom: 1px solid #757575;
+//   }
 
-  &-header {
-    border-bottom: 1px solid #757575;
-  }
+//   &-footer {
+//     border-top: 1px solid #757575;
+//   }
+// }
 
-  &-footer {
-    border-top: 1px solid #757575;
-  }
-}
+// .btn-close {
+//   color: #fff;
+// }
 
-.btn-close {
-  color: #fff;
-}
-
-.text-muted {
-  color: #bdbdbd !important;
-}
+// .text-muted {
+//   color: #bdbdbd !important;
+// }
 
 
-.btn {
-  &-primary {
-    background-color: #5C37CC;
-    border: 1px solid #5C37CC;
+// .btn {
+//   &-primary {
+//     background-color: #5C37CC;
+//     border: 1px solid #5C37CC;
 
-    &:hover {
-      background-color: rgba(241, 92, 35, .8);
-      border: 1px solid rgba(241, 92, 35, .8);
-    }
-  }
-}
+//     &:hover {
+//       background-color: rgba(241, 92, 35, .8);
+//       border: 1px solid rgba(241, 92, 35, .8);
+//     }
+//   }
+// }
 
-.btn-outline-primary {
-  border: 1px solid #5C37CC;
-  color: #5C37CC;
-}
+// .btn-outline-primary {
+//   border: 1px solid #5C37CC;
+//   color: #5C37CC;
+// }
 
-.btn-check:checked+.btn {
-  background-color: #5C37CC;
-  border: 1px solid #5C37CC;
-}
+// .btn-check:checked+.btn {
+//   background-color: #5C37CC;
+//   border: 1px solid #5C37CC;
+// }
 
-.card {
-  border: none;
+// .card {
+//   border: none;
 
-  &-header {
-    background-color: #424242 ;
-  }
-  &-body {
-    background-color: #616161;
-  }
-}
+//   &-header {
+//     background-color: #424242 ;
+//   }
+//   &-body {
+//     background-color: #616161;
+//   }
+// }
 
-.nav-link {
-  color: #fff;
+// .nav-link {
+//   color: #fff;
 
-  &:hover {
-    color: #757575;
-  }
-}
+//   &:hover {
+//     color: #757575;
+//   }
+// }
 
-.nav-link.active {
+// .nav-link.active {
 
-  background-color: #5C37CC !important;
-}
+//   background-color: #5C37CC !important;
+// }
 
-.bg-primary {
-  background-color: #5C37CC !important;
-}
+// .bg-primary {
+//   background-color: #5C37CC !important;
+// }
 
-.list-group-item {
-  background-color: transparent;
-  color: #fff;
-  border: 1px solid #616161;
-}
+// .list-group-item {
+//   background-color: transparent;
+//   color: #fff;
+//   border: 1px solid #616161;
+// }
 
-select option {
-  color: #000;
-}
+// select option {
+//   color: #000;
+// }
 

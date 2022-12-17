@@ -1,0 +1,31 @@
+$theme-colors: (
+    "info": $info-color,
+    "danger": $danger-color,
+    "success": $success-color,
+    "secondary": $secondary-color,
+    "primary": $primary-color,
+);
+
+$alert-border-radius: 4px;
+$alert-bg-scale: -30%;
+$alert-border-scale: -10%;
+$alert-color-scale: 90%;
+$alert-color: $text-color;
+
+$modal-content-bg: $first-grey;
+$modal-content-border-radius: 4px;
+$modal-header-border-color: none;
+$modal-footer-border-color: none;
+
+$btn-border-radius: 4px;
+
+$input-bg: $second-grey;
+$input-border-width: 0;
+$input-border-radius: 4px;
+$input-box-shadow: none;
+$input-transition: none;
+$input-focus-border-color: transparent;
+$input-focus-box-shadow: none;
+$input-color: $text-color;
+
+@import "~bootstrap/scss/bootstrap";

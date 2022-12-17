@@ -37,7 +37,7 @@ const Circle = ({ circleId, circleOp, onClose, onSave, onDelete }: Props) => {
      return
     }
 
-    fetch(`/workspaces/${workspaceId}/circles/${circleId}`, 'GET').then(res => setCircle(res))
+    fetch(`/workspaces/${workspaceId}/circles/${circleId}`).then(res => setCircle(res))
   }, [])
 
   const handleDelete = (circleId: string) => {

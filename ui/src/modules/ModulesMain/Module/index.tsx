@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import useFetch from 'use-http'
 import { Module as ModuleType, ModuleModel } from '../types'
 import { useParams, useSearchParams } from 'react-router-dom'
 import Alert from '../../../core/components/Alert'
 import ModuleContent from './Content'
 import ModuleTabs from './Tabs'
 import './style.scss'
+import useFetch from '../../../core/hooks/fetch'
 
 interface Props {
   moduleId: string
@@ -27,21 +27,15 @@ const Module = ({ moduleId, moduleOp, onClose, onSave, onDelete }: Props) => {
   const [searchParams] = useSearchParams();
   const { workspaceId } = useParams()
   const [module, setModule] = useState<ModuleModel>()
-  const { response, get } = useFetch()
+  const { fetch } = useFetch()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [ showDeleteAlert, toggleDeleteAlert ] = useState(false)
   const [activeTab, setActiveTab] = useState(TABS.CONTENT)
   const [modules, setModules] = useState([])
 
-  const loadModule = async () => {
-    const module = await get(`/workspaces/${workspaceId}/modules/${moduleId}`)
-    if (response.ok) setModule(module || [])
-  }
-
   useEffect(() => {
-    if (moduleOp !== "C")
-      loadModule()
+    fetch(`/workspaces/${workspaceId}/modules/${moduleId}`).then(res => setModule(module))
   }, [])
 
   useEffect(() => {

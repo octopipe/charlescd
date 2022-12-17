@@ -4,21 +4,21 @@ import { Dropdown, Modal, Form, Button, ModalProps } from "react-bootstrap";
 import ModalForm from './ModalForm'
 import Alert from "../../core/components/Alert";
 import './style.scss'
-import useFetch from "use-http";
 import { useParams } from "react-router-dom";
 import { CirclePagination } from "../CirclesMain/types";
 import { CircleModel } from "../CirclesMain/Circle/types";
+import useFetch from "../../core/hooks/fetch";
 
 
 const ModalMoveTo = ({ show, onClose }: ModalProps) => {
   const [circles, setCircles] = useState<CirclePagination>({continue: '', items: []})
-  const { response, get } = useFetch()
+  const { data, loading, fetch, error } = useFetch()
   const { workspaceId } = useParams()
 
   const loadCircles = useCallback(async () => {
-    const circle = await get(`/workspaces/${workspaceId}/circles`)
-    if (response.ok) setCircles(circle)
-  }, [get, response, setCircles, workspaceId])
+    const circles = await fetch(`/workspaces/${workspaceId}/circles`)
+    setCircles(circles)
+  }, [setCircles, workspaceId])
 
   useEffect(() => {
     loadCircles()

@@ -1,0 +1,42 @@
+.app-sidebar {
+  width: 300px;
+  box-sizing: border-box;
+  height: 100vh;
+  position: fixed;
+  background: #2C2C2E;
+  z-index: 10;
+
+  &__header {
+    padding: 10px 0 10px 0;
+    color: #98989E;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 15px;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    padding-top: 10px;
+
+    &__item {
+      padding: 10px 15px 10px 15px;
+      color: #fff;
+
+      &--active {
+        @extend .app-sidebar__list__item; 
+        background-color: #3A3A3C;
+
+        &:hover {
+          color: #fff;
+        }
+      }
+
+      &:hover {
+        background-color: #3A3A3C;
+        cursor: pointer;
+      }
+
+    }
+  }
+}

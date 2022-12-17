@@ -32,7 +32,7 @@ func NewServer(
 	circleServer pbv1.CircleServiceServer,
 	resourceServer pbv1.ResourceServiceServer,
 ) *server {
-	lis, err := net.Listen("tcp", ":3000")
+	lis, err := net.Listen("tcp", ":9000")
 	if err != nil {
 		log.Fatalln(err)
 	}

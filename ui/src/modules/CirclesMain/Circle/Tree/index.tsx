@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Edge, Node, Position} from "react-flow-renderer";
 import { useParams } from "react-router-dom";
-import useFetch, { CachePolicies } from 'use-http'
 import dagre from 'dagre';
 import './style.scss'
 import { ResourceMetadata } from "./types";
@@ -9,6 +8,7 @@ import ResourceModal from "./ResourceModal";
 import { ButtonGroup, ToggleButton } from "react-bootstrap";
 import TreeDiagram from "./Diagram";
 import TreeList from "./List";
+import useFetch from "../../../../core/hooks/fetch";
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -64,17 +64,15 @@ const viewsOptions = [
 ]
 
 const CircleTree = ({ circleId }: Props) => {
-  const { response, get } = useFetch({ cachePolicy: CachePolicies.NO_CACHE })
+  const { fetch } = useFetch()
   const { workspaceId } = useParams()
   const [tree, setTree] = useState<ResourceMetadata[]>([])
   const [currentView, setCurrentView] = useState(VIEWS.LIST)
   const [selectedResource, setSelectedResource] = useState<ResourceMetadata | undefined>()
 
   const loadTree = async () => {
-    const tree = await get(`/workspaces/${workspaceId}/circles/${circleId}/resources/tree`)
-    if (response.ok) {
-      setTree(tree || [])
-    }
+    const tree = await fetch(`/workspaces/${workspaceId}/circles/${circleId}/resources/tree`)
+    setTree(tree || [])
   }
 
   useEffect(() => {

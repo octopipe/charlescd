@@ -20,7 +20,7 @@ const Main = () => {
   const { breadcrumbItems } = useAppSelector(state => state.main)
 
   useEffect(() => {
-    fetch(`/workspaces/${workspaceId}`, "GET").then(res => setWorkspace(res))
+    fetch(`/workspaces/${workspaceId}`).then(res => setWorkspace(res))
   }, [])
 
   useEffect(() => {
@@ -30,7 +30,6 @@ const Main = () => {
 
   return (
     <div className='main'>
-      <Navbar workspace={workspace} breadcrumbItems={breadcrumbItems} />
       <DynamicContainer loading={loading} className='main__content'>
         <MainSidebar />
         <div className='main__content__body'>

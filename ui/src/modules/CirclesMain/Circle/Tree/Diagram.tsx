@@ -1,7 +1,6 @@
 import React, { useEffect, useState, memo } from "react";
 import ReactFlow, { Background, ConnectionLineType, Edge, Handle, Node, Position, useEdgesState, useNodesState } from "react-flow-renderer";
 import { useParams } from "react-router-dom";
-import useFetch, { CachePolicies } from 'use-http'
 import dagre from 'dagre';
 import './style.scss'
 import { Resource, ResourceMetadata } from "./types";

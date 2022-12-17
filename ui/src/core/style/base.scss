@@ -1,0 +1,16 @@
+@import "./colors.scss";
+@import "./custom.scss";
+
+body {
+  background-color: $background-color;
+  color: $text-color;
+  font-family: "Lato";
+}
+
+a {
+  color: $text-color;
+
+  &:hover {
+    color: rgba(0, 0, 0, .9);
+  }
+}

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { Nav } from 'react-bootstrap'
-import useFetch from 'use-http'
 import './style.scss'
 import { Circle as CircleType, CircleEnrivonment, CircleModel, CircleRouting, CircleRoutingCustomMatch, CircleRoutingSegment } from './types'
 import { useParams, useSearchParams } from 'react-router-dom'

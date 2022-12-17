@@ -4,9 +4,7 @@ import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { Provider as ReduxProvider } from 'react-redux'
 import reportWebVitals from './reportWebVitals';
 import Main from './modules/Main';
-import { Provider as FetchProvider, IncomingOptions, CachePolicies } from 'use-http'
 import Login from './modules/Login';
-
 import Home from './modules/Home';
 import store from './store'
 import Error from './modules/Error';
@@ -19,20 +17,14 @@ import { ROUTES } from './core/constants/routes';
 
 import './core/components/icons/library'
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './index.scss'
 import 'react-toastify/dist/ReactToastify.css';
-
+import './core/style/base.scss'
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
 const App = () => {
-  const options: IncomingOptions = {
-    retries: 3,
-    loading: false,
-  }
-
   return (
     <React.StrictMode>
       <ReduxProvider store={store}>

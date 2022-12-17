@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { CirclePagination } from './types'
 import { useLocation, useParams, useSearchParams } from 'react-router-dom'
-import CirclesSidebar from './Sidebar';
 import Circle from './Circle';
 import { Circle as CircleType } from './Circle/types'
 import Placeholder from '../../core/components/Placeholder'
@@ -10,6 +9,8 @@ import { setBreadcrumbItems } from '../Main/mainSlice'
 import './style.scss'
 import { useAppDispatch } from '../../core/hooks/redux';
 import useFetch from '../../core/hooks/fetch';
+import AppSidebar from '../../core/components/AppSidebar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const createCircleId = 'untitled'
 
@@ -23,7 +24,7 @@ const CirclesMain = () => {
   const { fetch } = useFetch()
 
   useEffect(() => {
-    get(`/workspaces/${workspaceId}/circles`, 'GET').then(res => setCircles(res))
+    get(`/workspaces/${workspaceId}/circles`).then(res => setCircles(res))
     dispatch(setBreadcrumbItems([
       { name: 'Circles', to: `/workspaces/${workspaceId}/circles` },
     ]))
@@ -73,13 +74,13 @@ const CirclesMain = () => {
   }
 
   const handleDeleteCircle = async (circleId: string) => {
-    await fetch(`/workspaces/${workspaceId}/circles/${circleId}`, 'DELETE')
-    await get(`/workspaces/${workspaceId}/circles`, 'GET')
+    await fetch(`/workspaces/${workspaceId}/circles/${circleId}`, { method: 'DELETE' })
+    await get(`/workspaces/${workspaceId}/circles`)
   }
 
   const handleSaveCircle = async (circle: CircleType) => {
-    const newCircle = await fetch(`/workspaces/${workspaceId}/circles`, 'POST', circle)
-    await get(`/workspaces/${workspaceId}/circles`, 'GET')
+    const newCircle = await fetch(`/workspaces/${workspaceId}/circles`,  { method: 'POST', data: circle})
+    await get(`/workspaces/${workspaceId}/circles`)
     setSearchParams(i => {
       if (!i.has(newCircle.id)) {
         i.append(newCircle.id, "R")
@@ -93,12 +94,25 @@ const CirclesMain = () => {
 
   return (
     <div className='circles'>
-      <CirclesSidebar
-        circles={circles}
-        loading={loadingCircles}
-        onCircleClick={handleCircleClick}
-        onCircleCreateClick={handleCircleCreateClick}
-      />
+      <AppSidebar>
+        <AppSidebar.Header>
+          <AppSidebar.HeaderItem onClick={handleCircleCreateClick}>
+            <FontAwesomeIcon icon="plus-circle" className="me-1" /> Create circle
+          </AppSidebar.HeaderItem>
+        </AppSidebar.Header>
+        <AppSidebar.List loading={loadingCircles}>
+          {circles && circles.items.length > 0 && circles?.items.map(item => (
+            <AppSidebar.ListItem
+              key={item.id}
+              isActive={searchParams.has(item.id)}
+              icon={['far', 'circle']}
+              activeIcon="circle"
+              text={item.name}
+              onClick={() => handleCircleClick(item.id)}
+            />
+          ))}
+        </AppSidebar.List>
+      </AppSidebar>
       <div className={activeCircleIds.length > 0 ? 'circles__content' : 'circles__content-empty'}>
         {activeCircleIds.length <= 0 && (
           <div className='container'>

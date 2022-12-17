@@ -1,21 +1,30 @@
-.workspaces {
+@import "../../core/style/colors.scss";
 
+.workspaces {
+  &__background {
+    position: absolute;
+    width: 100vw;
+    height: 300px;
+    top: 0;
+    z-index: -1;
+    background: #5C37CC;
+  }
   &__content {
     margin-top: 50px;
 
     &__item {
       box-sizing: border-box;
       padding: 20px 20px 12px;
-      border: 1px solid #757575;
-      border-radius: 20px;
+      border-radius: 4px;
       height: 200px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      background-color: $first-grey;
 
       &:hover {
-        background-color: #757575;
+        background-color: $second-grey;
       }
     }
 

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import useFetch from 'use-http'
 import { Module as ModuleType, ModuleModel } from '../types'
 import { useParams, useSearchParams } from 'react-router-dom'
 import ViewInput from '../../../core/components/ViewInput'
 import FloatingButton from '../../../core/components/FloatingButton'
 import './style.scss'
+import useFetch from '../../../core/hooks/fetch'
 
 interface Props {
   moduleId: string
@@ -17,7 +17,7 @@ const ModuleContent = ({ moduleId, moduleOp, onSave }: Props) => {
   const [searchParams] = useSearchParams();
   const { workspaceId } = useParams()
   const [module, setModule] = useState<ModuleModel>()
-  const { response, get } = useFetch()
+  const { fetch } = useFetch()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [url, setUrl] = useState('')
@@ -27,8 +27,8 @@ const ModuleContent = ({ moduleId, moduleOp, onSave }: Props) => {
 
 
   const loadModule = async () => {
-    const module = await get(`/workspaces/${workspaceId}/modules/${moduleId}`)
-    if (response.ok) setModule(module || [])
+    const module = await fetch(`/workspaces/${workspaceId}/modules/${moduleId}`)
+    setModule(module || [])
   }
 
   useEffect(() => {

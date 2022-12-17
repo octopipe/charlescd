@@ -1,8 +1,8 @@
 import React, { memo, useEffect, useState } from "react";
 import { Alert, Badge, ListGroup, Modal, ModalProps, Nav } from "react-bootstrap";
 import { useParams } from "react-router-dom";
-import useFetch from 'use-http'
 import Editor from "../../../../../core/components/Editor";
+import useFetch from "../../../../../core/hooks/fetch";
 import { Resource, ResourceMetadata } from "../types";
 import './style.scss'
 
@@ -28,25 +28,25 @@ const getAlertStatus = (resourceStatus: string) => {
 
 const ResourceModal = ({ circleId, show, onClose, selectedResource }: ResourceModalProps) => {
   const { workspaceId, circleName } = useParams()
-  const { response, get } = useFetch()
+  const { fetch } = useFetch()
   const [ activeKey, setActiveKey ] = useState<EVENT_KEYS>(EVENT_KEYS.OVERVIEW)
   const [resource, setResource] = useState<Resource>()
   const [events, setEvents] = useState<any>([])
   const [manifest, setManifest] = useState<any>({})
 
   const getResource = async () => {
-    const resource = await get(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}?group=${selectedResource?.group || ''}&kind=${selectedResource?.kind}`)
-    if (response.ok) setResource(resource || {})
+    const resource = await fetch(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}?group=${selectedResource?.group || ''}&kind=${selectedResource?.kind}`)
+    setResource(resource || {})
   }
 
   const getManifest = async () => {
-    const manifest = await get(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}/manifest?group=${selectedResource?.group || ''}&kind=${selectedResource?.kind}`)
-    if (response.ok) setManifest(manifest || {})
+    const manifest = await fetch(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}/manifest?group=${selectedResource?.group || ''}&kind=${selectedResource?.kind}`)
+    setManifest(manifest || {})
   }
 
   const getEvents = async () => {
-    const events = await get(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}/events?kind=${selectedResource?.kind}`)
-    if (response.ok) setEvents(events || [])
+    const events = await fetch(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}/events?kind=${selectedResource?.kind}`)
+    setEvents(events || [])
   }
 
   const handleSelect = (eventKey: string | null) => { setActiveKey(eventKey as EVENT_KEYS) }

@@ -2,9 +2,15 @@ import React from 'react';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { NavLink, useParams } from 'react-router-dom';
+import { ReactComponent as LogoWhite } from '../../../core/assets/svg/logo-white.svg'
 import './style.scss'
 
 const items = [
+  {
+    name: 'Home',
+    to: '',
+    icon: 'home'
+  },
   {
     name: 'Circles',
     to: 'circles',
@@ -27,6 +33,11 @@ const MainSidebar = () => {
 
   return (
     <div className='main__sidebar'>
+      <div className='main__sidebar__logo'>
+        <NavLink to='/'>
+          <LogoWhite />
+        </NavLink>
+      </div>
       <div className='main__sidebar__list'>
         {items.map(item => (
           <NavLink 

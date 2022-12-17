@@ -1,3 +1,5 @@
+@import "../../../../core/style/colors.scss"; 
+
 .circle-tree {
   &__buttons {
     display: flex;
@@ -70,10 +72,10 @@
   
 
   &__item {
-    background-color: #424242;
+    background-color: $first-grey;
     cursor: pointer;
     color: white;
-    border-left: 12px solid #757575;
+    border-left: 12px solid $second-grey;
     height: 100%;
     margin: 10px 0 10px 0;
     padding: 1rem;
@@ -81,22 +83,22 @@
 
     &--Healthy {
       @extend .circle-list__item;
-      border-color: #43a047;
+      border-color: $success-color;
     }
 
     &--Progressing {
       @extend .circle-list__item;
-      border-color: #039be5;
+      border-color: $info-color;
     }
 
     &--Degraded {
       @extend .circle-list__item;
-      border-color: #e53935;
+      border-color: $danger-color;
     }
 
     &--SYNCED {
       @extend .circle-list__item;
-      border-color: #5C37CC;
+      border-color: $second-grey;
     }
     
 

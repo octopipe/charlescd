@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import useFetch, { CachePolicies } from 'use-http'
 import './style.scss'
 import { Module as ModuleType, ModulePagination } from './types'
 import { useLocation, useParams, useSearchParams } from 'react-router-dom'
-import ModulesSidebar from './Sidebar';
 import Module from './Module'
 import { useAppDispatch } from '../../core/hooks/redux'
 import { setBreadcrumbItems } from '../Main/mainSlice'
+import useFetch from '../../core/hooks/fetch';
+import AppSidebar from '../../core/components/AppSidebar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const createModuleId = 'untitled'
 
@@ -17,11 +18,11 @@ const ModulesMain = () => {
   const [modules, setModules] = useState<ModulePagination>({continue: '', items: []})
   const [activeModuleIds, setActiveModulesIds] = useState<string[]>([])
   const dispatch = useAppDispatch()
-  const { response, get, post, delete: deleteMethod } = useFetch({cachePolicy: CachePolicies.NO_CACHE})
+  const { fetch,  loading } = useFetch()
 
   const loadModules = async () => {
-    const modules = await get(`/workspaces/${workspaceId}/modules`)
-    if (response.ok) setModules(modules || [])
+    const modules = await fetch(`/workspaces/${workspaceId}/modules`)
+    setModules(modules || [])
   }
 
   useEffect(() => {
@@ -76,39 +77,48 @@ const ModulesMain = () => {
   }
 
   const handleDeleteModule = async (moduleId: string) => {
-    await deleteMethod(`/workspaces/${workspaceId}/modules/${moduleId}`)
+    await fetch(`/workspaces/${workspaceId}/modules/${moduleId}`, { method: 'DELETE' })
     await loadModules()
-    if (response.ok) {
-      setSearchParams(i => {
-        i.delete(moduleId)
-        return i
-      })
-    }
+    setSearchParams(i => {
+      i.delete(moduleId)
+      return i
+    })
   }
 
   const handleSaveModule = async (module: ModuleType) => {
-    const newModule = await post(`/workspaces/${workspaceId}/modules`, module)
-    if (response.ok) {
-      setSearchParams(i => {
-        if (!i.has(newModule.id)) {
-          i.append(newModule.id, "R")
-        }
+    const newModule = await fetch(`/workspaces/${workspaceId}/modules`, {method: 'POST', data: module})
+    setSearchParams(i => {
+      if (!i.has(newModule.id)) {
+        i.append(newModule.id, "R")
+      }
 
-        i.delete(createModuleId)
-  
-        return i
-      })
-      await loadModules()
-    }
+      i.delete(createModuleId)
+
+      return i
+    })
   }
 
   return (
     <div className='modules'>
-      <ModulesSidebar
-        modules={modules}
-        onModuleClick={handleModuleClick}
-        onModuleCreateClick={handleModuleCreateClick}
-      />
+      <AppSidebar>
+        <AppSidebar.Header>
+          <AppSidebar.HeaderItem onClick={handleModuleCreateClick}>
+            <FontAwesomeIcon icon="plus-circle" className="me-1" /> Create circle
+          </AppSidebar.HeaderItem>
+        </AppSidebar.Header>
+        <AppSidebar.List loading={loading}>
+          {modules&& modules.items.length > 0 && modules?.items.map(item => (
+            <AppSidebar.ListItem
+              key={item.id}
+              isActive={searchParams.has(item.id)}
+              icon="folder"
+              activeIcon="folder"
+              text={item.name}
+              onClick={() => handleModuleClick(item.id)}
+            />
+          ))}
+        </AppSidebar.List>
+      </AppSidebar>
       <div className='modules__content'>
         {activeModuleIds.map(id => (
           <Module

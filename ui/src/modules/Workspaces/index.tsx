@@ -17,16 +17,17 @@ const Workspaces = () => {
 
 
   const saveWorkspace = useCallback(async (workspace: Workspace) => {
-    await fetch('/workspaces', "POST", workspace)
-    await fetch('/workspaces', 'GET')
+    await fetch('/workspaces', {method: 'POST', data: workspace})
+    await fetch('/workspaces')
   }, [fetch])
 
   useEffect(() => {
-    fetch('/workspaces', "GET").then(res => setWorkspaces(res))
+    fetch('/workspaces').then(res => setWorkspaces(res))
   }, [])  
 
   return (
     <DynamicContainer loading={loading} className='workspaces'>
+      <div className='workspaces__background'></div>
       <Container className='workspaces__content'>
         <h2 className='mb-4'>Workspaces</h2>
         <Row>
