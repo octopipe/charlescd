@@ -85,10 +85,16 @@ func (r k8sRepository) toCircleModel(circle charlescdiov1alpha1.Circle) CircleMo
 	modules := []CircleModule{}
 	for _, m := range circle.Spec.Modules {
 		modules = append(modules, CircleModule{
+			Name:      m.Name,
 			ModuleID:  id.ToID(m.Name),
 			Revision:  m.Revision,
 			Overrides: m.Overrides,
 		})
+	}
+
+	moduleStatus := map[string]charlescdiov1alpha1.CircleModuleStatus{}
+	for moduleName, s := range circle.Status.Modules {
+		moduleStatus[id.ToID(moduleName)] = s
 	}
 
 	return CircleModel{
@@ -100,8 +106,12 @@ func (r k8sRepository) toCircleModel(circle charlescdiov1alpha1.Circle) CircleMo
 			IsDefault:    circle.Spec.IsDefault,
 			Environments: circle.Spec.Environments,
 			Routing:      circle.Spec.Routing,
-			Status:       circle.Status,
-			Modules:      modules,
+			Status: charlescdiov1alpha1.CircleStatus{
+				Conditions: circle.Status.Conditions,
+				Modules:    moduleStatus,
+				Status:     circle.Status.Status,
+			},
+			Modules: modules,
 		},
 		CreatedAt: circle.CreationTimestamp.Format(time.RFC3339),
 	}
@@ -166,9 +176,14 @@ func (r k8sRepository) FindAll(ctx context.Context, namespace string, options li
 			for _, m := range i.Spec.Modules {
 				modules = append(modules, CircleModule{
 					ModuleID:  id.ToID(m.Name),
+					Name:      m.Name,
 					Revision:  m.Revision,
 					Overrides: m.Overrides,
 				})
+			}
+			moduleStatus := map[string]charlescdiov1alpha1.CircleModuleStatus{}
+			for moduleName, s := range i.Status.Modules {
+				moduleStatus[id.ToID(moduleName)] = s
 			}
 
 			annotations := i.GetAnnotations()
@@ -178,8 +193,12 @@ func (r k8sRepository) FindAll(ctx context.Context, namespace string, options li
 					Name:        annotations["name"],
 					Description: i.Spec.Description,
 					IsDefault:   i.Spec.IsDefault,
-					Status:      i.Status,
-					Modules:     modules,
+					Status: charlescdiov1alpha1.CircleStatus{
+						Conditions: i.Status.Conditions,
+						Modules:    moduleStatus,
+						Status:     i.Status.Status,
+					},
+					Modules: modules,
 				},
 				CreatedAt: i.CreationTimestamp.Format(time.RFC3339),
 			})

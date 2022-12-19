@@ -1,8 +1,8 @@
 import React, { memo, useEffect, useState } from "react";
 import { Alert, Badge, ListGroup, Modal, ModalProps, Nav } from "react-bootstrap";
 import { useParams } from "react-router-dom";
-import Editor from "../../../../../core/components/Editor";
-import useFetch from "../../../../../core/hooks/fetch";
+import Editor from "../../../core/components/Editor";
+import useFetch from "../../../core/hooks/fetch";
 import { Resource, ResourceMetadata } from "../types";
 import './style.scss'
 
@@ -79,6 +79,7 @@ const ResourceModal = ({ circleId, show, onClose, selectedResource }: ResourceMo
       <Editor
         value={JSON.stringify(manifest, null, 2)}
         onChange={() => {}}
+        height="600px"
       />
     </>
   )

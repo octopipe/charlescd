@@ -1,13 +1,14 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useCallback, useEffect, useState } from "react";
 import { Dropdown, Modal, Form, Button, ModalProps } from "react-bootstrap";
-import ModalForm from './ModalForm'
+import ModalAddModule from './ModalAdd'
 import Alert from "../../core/components/Alert";
 import './style.scss'
 import { useParams } from "react-router-dom";
-import { CirclePagination } from "../CirclesMain/types";
-import { CircleModel } from "../CirclesMain/Circle/types";
+import { CirclePagination } from "../../core/types/circle";
+import { CircleModel } from "../../core/types/circle";
 import useFetch from "../../core/hooks/fetch";
+import { ModuleResource } from "../../core/types/circle";
 
 
 const ModalMoveTo = ({ show, onClose }: ModalProps) => {
@@ -61,10 +62,29 @@ const CustomToggle = React.forwardRef<any, any>(({ children, onClick }, ref) => 
   </a>
 ));
 
+
 const CircleModules = ({ circle }: Props) => {
   const [moveTo, toggleMoveTo] = useState(false)
   const [remove, toggleRemove] = useState(false)
   const [form, toggleForm] = useState(false)
+
+  const getStatus = (resources: ModuleResource[]) => {
+    let status = 'Healthy'
+    for (let i = 0; i < resources.length; i++) {
+      if (resources[i]?.status === 'Progressing') {
+        status = 'Progressing'
+      }
+
+      if (resources[i]?.status === 'Degraded') {
+        status = 'Degraded'
+        break
+      }
+    }
+
+    console.log('STATUS', status)
+
+    return status
+  }
 
   return (
     <>
@@ -73,7 +93,7 @@ const CircleModules = ({ circle }: Props) => {
           Modules
         </div>
         { circle?.modules?.map(module => (
-          <div className={circle.status.modules[module.name] ? `circle-modules__item--${circle.status.modules[module.name].status}` : `circle-modules__item`} key={module.name}>
+          <div className={`circle-modules__item--${getStatus(circle.status.modules[module.moduleId]?.resources)}`} key={module.name}>
             {module.name}
             <Dropdown>
               <Dropdown.Toggle as={CustomToggle}>
@@ -93,7 +113,7 @@ const CircleModules = ({ circle }: Props) => {
           </Button>
         </div>
       </div>
-      <ModalForm show={form} onClose={() => toggleForm(false)} />
+      <ModalAddModule show={form} onClose={() => toggleForm(false)} />
       <ModalMoveTo show={moveTo} onClose={() => toggleMoveTo(false)}/>
       <Alert action={() => ({})} show={remove} onClose={() => toggleRemove(false)}/>
     </>

@@ -1,0 +1,42 @@
+@import '../../style/colors.scss';
+
+.viewer {
+  width: 600px;
+  border-right: 1px solid $first-grey;
+  display: inline-block;
+  overflow-y: auto;
+  position: relative;
+
+  &__tabs {
+    background: $first-grey;
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &__item {
+      cursor: pointer;
+      display: flex;
+      padding: 0 10px 0 10px;
+      width: 210px;
+      background: $first-grey;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      &__close {
+        cursor: pointer;
+      }
+
+      &--active {
+        @extend .viewer__tabs__item;
+        background: $second-grey;
+      }
+    }
+  }
+
+  &__content {
+    padding: 30px;
+  }
+}

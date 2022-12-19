@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
+	"github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/argoproj/gitops-engine/pkg/sync"
 	"github.com/octopipe/charlescd/internal/butler/errs"
 	"github.com/octopipe/charlescd/internal/butler/repository"
@@ -118,14 +119,28 @@ func (c CircleManager) syncResources(targets []*unstructured.Unstructured, circl
 		return nil, errs.E(errs.Internal, errs.Code("SYNC_ENGINE_ERROR"), err)
 	}
 
+	namespaceResources := c.clusterCache.FindResources(namespace)
+
 	circleModuleResources := []charlescdiov1alpha1.CircleModuleResource{}
 	for _, r := range res {
-		circleModuleResources = append(circleModuleResources, charlescdiov1alpha1.CircleModuleResource{
+		namespaceResource, ok := namespaceResources[r.ResourceKey]
+		circleModuleResource := charlescdiov1alpha1.CircleModuleResource{
 			Group:     r.ResourceKey.Group,
 			Kind:      r.ResourceKey.Kind,
 			Namespace: r.ResourceKey.Namespace,
 			Name:      r.ResourceKey.Name,
-		})
+			Health:    "",
+			Error:     "",
+		}
+		if ok && namespaceResource.Resource != nil {
+			healthy, _ := health.GetResourceHealth(namespaceResource.Resource, nil)
+			if healthy != nil {
+				circleModuleResource.Health = string(healthy.Status)
+				circleModuleResource.Error = healthy.Message
+			}
+		}
+
+		circleModuleResources = append(circleModuleResources, circleModuleResource)
 	}
 
 	return circleModuleResources, nil

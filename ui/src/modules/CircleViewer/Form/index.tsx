@@ -1,17 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Nav } from 'react-bootstrap'
 import './style.scss'
-import { Circle as CircleType, CircleEnrivonment, CircleModel, CircleRouting, CircleRoutingCustomMatch, CircleRoutingSegment } from './types'
+import { Circle as CircleType, CircleEnrivonment, CircleModel, CircleRouting, CircleRoutingCustomMatch, CircleRoutingSegment } from '../../../core/types/circle'
 import { useParams, useSearchParams } from 'react-router-dom'
 import CircleModules from '../../CircleModules'
 import ViewInput from '../../../core/components/ViewInput'
 import { useAppSelector } from '../../../core/hooks/redux'
 import FloatingButton from '../../../core/components/FloatingButton'
 import Editor from '../../../core/components/Editor'
+import { CIRCLE_VIEW_MODE } from '../../../core/types/circle'
 
 interface Props {
   circle?: CircleModel
-  circleOp: string
+  viewMode: CIRCLE_VIEW_MODE
   onUpdate?: (id: string) => void
   onSave: (circle: CircleType) => void
 }
@@ -26,26 +27,25 @@ const initialSegments = [
   { key: 'email', op: 'EQUAL', value: 'email@mail.com' }
 ]
 
-const CircleContent = ({ circle, circleOp, onSave }: Props) => {
-  const [searchParams] = useSearchParams();
+const CircleForm = ({ circle, viewMode, onSave }: Props) => {
   const { workspace } = useAppSelector(state => state.main)
-  const { workspaceId } = useParams()
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
+  const [hasChange, setHasChange] = useState(false)
+  const [form, setForm] = useState({
+    name: circle?.name || '',
+    description: circle?.description || '',
+    customMatch: JSON.stringify(circle?.routing?.match?.customMatch, null, 2) || JSON.stringify(initialCustomMatch, null, 2),
+    segments: JSON.stringify(initialSegments, null, 2),
+    environments: JSON.stringify(circle?.environments, null, 2) || JSON.stringify(initialEnviroments, null, 2),
+  })
   const [matchStrategy, setMatchStrategy] = useState('customMatch')
-  const [customMatch, setCustomMatch] = useState<CircleRoutingCustomMatch>(initialCustomMatch)
-  const [segments, setSegments] = useState<CircleRoutingSegment[]>(initialSegments)
-  const [environments, setEnvironments] = useState<CircleEnrivonment[]>(initialEnviroments)
 
-  useEffect(() => {
-    setName(circle?.name || '')
-    setDescription(circle?.description || '')
-    setCustomMatch(circle?.routing?.match?.customMatch || initialCustomMatch)
-    setEnvironments(circle?.environments || initialEnviroments)
-  }, [circle])
+  const handleChange = (input: any) => {
+    setHasChange(true)
+    setForm(state => ({...state, ...input}))
+  }
 
   const isCreate = () => {
-    return circleOp === 'C'
+    return viewMode === CIRCLE_VIEW_MODE.CREATE
   }
 
   const handleClickSave = () => {
@@ -54,20 +54,20 @@ const CircleContent = ({ circle, circleOp, onSave }: Props) => {
       if (matchStrategy === 'customMatch') {
         routing = {
           ...routing,
-          match: { customMatch} ,
+          match: { customMatch: JSON.parse(form.customMatch) } ,
         }
       } else {
         routing = {
           ...routing,
-          match: { segments }
+          match: { segments: JSON.parse(form.segments) }
         }
       }
     }
 
     const newCircle = {
-      name,
-      description,
-      environments,
+      name: form.name,
+      description: form.description,
+      environments: JSON.parse(form.environments),
       modules: [],
       routing,
     }
@@ -78,7 +78,7 @@ const CircleContent = ({ circle, circleOp, onSave }: Props) => {
 
   return (
     <div className='circle__content'>
-      {circleOp === 'C' && (
+      {(isCreate() || hasChange) && (
         <FloatingButton
           icon="check"
           iconColor='white'
@@ -89,18 +89,18 @@ const CircleContent = ({ circle, circleOp, onSave }: Props) => {
       <ViewInput.Text
         icon={["far", "circle"]}
         label='Name'
-        value={name}
+        value={form.name}
         edit={isCreate()}
         canEdit={false}
-        onChange={setName}
+        onChange={value => handleChange({ name: value })}
         placeholder="Circle name"
       />
       <ViewInput.Text
         icon="align-justify"
         label='Description'
-        value={description}
+        value={form.description}
         edit={isCreate()}
-        onChange={setDescription}
+        onChange={value => handleChange({ description: value })}
         as="textarea"
         placeholder="Circle description"
       />
@@ -116,16 +116,16 @@ const CircleContent = ({ circle, circleOp, onSave }: Props) => {
           <div className='circle__content__section__custom-match'>
             <Editor
               height='200px'
-              value={JSON.stringify(customMatch, null, 2)}
-              onChange={value => setCustomMatch(JSON.parse(value))}
+              value={form.customMatch}
+              onChange={value => handleChange({ customMatch: value })}
             />
           </div>
         ) : (
           <div className='circle__content__section__segments'>
             <Editor
               height='200px'
-              value={JSON.stringify(segments, null, 2)}
-              onChange={value => setSegments(JSON.parse(value))}
+              value={form.segments}
+              onChange={value => handleChange({ segments: value })}
             />
           </div>
         )}
@@ -142,12 +142,12 @@ const CircleContent = ({ circle, circleOp, onSave }: Props) => {
       >
         <Editor
           height='200px'
-          value={JSON.stringify(environments, null, 2)}
-          onChange={value => setEnvironments(JSON.parse(value))}
+          value={form.environments}
+          onChange={value => handleChange({ environments: value })}
         />
       </ViewInput>
     </div>
   )
 }
 
-export default CircleContent
+export default CircleForm

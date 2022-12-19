@@ -1,0 +1,44 @@
+.login {
+  overflow-x:unset;
+
+  &__content {
+    height: 100vh;
+    width: 50rem;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    padding: 200px;
+  }
+
+  &__circle-1{
+    position: fixed;
+    right: -900px;
+    top: -20rem;
+    border:20px solid #0062FF;    
+    height:100rem;
+    width: 100rem;
+    border-radius:50%;
+    transform: matrix(1, 0, 0, -1, 0, 0);
+  }
+
+  &__circle-2{
+    @extend .login__circle-1;
+    right: -950px;
+    top: -22rem;
+    opacity: 0.42;
+  }
+
+  &__circle-3{
+    @extend .login__circle-1;
+    right: -980px;
+    top: -17rem;
+    opacity: 0.24;
+  }
+
+  &__circle-4{
+    @extend .login__circle-1;
+    right: -850px;
+    top: -19rem;
+    opacity: 0.42;
+  }
+}

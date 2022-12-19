@@ -1,4 +1,4 @@
-@import "../../../../core/style/colors.scss"; 
+@import "../../core/style/colors.scss"; 
 
 .circle-tree {
   &__buttons {
@@ -45,17 +45,17 @@
 
     &--Healthy {
       @extend .circle-diagram__item;
-      border-color: #43a047;
+      border-color: $success-color;
     }
 
     &--Progressing {
       @extend .circle-diagram__item;
-      border-color: #039be5;
+      border-color: $info-color;
     }
 
     &--Degraded {
       @extend .circle-diagram__item;
-      border-color: #e53935;
+      border-color: $danger-color;
     }
   }
 }

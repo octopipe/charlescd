@@ -11,6 +11,7 @@ import { Alert, Badge, ButtonGroup, FormCheck, ToggleButton } from "react-bootst
 
 
 interface Props {
+  circleId: string
   tree: ResourceMetadata[]
   onSelectResource: (resource: ResourceMetadata) => void
 }
@@ -47,7 +48,7 @@ const alertStatus: Alerts = {
   "Healthy": "success",
 }
 
-const TreeList = memo(({ tree, onSelectResource }: Props) => {
+const TreeList = memo(({ circleId, tree, onSelectResource }: Props) => {
   const [filteredTree, setFilteredTree] = useState(tree)
   const [currentFilter, setCurrentFilter] = useState(FILTERS.ALL)
 
@@ -79,10 +80,10 @@ const TreeList = memo(({ tree, onSelectResource }: Props) => {
       <ButtonGroup className="circle-list__filters">
         {filters.map((filter, idx) => (
           <ToggleButton
-            id={`filter-${idx}`}
+            id={`filter-${circleId}-${idx}`}
             key={idx}
             type="radio"
-            name="circle-list-filters"
+            name={`filter-${circleId}-${idx}`}
             variant="secondary"
             value={filter.value}
             checked={filter.value === currentFilter}

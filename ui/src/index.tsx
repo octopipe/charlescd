@@ -8,9 +8,9 @@ import Login from './modules/Login';
 import Home from './modules/Home';
 import store from './store'
 import Error from './modules/Error';
-import CirclesMain from './modules/CirclesMain';
+import Circles from './modules/Circles';
 import { ToastContainer, toast } from "react-toastify";
-import ModulesMain from './modules/ModulesMain';
+import ModulesMain from './modules/Modules';
 import Root from './modules/Root';
 import Workspaces from './modules/Workspaces';
 import { ROUTES } from './core/constants/routes';
@@ -37,7 +37,7 @@ const App = () => {
             </Route>
             <Route path={ROUTES.MAIN} element={<Main />}>
               <Route path='' element={<Home />} />
-              <Route path='circles' element={<CirclesMain />} />
+              <Route path='circles' element={<Circles />} />
               <Route path='modules' element={<ModulesMain />} />
             </Route>
             <Route path='/error' element={<Error />} />

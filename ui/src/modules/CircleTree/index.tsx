@@ -8,7 +8,7 @@ import ResourceModal from "./ResourceModal";
 import { ButtonGroup, ToggleButton } from "react-bootstrap";
 import TreeDiagram from "./Diagram";
 import TreeList from "./List";
-import useFetch from "../../../../core/hooks/fetch";
+import useFetch from "../../core/hooks/fetch";
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -92,10 +92,10 @@ const CircleTree = ({ circleId }: Props) => {
           {viewsOptions.map((option, idx) => (
             <ToggleButton
               key={idx}
-              id={`radio-${idx}`}
+              id={`radio-${circleId}-${idx}`}
               type="radio"
               variant='outline-primary'
-              name="radio"
+              name={`radio-${circleId}`}
               value={option.value}
               checked={currentView === option.value}
               onChange={(e) => setCurrentView(e.currentTarget.value as VIEWS)}
@@ -105,7 +105,7 @@ const CircleTree = ({ circleId }: Props) => {
           ))}
         </ButtonGroup>
       </div>
-      <TreeList tree={tree} onSelectResource={setSelectedResource} />
+      <TreeList circleId={circleId} tree={tree} onSelectResource={setSelectedResource} />
       {currentView === VIEWS.DIAGRAM && <TreeDiagram show={true} tree={tree} onClose={() => setCurrentView(VIEWS.LIST)} onSelectResource={setSelectedResource} /> }
       {selectedResource && <ResourceModal show={!!selectedResource} circleId={circleId} selectedResource={selectedResource} onClose={() => setSelectedResource(undefined)}/>}
     </div>

@@ -31,9 +31,19 @@ export interface Overrides {
   [key: string]: string
 }
 
+export interface ModuleResource {
+  group: string
+  kind: string
+  name: string
+  namespace: string
+  status?: string
+  error?: string
+}
+
 export interface ModuleStatusValue {
   status: string
   error: string
+  resources: ModuleResource[]
 }
 
 export interface ModuleStatus {
@@ -45,6 +55,7 @@ export interface CircleStatus {
 }
  
 export interface CircleModule {
+  moduleId: string
   name: string
   revision: string
   overrides: Overrides
@@ -67,4 +78,30 @@ export interface CircleModel extends Circle {
   id: string
   createdAt: string
   status: CircleStatus
+}
+
+export interface CircleItem {
+  id: string
+  name: string
+  namespace: string
+  isDefault: boolean
+  modules: CircleModule[]
+}
+
+export interface CirclePagination {
+  continue: string
+  items: CircleItem[]
+}
+
+export enum CIRCLE_VIEW_MODE {
+  VIEW = 'VIEW',
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  TREE = 'TREE',
+}
+
+export enum CIRCLE_MODULE_RESOURCE_STATUS {
+  HEALTHY = 'Healthy',
+  PROGRESSING = 'Progressing',
+  DEGRADED = 'Degraded',
 }
