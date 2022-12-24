@@ -88,6 +88,26 @@ export interface CircleItem {
   modules: CircleModule[]
 }
 
+export interface CircleStatusModelModuleResource {
+  name: string
+  namespace: string
+  kind: string
+  health?: string
+  message?: string
+}
+
+export interface CircleStatusModelModule {
+  resources: CircleStatusModelModuleResource[]
+} 
+
+export interface CircleStatusModelModules {
+  [key: string]: CircleStatusModelModule
+}
+
+export interface CircleStatusModel {
+  modules: CircleStatusModelModules
+}
+
 export interface CirclePagination {
   continue: string
   items: CircleItem[]

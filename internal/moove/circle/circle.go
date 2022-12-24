@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/octopipe/charlescd/internal/moove/core/listoptions"
+	pbv1 "github.com/octopipe/charlescd/pb/v1"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
 )
 
@@ -47,6 +48,7 @@ type CircleItemModel struct {
 
 type CircleProvider interface {
 	Sync(ctx context.Context, namespace string, name string) error
+	Status(ctx context.Context, namespace string, name string) (*pbv1.StatusResponse, error)
 }
 
 type CircleRepository interface {
@@ -61,6 +63,7 @@ type CircleUseCase interface {
 	FindAll(ctx context.Context, workspaceId string, listoptions listoptions.Request) (listoptions.Response, error)
 	FindById(ctx context.Context, workspaceId string, circleId string) (CircleModel, error)
 	Sync(ctx context.Context, workspaceId string, circleId string) error
+	Status(ctx context.Context, workspaceId string, circleId string) (*pbv1.StatusResponse, error)
 	Create(ctx context.Context, workspaceId string, circle Circle) (CircleModel, error)
 	Update(ctx context.Context, workspaceId string, circleId string, circle Circle) (CircleModel, error)
 	Delete(ctx context.Context, workspaceId string, circleId string) error

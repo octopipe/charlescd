@@ -1,11 +1,13 @@
 import { AxiosResponse } from "axios";
-import { Circle, CircleModel, CirclePagination } from "../types/circle";
+import { Circle, CircleModel, CirclePagination, CircleStatusModel } from "../types/circle";
 import { client } from "./client";
 
 const getCircles = (workspaceId: string): Promise<AxiosResponse<CirclePagination>> => client.get(`/workspaces/${workspaceId}/circles`)
 const getCircle = (workspaceId: string, circleId: string): Promise<AxiosResponse<CircleModel>> => client.get(`/workspaces/${workspaceId}/circles/${circleId}`)
+const getCircleStatus = (workspaceId: string, circleId: string): Promise<AxiosResponse<CircleStatusModel>> => client.get(`/workspaces/${workspaceId}/circles/${circleId}/status`)
 
 export const circleApi = {
   getCircles,
   getCircle,
+  getCircleStatus,
 }

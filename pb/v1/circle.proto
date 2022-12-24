@@ -6,10 +6,35 @@ option go_package = "./v1";
 import "google/protobuf/any.proto";
 
 service CircleService {
-  rpc Sync(SyncRequest) returns (google.protobuf.Any) {}
+  rpc Sync(GetCircle) returns (google.protobuf.Any) {}
+  rpc Status(GetCircle) returns (StatusResponse) {}
 }
 
-message SyncRequest {
+message GetCircle {
   string circleName = 1;
   string circleNamespace = 2;
+}
+
+message ModuleResourceStatus {
+  string name = 1;
+  string namespace = 2;
+  string kind = 3;
+  string health = 4;
+  string message = 5;
+}
+
+message ModuleStatus {
+  repeated ModuleResourceStatus resources = 1;
+}
+
+message History {
+  string status = 1;
+  string message = 2;
+  string eventTime = 3;
+  string action = 4;
+}
+
+message StatusResponse {
+  map<string, ModuleStatus> modules = 1;
+  repeated History history = 2;
 }

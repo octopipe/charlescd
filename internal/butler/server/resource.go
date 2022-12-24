@@ -153,7 +153,6 @@ func (r ResourceServer) Tree(ctx context.Context, request *pbv1.TreeRequest) (*p
 		Kind:      circle.Kind,
 		Group:     circle.GroupVersionKind().Group,
 		Error:     "",
-		Status:    circle.Status.Status,
 	})
 
 	for moduleName, m := range circle.Status.Modules {
@@ -167,7 +166,6 @@ func (r ResourceServer) Tree(ctx context.Context, request *pbv1.TreeRequest) (*p
 			Group:     charlescdiov1alpha1.GroupVersion.Group,
 			Kind:      "Module",
 			Error:     m.Error,
-			Status:    m.Status,
 		}
 
 		resources = append(resources, moduleResource)

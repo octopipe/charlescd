@@ -5,18 +5,51 @@ import (
 
 	"github.com/octopipe/charlescd/internal/butler/utils"
 	charlescdiov1alpha1 "github.com/octopipe/charlescd/pkg/api/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
-func (c CircleManager) updateCircleStatus(circle *charlescdiov1alpha1.Circle, message string) error {
-	circle.Status.Conditions = append(circle.Status.Conditions, metav1.Condition{
-		Type:               "ReconcileSuccess",
-		LastTransitionTime: metav1.Now(),
-		Message:            message,
-		Reason:             "Successful",
-		Status:             metav1.ConditionTrue,
-	})
+const (
+	SyncSuccessType = "SyncSuccess"
+	SyncFailedType  = "SyncFailed"
+)
 
-	err := utils.UpdateObjectStatusWithDefaultRetry(context.Background(), c.Client, circle)
+func (c CircleManager) updateCircleStatus(
+	circle *charlescdiov1alpha1.Circle,
+	status string,
+	action string,
+	message string,
+	eventTime string,
+) error {
+	namespacedName := types.NamespacedName{
+		Name:      circle.Name,
+		Namespace: circle.Namespace,
+	}
+
+	currentCircle := &charlescdiov1alpha1.Circle{}
+	err := c.Get(context.Background(), namespacedName, currentCircle)
+	if err != nil {
+		return err
+	}
+
+	currentHistory := currentCircle.Status.History
+	if len(currentHistory) > 0 {
+		lastHistory := currentHistory[len(currentHistory)-1]
+
+		if lastHistory.Action == action && lastHistory.Status == status {
+			return nil
+		}
+	}
+
+	history := charlescdiov1alpha1.CircleStatusHistory{
+		Status:    status,
+		Message:   message,
+		EventTime: eventTime,
+		Action:    action,
+	}
+
+	currentHistory = append(currentHistory, history)
+	currentCircle.Status = circle.Status
+	currentCircle.Status.History = currentHistory
+	err = utils.UpdateObjectStatusWithDefaultRetry(context.Background(), c.Client, currentCircle)
 	return err
 }

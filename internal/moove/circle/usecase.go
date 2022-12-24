@@ -6,6 +6,7 @@ import (
 	"github.com/octopipe/charlescd/internal/moove/core/listoptions"
 	"github.com/octopipe/charlescd/internal/moove/workspace"
 	"github.com/octopipe/charlescd/internal/utils/id"
+	pbv1 "github.com/octopipe/charlescd/pb/v1"
 )
 
 type UseCase struct {
@@ -115,4 +116,24 @@ func (u UseCase) Update(ctx context.Context, workspaceId string, circleId string
 	}
 
 	return updatedCircle, nil
+}
+
+func (u UseCase) Status(ctx context.Context, workspaceId string, circleId string) (*pbv1.StatusResponse, error) {
+	namespace, err := u.workspaceUseCase.GetKebabCaseNameById(workspaceId)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = u.circleRepository.FindById(ctx, namespace, circleId)
+	if err != nil {
+		return nil, err
+	}
+
+	name, err := id.DecodeID(circleId)
+	if err != nil {
+		return nil, err
+	}
+
+	status, err := u.circleProvider.Status(ctx, namespace, name)
+	return status, err
 }

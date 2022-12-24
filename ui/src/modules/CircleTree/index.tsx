@@ -105,7 +105,7 @@ const CircleTree = ({ circleId }: Props) => {
           ))}
         </ButtonGroup>
       </div>
-      <TreeList circleId={circleId} tree={tree} onSelectResource={setSelectedResource} />
+      {currentView === VIEWS.LIST && <TreeList circleId={circleId} tree={tree} onSelectResource={setSelectedResource} /> }
       {currentView === VIEWS.DIAGRAM && <TreeDiagram show={true} tree={tree} onClose={() => setCurrentView(VIEWS.LIST)} onSelectResource={setSelectedResource} /> }
       {selectedResource && <ResourceModal show={!!selectedResource} circleId={circleId} selectedResource={selectedResource} onClose={() => setSelectedResource(undefined)}/>}
     </div>

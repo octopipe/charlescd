@@ -9,7 +9,7 @@
 }
 
 .circle-diagram {
-  width: 100vw;
+  width: 530px;
   height: 100vh;
 
   &__item {
@@ -61,7 +61,7 @@
 }
 
 .circle-list {
-  padding: 0 2rem 0 2rem;
+  padding: 0;
 
 
   &__filters {
@@ -80,6 +80,7 @@
     margin: 10px 0 10px 0;
     padding: 1rem;
     border-radius: 10px;
+    border-color: $second-grey;
 
     &--Healthy {
       @extend .circle-list__item;

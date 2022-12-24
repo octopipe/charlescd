@@ -5,10 +5,13 @@ import ModalAddModule from './ModalAdd'
 import Alert from "../../core/components/Alert";
 import './style.scss'
 import { useParams } from "react-router-dom";
-import { CirclePagination } from "../../core/types/circle";
+import { CirclePagination, CircleStatusModel, CircleStatusModelModuleResource } from "../../core/types/circle";
 import { CircleModel } from "../../core/types/circle";
 import useFetch from "../../core/hooks/fetch";
 import { ModuleResource } from "../../core/types/circle";
+import usePolling from "../../core/hooks/polling";
+import { circleApi } from "../../core/api/circle";
+import Spinner from "../../core/components/Spinner";
 
 
 const ModalMoveTo = ({ show, onClose }: ModalProps) => {
@@ -62,26 +65,37 @@ const CustomToggle = React.forwardRef<any, any>(({ children, onClick }, ref) => 
   </a>
 ));
 
+interface Status {
+  health: string
+  message?: string
+}
 
 const CircleModules = ({ circle }: Props) => {
+  const { workspaceId } = useParams()
   const [moveTo, toggleMoveTo] = useState(false)
   const [remove, toggleRemove] = useState(false)
   const [form, toggleForm] = useState(false)
+  const { startPolling, stopPolling, data, loading } = usePolling<CircleStatusModel>({ timer: 3000, request: () => circleApi.getCircleStatus(workspaceId || '', circle.id) })
 
-  const getStatus = (resources: ModuleResource[]) => {
-    let status = 'Healthy'
+
+  useEffect(() => {
+    startPolling()
+
+    return () => stopPolling()
+  }, [])
+
+  const getStatus = (resources: CircleStatusModelModuleResource[]) => {
+    let status: Status = {health: 'Healthy'}
     for (let i = 0; i < resources.length; i++) {
-      if (resources[i]?.status === 'Progressing') {
-        status = 'Progressing'
+      if (resources[i]?.health === 'Progressing') {
+        status =  { health: 'Progressing', message: resources[i]?.message}
       }
 
-      if (resources[i]?.status === 'Degraded') {
-        status = 'Degraded'
+      if (resources[i]?.health === 'Degraded') {
+        status =  { health: 'Degraded', message: resources[i]?.message}
         break
       }
     }
-
-    console.log('STATUS', status)
 
     return status
   }
@@ -92,19 +106,27 @@ const CircleModules = ({ circle }: Props) => {
         <div className="circle-modules__title">
           Modules
         </div>
-        { circle?.modules?.map(module => (
-          <div className={`circle-modules__item--${getStatus(circle.status.modules[module.moduleId]?.resources)}`} key={module.name}>
-            {module.name}
-            <Dropdown>
-              <Dropdown.Toggle as={CustomToggle}>
-                <FontAwesomeIcon icon="ellipsis-vertical" />
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={() => toggleForm(true)}>Edit</Dropdown.Item>
-                <Dropdown.Item onClick={() => toggleMoveTo(true)}>Move to</Dropdown.Item>
-                <Dropdown.Item onClick={() => toggleRemove(true)}>Remove</Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
+        { loading ? <Spinner /> : Object.keys(data?.modules || {}).map(moduleName => (
+          <div className={`circle-modules__item--${getStatus(data?.modules[moduleName]?.resources || []).health}`} key={moduleName}>
+            <div className="circle-modules__item__header">
+              <span>{moduleName}</span>
+              <Dropdown>
+                <Dropdown.Toggle as={CustomToggle}>
+                  <FontAwesomeIcon icon="ellipsis-vertical" />
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={() => toggleForm(true)}>Edit</Dropdown.Item>
+                  <Dropdown.Item onClick={() => toggleMoveTo(true)}>Move to</Dropdown.Item>
+                  <Dropdown.Item onClick={() => toggleRemove(true)}>Remove</Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            </div>
+            {getStatus(data?.modules[moduleName]?.resources || [])?.message && (
+              <div className="circle-modules__item__status">
+                <hr />
+                {getStatus(data?.modules[moduleName]?.resources || []).message}.message
+              </div>
+            )}
           </div>
         )) }
         <div className="d-grid gap-2">

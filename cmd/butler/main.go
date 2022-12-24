@@ -166,7 +166,7 @@ func main() {
 		}
 	}()
 
-	circleServer := server.NewCircleServer(client, circleManager)
+	circleServer := server.NewCircleServer(clusterCache, client, circleManager)
 	resourceServer := server.NewResourceServer(client, clusterCache, clientset, dynamicClient)
 	server := server.NewServer(logger, circleServer, resourceServer)
 	setupLog.Info("starting grpc server")

@@ -16,10 +16,19 @@ func NewGrpcProvider(grpcClient grpcclient.Client) CircleProvider {
 }
 
 func (p grpcProvider) Sync(ctx context.Context, namespace string, name string) error {
-	req := &pbv1.SyncRequest{
+	req := &pbv1.GetCircle{
 		CircleName:      name,
 		CircleNamespace: namespace,
 	}
 	_, err := p.grpcClient.CircleClient.Sync(ctx, req)
 	return err
+}
+
+func (p grpcProvider) Status(ctx context.Context, namespace string, name string) (*pbv1.StatusResponse, error) {
+	req := &pbv1.GetCircle{
+		CircleName:      name,
+		CircleNamespace: namespace,
+	}
+	circleStatus, err := p.grpcClient.CircleClient.Status(ctx, req)
+	return circleStatus, err
 }

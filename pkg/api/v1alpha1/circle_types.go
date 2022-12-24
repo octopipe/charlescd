@@ -23,6 +23,17 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+const (
+	SuccessStatus = "Success"
+	FailedStatus  = "Failed"
+)
+
+const (
+	UpdateModuleAction = "update_module"
+	UpdateCircleAction = "circle_module"
+	SyncCircleAction   = "sync_circle"
+)
+
 type Override struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
@@ -84,14 +95,20 @@ type CircleModuleResource struct {
 	Kind      string `json:"kind,omitempty"`
 	Name      string `json:"name,omitempty"`
 	Namespace string `json:"namespace,omitempty"`
-	Health    string `json:"status,omitempty"`
-	Error     string `json:"error,omitempty"`
 }
 
 type CircleModuleStatus struct {
 	Status    string                 `json:"status,omitempty"`
+	SyncTime  string                 `json:"syncTime,omitempty"`
 	Error     string                 `json:"error,omitempty"`
 	Resources []CircleModuleResource `json:"resources,omitempty"`
+}
+
+type CircleStatusHistory struct {
+	Status    string `json:"status,omitempty"`
+	Message   string `json:"message,omitempty"`
+	EventTime string `json:"eventTime,omitempty"`
+	Action    string `json:"action,omitempty"`
 }
 
 // CircleStatus defines the observed state of Circle
@@ -99,9 +116,10 @@ type CircleStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Conditions []metav1.Condition            `json:"conditions,omitempty"`
-	Status     string                        `json:"status,omitempty"`
-	Modules    map[string]CircleModuleStatus `json:"modules,omitempty"`
+	History  []CircleStatusHistory         `json:"history,omitempty"`
+	SyncTime string                        `json:"syncTime,omitempty"`
+	Status   string                        `json:"status,omitempty"`
+	Modules  map[string]CircleModuleStatus `json:"modules,omitempty"`
 }
 
 //+kubebuilder:object:root=true

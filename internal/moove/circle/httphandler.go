@@ -27,6 +27,7 @@ func NewEchohandler(e *echo.Echo, logger *zap.Logger, circleUseCase CircleUseCas
 	s.GET("", handler.FindAll)
 	s.POST("", handler.Create)
 	s.POST("/:circleId/sync", handler.Sync)
+	s.GET("/:circleId/status", handler.Status)
 	s.GET("/:circleId", handler.FindById)
 	s.PUT("/:circleId", handler.Update)
 	s.DELETE("/:circleId", handler.Delete)
@@ -133,4 +134,14 @@ func (h EchoHandler) Delete(c echo.Context) error {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}
 	return c.JSON(204, Circle{})
+}
+
+func (h EchoHandler) Status(c echo.Context) error {
+	workspaceId := c.Param("workspaceId")
+	circleId := c.Param("circleId")
+	status, err := h.circleUseCase.Status(c.Request().Context(), workspaceId, circleId)
+	if err != nil {
+		return errs.NewHTTPResponse(c, h.logger, err)
+	}
+	return c.JSON(200, status)
 }

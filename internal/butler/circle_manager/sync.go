@@ -2,11 +2,9 @@ package circlemanager
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/argoproj/gitops-engine/pkg/cache"
-	"github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/argoproj/gitops-engine/pkg/sync"
 	"github.com/octopipe/charlescd/internal/butler/errs"
 	"github.com/octopipe/charlescd/internal/butler/repository"
@@ -18,35 +16,53 @@ import (
 )
 
 func (c CircleManager) Sync(circle *charlescdiov1alpha1.Circle) error {
-	circleStatus := "SYNCED"
+	var syncErr error
+	circleStatus := SyncSuccessType
+	syncTime := time.Now().Format(time.RFC3339)
 	result := map[string]charlescdiov1alpha1.CircleModuleStatus{}
 	for _, circleModule := range circle.Spec.Modules {
 		res, err := c.syncResourcesByCircleModule(circle, circleModule)
 		if err != nil {
 			result[circleModule.Name] = charlescdiov1alpha1.CircleModuleStatus{
-				Status: "FAILED",
-				Error:  err.Error(),
+				Status:   SyncFailedType,
+				Error:    err.Error(),
+				SyncTime: syncTime,
 			}
-			circleStatus = "FAILED"
+			syncErr = err
+			circleStatus = SyncFailedType
 			continue
 		}
 
 		result[circleModule.Name] = charlescdiov1alpha1.CircleModuleStatus{
 			Resources: res,
-			Status:    "SYNCED",
+			Status:    SyncSuccessType,
+			SyncTime:  syncTime,
 		}
 	}
 
 	circle.Status = charlescdiov1alpha1.CircleStatus{
-		Modules: result,
-		Status:  circleStatus,
-	}
-	err := c.updateCircleStatus(circle, fmt.Sprintf("circle synced at %s ", time.Now().Format(time.RFC3339)))
-	if err != nil {
-		return err
+		Modules:  result,
+		Status:   circleStatus,
+		SyncTime: syncTime,
 	}
 
-	return nil
+	if syncErr != nil {
+		return c.updateCircleStatus(
+			circle,
+			charlescdiov1alpha1.FailedStatus,
+			charlescdiov1alpha1.SyncCircleAction,
+			syncErr.Error(),
+			syncTime,
+		)
+	}
+
+	return c.updateCircleStatus(
+		circle,
+		charlescdiov1alpha1.SuccessStatus,
+		charlescdiov1alpha1.SyncCircleAction,
+		"sync circle with success",
+		syncTime,
+	)
 }
 
 func (c CircleManager) syncResourcesByCircleModule(circle *charlescdiov1alpha1.Circle, circleModule charlescdiov1alpha1.CircleModule) ([]charlescdiov1alpha1.CircleModuleResource, error) {
@@ -119,25 +135,13 @@ func (c CircleManager) syncResources(targets []*unstructured.Unstructured, circl
 		return nil, errs.E(errs.Internal, errs.Code("SYNC_ENGINE_ERROR"), err)
 	}
 
-	namespaceResources := c.clusterCache.FindResources(namespace)
-
 	circleModuleResources := []charlescdiov1alpha1.CircleModuleResource{}
 	for _, r := range res {
-		namespaceResource, ok := namespaceResources[r.ResourceKey]
 		circleModuleResource := charlescdiov1alpha1.CircleModuleResource{
 			Group:     r.ResourceKey.Group,
 			Kind:      r.ResourceKey.Kind,
 			Namespace: r.ResourceKey.Namespace,
 			Name:      r.ResourceKey.Name,
-			Health:    "",
-			Error:     "",
-		}
-		if ok && namespaceResource.Resource != nil {
-			healthy, _ := health.GetResourceHealth(namespaceResource.Resource, nil)
-			if healthy != nil {
-				circleModuleResource.Health = string(healthy.Status)
-				circleModuleResource.Error = healthy.Message
-			}
 		}
 
 		circleModuleResources = append(circleModuleResources, circleModuleResource)

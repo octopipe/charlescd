@@ -137,7 +137,7 @@ const CircleForm = ({ circle, viewMode, onSave }: Props) => {
         {circle && <CircleModules circle={circle} />}
       </ViewInput>
       <ViewInput
-        label="Modules"
+        label="Environments"
         icon="folder"
       >
         <Editor

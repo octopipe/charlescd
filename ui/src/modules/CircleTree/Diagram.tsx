@@ -103,11 +103,7 @@ const TreeDiagram = ({ show, tree, onClose, onSelectResource }: Props) => {
   }
 
   return (
-    <Modal show={show} fullscreen={true} onHide={() => onClose()} className="circle-diagram">
-      <Modal.Header closeButton style={{backgroundColor: "#1C1C1E"}}>
-        <Modal.Title>Modal</Modal.Title>
-      </Modal.Header>
-      <Modal.Body style={{backgroundColor: "#1C1C1E"}}>
+    <div className="circle-diagram">
         <ReactFlow
           nodeTypes={nodeTypes}
           nodes={nodes}
@@ -120,8 +116,7 @@ const TreeDiagram = ({ show, tree, onClose, onSelectResource }: Props) => {
         >
           <Background/>
         </ReactFlow>
-      </Modal.Body>
-    </Modal>
+    </div>
   )
 }
 
