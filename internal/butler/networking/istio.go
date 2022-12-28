@@ -10,6 +10,7 @@ import (
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 )
 
@@ -17,10 +18,9 @@ func getMatchForDefaultRouting(circle charlescdiov1alpha1.Circle) []*networkingv
 	match := []*networkingv1alpha3.HTTPMatchRequest{}
 	matchRouting := circle.Spec.Routing.Match
 
-	if matchRouting.CustomMatch != nil {
-
+	if matchRouting != nil {
 		headers := map[string]*networkingv1alpha3.StringMatch{}
-		for key, value := range matchRouting.CustomMatch.Headers {
+		for key, value := range matchRouting.Headers {
 			headers[key] = &networkingv1alpha3.StringMatch{
 				MatchType: &networkingv1alpha3.StringMatch_Regex{Regex: value},
 			}
@@ -40,7 +40,7 @@ func getMatchForDefaultRouting(circle charlescdiov1alpha1.Circle) []*networkingv
 func getMatch(circle charlescdiov1alpha1.Circle) []*networkingv1alpha3.HTTPMatchRequest {
 	match := []*networkingv1alpha3.HTTPMatchRequest{}
 
-	if circle.Spec.Routing.Strategy == DefaultRouting {
+	if circle.Spec.Routing.Strategy == charlescdiov1alpha1.MatchRoutingStrategy {
 		return getMatchForDefaultRouting(circle)
 	}
 
@@ -60,20 +60,34 @@ func getModuleService(module charlescdiov1alpha1.CircleModuleStatus) *charlescdi
 func getRoute(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.CircleModule) *networkingv1alpha3.HTTPRoute {
 	currentModule := circle.Status.Modules[module.Name]
 	service := getModuleService(currentModule)
-	newRoute := &networkingv1alpha3.HTTPRoute{
-		Name:  circle.GetName(),
-		Match: getMatch(circle),
+
+	if circle.Spec.Routing.Strategy != charlescdiov1alpha1.CanaryRoutingStrategy {
+		return &networkingv1alpha3.HTTPRoute{
+			Name:  circle.GetName(),
+			Match: getMatch(circle),
+			Route: []*networkingv1alpha3.HTTPRouteDestination{
+				{
+					Destination: &networkingv1alpha3.Destination{
+						Host:   fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace),
+						Subset: circle.GetName(),
+					},
+				},
+			},
+		}
+	}
+
+	return &networkingv1alpha3.HTTPRoute{
+		Name: circle.GetName(),
 		Route: []*networkingv1alpha3.HTTPRouteDestination{
 			{
 				Destination: &networkingv1alpha3.Destination{
 					Host:   fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace),
 					Subset: circle.GetName(),
 				},
+				Weight: int32(circle.Spec.Routing.Canary.Weight),
 			},
 		},
 	}
-
-	return newRoute
 }
 
 func newVirtualService(module charlescdiov1alpha1.CircleModule, circle charlescdiov1alpha1.Circle) *v1alpha3.VirtualService {
@@ -155,7 +169,7 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 				{
 					Name: circle.GetName(),
 					Labels: map[string]string{
-						utils.AnnotationCircleMark: string(circle.GetUID()),
+						utils.AnnotationCircleMark: utils.GetCircleMark(types.NamespacedName{Namespace: circle.Namespace, Name: circle.Name}),
 					},
 				},
 			},
@@ -170,6 +184,9 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 func mergeDestionRules(module charlescdiov1alpha1.CircleModule, circle charlescdiov1alpha1.Circle, destinationRule *v1alpha3.DestinationRule) *v1alpha3.DestinationRule {
 	newSubset := &networkingv1alpha3.Subset{
 		Name: circle.GetName(),
+		Labels: map[string]string{
+			utils.AnnotationCircleMark: utils.GetCircleMark(types.NamespacedName{Namespace: circle.Namespace, Name: circle.Name}),
+		},
 	}
 
 	subsets := []*networkingv1alpha3.Subset{newSubset}
@@ -217,7 +234,6 @@ func (n networkingLayer) SyncIstio(circle charlescdiov1alpha1.Circle, circleModu
 	// if currentModule.Status != string(health.HealthStatusHealthy) {
 	// 	return nil, nil
 	// }
-
 	service := getModuleService(currentModule)
 	if service == nil {
 		return nil, nil

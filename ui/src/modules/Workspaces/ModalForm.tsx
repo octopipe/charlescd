@@ -16,14 +16,15 @@ const WorkspaceForm = ({ show, onHide, onSave }: Props) => {
   const [description, setDescription] = useState('')
   const [routingStrategy, setRoutingStrategy] = useState('')
   
-  const handleSave = useCallback(() => {
+  const handleSave = () => {
     const newWorkspace = {
       name,
       description,
       routingStrategy,
     }
+    console.log(newWorkspace)
     onSave(newWorkspace)
-  }, [])
+  }
 
   return (
     <Modal show={show} onHide={onHide}>
@@ -37,7 +38,7 @@ const WorkspaceForm = ({ show, onHide, onSave }: Props) => {
           value={name}
           edit={true}
           canEdit={false}
-          onChange={setName}
+          onChange={value => setName(value)}
           placeholder="Workspace name"
         />
         <ViewInput.Text
@@ -46,7 +47,7 @@ const WorkspaceForm = ({ show, onHide, onSave }: Props) => {
           value={description}
           edit={true}
           canEdit={false}
-          onChange={setDescription}
+          onChange={value => setDescription(value)}
           as="textarea"
           placeholder="Workspace description"
         />

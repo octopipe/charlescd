@@ -1,3 +1,5 @@
+@import "../../core/style/colors.scss";
+
 .circles {
   width: 100%;
   
@@ -27,5 +29,16 @@
   }
 
 
-  
+  &__progress {
+    position: fixed;
+    width: 300px;
+    bottom: 0;
+
+    .progress {
+      height: 30px;
+      border-radius: 0 !important;
+      background-color: $second-grey;
+    }
+    
+  }
 }

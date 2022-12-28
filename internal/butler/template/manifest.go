@@ -23,9 +23,7 @@ func (t template) addLabels(currentLabels map[string]string, manifest *unstructu
 	namespacedName := types.NamespacedName{Name: circle.Name, Namespace: circle.Namespace}
 	labels[utils.AnnotationManagedBy] = utils.ManagedBy
 
-	if manifest.GetKind() == "Service" {
-		labels[utils.AnnotationCircles] = utils.AddCircleToLabels(utils.GetCircleMark(namespacedName), labels)
-	} else {
+	if manifest.GetKind() != "Service" {
 		labels[utils.AnnotationModuleMark] = string(module.UID)
 		labels[utils.AnnotationCircleMark] = utils.GetCircleMark(namespacedName)
 	}

@@ -1,0 +1,13 @@
+@import "../../core/style/colors.scss";
+
+.global-error {
+  position: fixed;
+  width: 100vw;
+  height: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: $danger-color;
+  z-index: 99;
+  bottom: 0;
+}

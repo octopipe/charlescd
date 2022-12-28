@@ -44,11 +44,9 @@ func newCircleObject(name string, moduleName string) *charlescdiov1alpha1.Circle
 		Author:    "Test",
 		IsDefault: true,
 		Routing: charlescdiov1alpha1.CircleRouting{
-			Match: &charlescdiov1alpha1.MatchRouteStrategy{
-				CustomMatch: &charlescdiov1alpha1.CircleMatch{
-					Headers: map[string]string{
-						"x-test-id": "1111",
-					},
+			Match: &charlescdiov1alpha1.CircleMatch{
+				Headers: map[string]string{
+					"x-test-id": "1111",
 				},
 			},
 		},
@@ -186,7 +184,7 @@ func (s *SyncCircleTestSuite) TestSyncCircleWithoutModuleInCluster() {
 	syncedCircle := &charlescdiov1alpha1.Circle{}
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)
 
-	assert.Equal(s.T(), syncedCircle.Status.Status, `FAILED`)
+	assert.Equal(s.T(), syncedCircle.Status.SyncStatus, `FAILED`)
 }
 
 func (s *SyncCircleTestSuite) TestReSyncCircle() {
@@ -202,7 +200,7 @@ func (s *SyncCircleTestSuite) TestReSyncCircle() {
 	syncedCircle := &charlescdiov1alpha1.Circle{}
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle), syncedCircle)
 
-	assert.Equal(s.T(), syncedCircle.Status.Status, `FAILED`)
+	assert.Equal(s.T(), syncedCircle.Status.SyncStatus, `FAILED`)
 
 	newModule := newModuleObject(moduleName)
 	err = s.clientset.Create(s.ctx, newModule)
@@ -237,7 +235,7 @@ func (s *SyncCircleTestSuite) TestSyncCircleDeletionModules() {
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle1), syncedCircle1)
 	s.clientset.Get(s.ctx, client.ObjectKeyFromObject(newCircle2), syncedCircle2)
 
-	assert.Equal(s.T(), "SYNCED", syncedCircle1.Status.Status)
+	assert.Equal(s.T(), "SYNCED", syncedCircle1.Status.SyncStatus)
 
 	resources1 := syncedCircle1.Status.Modules[moduleName1].Resources
 	assert.Equal(s.T(), 2, len(resources1))

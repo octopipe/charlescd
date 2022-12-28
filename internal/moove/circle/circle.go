@@ -9,18 +9,18 @@ import (
 )
 
 type CircleModule struct {
-	ModuleID  string                         `json:"moduleId,omitempty" validate:"required"`
 	Name      string                         `json:"name,omitempty" validate:"required"`
 	Revision  string                         `json:"revision,omitempty" validate:"required"`
 	Overrides []charlescdiov1alpha1.Override `json:"overrides,omitempty"`
 }
 
 type CircleItem struct {
-	Name        string                           `json:"name"`
-	Description string                           `json:"description"`
-	Modules     []CircleModule                   `json:"modules"`
-	IsDefault   bool                             `json:"isDefault"`
-	Status      charlescdiov1alpha1.CircleStatus `json:"status"`
+	Name        string                            `json:"name"`
+	Description string                            `json:"description"`
+	Routing     charlescdiov1alpha1.CircleRouting `json:"routing,omitempty"`
+	Modules     []CircleModule                    `json:"modules"`
+	IsDefault   bool                              `json:"isDefault"`
+	Status      charlescdiov1alpha1.CircleStatus  `json:"status"`
 }
 
 type Circle struct {

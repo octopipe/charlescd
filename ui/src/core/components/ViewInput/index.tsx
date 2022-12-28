@@ -27,18 +27,19 @@ const ViewInput = (props: PropsViewInput) => {
 }
 
 interface PropsViewInputText {
-  value: string
+  value?: string | number
   edit?: boolean
   canEdit?: boolean
   placeholder: string
   label: string
   as?: string
   icon: IconProp
-  onChange: (value: string) => void
+  type?: string
+  onChange?: (value: string) => void
   
 }
 
-const ViewInputText = ({ label, icon, edit, value, as, placeholder, canEdit = true,  onChange }: PropsViewInputText) => {
+const ViewInputText = ({ label, icon, edit, value, as, placeholder, canEdit = true, type,  onChange }: PropsViewInputText) => {
   const [isEdit, setEdit] = useState(edit)
 
   return (
@@ -50,11 +51,12 @@ const ViewInputText = ({ label, icon, edit, value, as, placeholder, canEdit = tr
         className="view-input__content__input px-2"
         value={value}
         as={as as any}
-        onChange={e => onChange(e.target.value)}
+        onChange={e => onChange && onChange(e.target.value)}
         placeholder={placeholder || ''}
         plaintext={!isEdit}
         readOnly={!isEdit}
         onClick={() => canEdit && setEdit(true)}
+        type={type || 'text'}
       />
     </ViewInput>
   )

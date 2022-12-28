@@ -1,5 +1,5 @@
-import React from 'react'
-import { IconProp } from '@fortawesome/fontawesome-svg-core'
+import React, { useState } from 'react'
+import { icon, IconProp } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import './style.scss'
 import { Dropdown } from 'react-bootstrap'
@@ -8,7 +8,8 @@ interface ViewerPropsBase {
   children: React.ReactNode
 }
 
-interface ViewerTabsOption {
+export interface ViewerTabsOption {
+  icon?: IconProp
   name: string
   onAction: () => void
 }
@@ -19,20 +20,42 @@ interface ViewerTabsProps {
   options?: ViewerTabsOption[]
 }
 
-const ViewerTabs = ({ children, hasOptions, options }: ViewerTabsProps) => {
-  const CustomToggle = React.forwardRef<any, any>(({ children, onClick }, ref) => (
-    <a
-      ref={ref}
-      onClick={(e) => {
-        e.preventDefault();
-        onClick(e);
-      }}
-      className="circle-modules__item__menu"
-    >
-      {children}
-    </a>
-  ));
+const CustomToggle = React.forwardRef<any, any>(({ children, onClick }, ref) => (
+  <a
+    ref={ref}
+    onClick={(e) => {
+      e.preventDefault();
+      onClick(e);
+    }}
+    className="circle-modules__item__menu"
+  >
+    {children}
+  </a>
+));
 
+const CustomMenu = React.forwardRef<any, any>(
+  ({ children, style, className, 'aria-labelledby': labeledBy }, ref) => {
+    const [value, setValue] = useState('');
+
+    return (
+      <div
+        ref={ref}
+        style={style}
+        className={className}
+        aria-labelledby={labeledBy}
+      >
+        <ul className="list-unstyled">
+          {React.Children.toArray(children).filter(
+            (child: any) =>
+              !value || child.props.children.toLowerCase().startsWith(value),
+          )}
+        </ul>
+      </div>
+    );
+  },
+);
+
+const ViewerTabs = ({ children, hasOptions, options }: ViewerTabsProps) => {
   return (
     <div className='viewer__tabs'>
       <div className='d-flex'>
@@ -40,13 +63,14 @@ const ViewerTabs = ({ children, hasOptions, options }: ViewerTabsProps) => {
       </div>
       {hasOptions && (
         <div className='viewer__tabs__options'>
-          <Dropdown className='mx-2'>
+          <Dropdown className='mx-3'>
             <Dropdown.Toggle as={CustomToggle}>
               <FontAwesomeIcon icon="ellipsis-vertical" />
             </Dropdown.Toggle>
-            <Dropdown.Menu>
+            <Dropdown.Menu as={CustomMenu} className="viewer__tabs__options__menu">
               { options?.map(option => (
                 <Dropdown.Item onClick={option.onAction}>
+                  {option?.icon && <FontAwesomeIcon icon={option.icon} className='me-2' />}
                   {option.name}
                 </Dropdown.Item>
               )) }

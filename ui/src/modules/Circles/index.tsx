@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { CirclePagination, CIRCLE_VIEW_MODE } from '../../core/types/circle'
+import { CirclePagination, CIRCLE_ROUTING_STRATEGY, CIRCLE_VIEW_MODE } from '../../core/types/circle'
 import { useLocation, useParams, useSearchParams } from 'react-router-dom'
 import Placeholder from '../../core/components/Placeholder'
 import { ReactComponent as EmptyCirclesSVG } from '../../core/assets/svg/empty-circles.svg'
@@ -13,11 +13,15 @@ import { fetchCircles } from './circlesSlice';
 import { FETCH_STATUS } from '../../core/utils/fetch'
 import Viewer from '../../core/components/Viewer'
 import CircleViewer from '../CircleViewer'
+import { ProgressBar } from 'react-bootstrap'
 
 const createCircleId = 'untitled'
 
+const COLOR = ['#7e57c2', '#29b6f6', '#66bb6a', '#ff9800', '#03a9f4']
+
 const CirclesMain = () => {
   const dispatch = useAppDispatch()
+  const { workspace } = useAppSelector(state => state.main)
   const { list, status } = useAppSelector(state => state.circles)
   const { workspaceId } = useParams()
   const [searchParams, setSearchParams] = useSearchParams();
@@ -82,20 +86,6 @@ const CirclesMain = () => {
     })
   }
 
-  // const handleSaveCircle = async (circle: CircleType) => {
-  //   const newCircle = await fetch(`/workspaces/${workspaceId}/circles`,  { method: 'POST', data: circle})
-  //   await get(`/workspaces/${workspaceId}/circles`)
-  //   setSearchParams(i => {
-  //     if (!i.has(newCircle.id)) {
-  //       i.append(newCircle.id, CIRCLE_VIEW_MODE.VIEW)
-  //     }
-
-  //     i.delete(createCircleId)
-
-  //     return i
-  //   })
-  // }
-
   return (
     <div className='circles'>
       <AppSidebar>
@@ -116,6 +106,17 @@ const CirclesMain = () => {
             />
           ))}
         </AppSidebar.List>
+        {workspace?.routingStrategy === CIRCLE_ROUTING_STRATEGY.CANARY && (
+          <div className='circles__progress'>
+            <ProgressBar>
+              {list?.items?.map((item, idx) => (
+                <ProgressBar variant="000" now={item.routing.canary?.weight} key={1}
+                  style={{backgroundColor: COLOR[idx]}}
+                />
+              ))}
+            </ProgressBar>
+          </div>
+        )}
       </AppSidebar>
       <div className={activeCircleIds.length > 0 ? 'circles__content' : 'circles__content-empty'}>
         {activeCircleIds.length <= 0 && (

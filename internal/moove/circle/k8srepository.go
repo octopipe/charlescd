@@ -55,13 +55,8 @@ func (r k8sRepository) fillCircle(target charlescdiov1alpha1.Circle, namespace s
 	})
 	modules := []charlescdiov1alpha1.CircleModule{}
 	for _, m := range circle.Modules {
-		name, err := id.DecodeID(m.ModuleID)
-		if err != nil {
-			return charlescdiov1alpha1.Circle{}, err
-		}
-
 		modules = append(modules, charlescdiov1alpha1.CircleModule{
-			Name:      name,
+			Name:      m.Name,
 			Revision:  m.Revision,
 			Overrides: m.Overrides,
 			Namespace: namespace,
@@ -86,7 +81,6 @@ func (r k8sRepository) toCircleModel(circle charlescdiov1alpha1.Circle) CircleMo
 	for _, m := range circle.Spec.Modules {
 		modules = append(modules, CircleModule{
 			Name:      m.Name,
-			ModuleID:  id.ToID(m.Name),
 			Revision:  m.Revision,
 			Overrides: m.Overrides,
 		})
@@ -107,9 +101,10 @@ func (r k8sRepository) toCircleModel(circle charlescdiov1alpha1.Circle) CircleMo
 			Environments: circle.Spec.Environments,
 			Routing:      circle.Spec.Routing,
 			Status: charlescdiov1alpha1.CircleStatus{
-				History: circle.Status.History,
-				Modules: moduleStatus,
-				Status:  circle.Status.Status,
+				History:    circle.Status.History,
+				Modules:    moduleStatus,
+				SyncStatus: circle.Status.SyncStatus,
+				SyncedAt:   circle.Status.SyncedAt,
 			},
 			Modules: modules,
 		},
@@ -175,7 +170,6 @@ func (r k8sRepository) FindAll(ctx context.Context, namespace string, options li
 			modules := []CircleModule{}
 			for _, m := range i.Spec.Modules {
 				modules = append(modules, CircleModule{
-					ModuleID:  id.ToID(m.Name),
 					Name:      m.Name,
 					Revision:  m.Revision,
 					Overrides: m.Overrides,
@@ -193,10 +187,11 @@ func (r k8sRepository) FindAll(ctx context.Context, namespace string, options li
 					Name:        annotations["name"],
 					Description: i.Spec.Description,
 					IsDefault:   i.Spec.IsDefault,
+					Routing:     i.Spec.Routing,
 					Status: charlescdiov1alpha1.CircleStatus{
-						History: i.Status.History,
-						Modules: moduleStatus,
-						Status:  i.Status.Status,
+						Modules:    moduleStatus,
+						SyncStatus: i.Status.SyncStatus,
+						SyncedAt:   i.Status.SyncedAt,
 					},
 					Modules: modules,
 				},

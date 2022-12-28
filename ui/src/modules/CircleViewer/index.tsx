@@ -1,13 +1,16 @@
 import React, { useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
+import { circleApi } from '../../core/api/circle'
 import Spinner from '../../core/components/Spinner'
-import Viewer from '../../core/components/Viewer'
+import Viewer, { ViewerTabsOption } from '../../core/components/Viewer'
 import { useAppDispatch, useAppSelector } from '../../core/hooks/redux'
-import { CIRCLE_VIEW_MODE } from '../../core/types/circle'
+import { Circle, CIRCLE_VIEW_MODE } from '../../core/types/circle'
 import { FETCH_STATUS } from '../../core/utils/fetch'
+import { fetchCircles } from '../Circles/circlesSlice'
 import CircleTree from '../CircleTree'
-import { fetchCircle, removeCircleViewer } from './circleViewerSlice'
+import { fetchCircle, fetchCircleCreate, fetchCircleSync, fetchCircleUpdate, removeCircleViewer } from './circleViewerSlice'
 import CircleForm from './Form'
+import CircleHistory from './History'
 
 interface Props {
   circleId: string
@@ -16,10 +19,18 @@ interface Props {
   onChangeViewMode: (circleId: string, viewMode: CIRCLE_VIEW_MODE) => void
 }
 
+
+
 const CircleViewer = ({ circleId, viewMode, onClose, onChangeViewMode }: Props) => {
-  const { workspaceId } = useParams()
   const dispatch = useAppDispatch()
+  const { workspaceId } = useParams()
   const { circleViewer } = useAppSelector(state => state)
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const OPTIONS: ViewerTabsOption[] = [
+    { icon: 'trash', name: 'Remove', onAction: () => { } },
+    { icon: 'rotate',  name: 'Sync', onAction: () => { dispatch(fetchCircleSync({ workspaceId, circleId })) } }
+  ]
 
   useEffect(() => {
     if (viewMode !== CIRCLE_VIEW_MODE.CREATE)
@@ -29,22 +40,30 @@ const CircleViewer = ({ circleId, viewMode, onClose, onChangeViewMode }: Props) 
   const handleClose = () => {
     onClose(circleId)
     dispatch(removeCircleViewer({ circleId }))
-
   }
 
-  const isCreate = () => viewMode === CIRCLE_VIEW_MODE.CREATE
+  const handleSave = async (form: Circle) => {
+    await dispatch(fetchCircleCreate({workspaceId, data: form}))
+    dispatch(fetchCircles(workspaceId))
+    onClose(circleId)
+  }
+
+  const handleUpdate = async (form: Circle) => {
+    await dispatch(fetchCircleUpdate({workspaceId, circleId, data: form}))
+    dispatch(fetchCircles(workspaceId))
+  }
 
   if (circleViewer[circleId]) {
     return (
       <Viewer>
-        {circleViewer[circleId]?.status === FETCH_STATUS.LOADING && <Spinner />}
-        { circleViewer[circleId]?.status === FETCH_STATUS.SUCCEEDED && (
+        {circleViewer[circleId]?.item.status === FETCH_STATUS.LOADING && <Spinner />}
+        { circleViewer[circleId]?.item.status === FETCH_STATUS.SUCCEEDED && (
           <>
-            <Viewer.Tabs hasOptions={viewMode !== CIRCLE_VIEW_MODE.CREATE} options={[{ name: 'Remove', onAction: () => {} }]}>
+            <Viewer.Tabs hasOptions={viewMode !== CIRCLE_VIEW_MODE.CREATE} options={OPTIONS}>
               <Viewer.TabsItem
                 id={circleId}
                 icon="circle"
-                text={circleViewer[circleId]?.item.name}
+                text={circleViewer[circleId]?.item.data.name}
                 isActive={viewMode === CIRCLE_VIEW_MODE.VIEW}
                 hasClose={true}
                 onClick={() => onChangeViewMode(circleId, CIRCLE_VIEW_MODE.VIEW)}
@@ -57,10 +76,18 @@ const CircleViewer = ({ circleId, viewMode, onClose, onChangeViewMode }: Props) 
                 isActive={viewMode === CIRCLE_VIEW_MODE.TREE}
                 onClick={() => onChangeViewMode(circleId, CIRCLE_VIEW_MODE.TREE)}
               />
+             <Viewer.TabsItem
+                id={circleId}
+                icon="align-justify"
+                text="History"
+                isActive={viewMode === CIRCLE_VIEW_MODE.HISTORY}
+                onClick={() => onChangeViewMode(circleId, CIRCLE_VIEW_MODE.HISTORY)}
+              /> 
             </Viewer.Tabs>
             <Viewer.Content>
-              {viewMode === CIRCLE_VIEW_MODE.VIEW && circleViewer[circleId]?.item && <CircleForm circle={circleViewer[circleId]?.item} viewMode={viewMode} onSave={() => {}}  />}
+              {viewMode === CIRCLE_VIEW_MODE.VIEW && circleViewer[circleId]?.item && <CircleForm circle={circleViewer[circleId]?.item.data} viewMode={viewMode} onSave={handleSave} onUpdate={handleUpdate}  />}
               {viewMode === CIRCLE_VIEW_MODE.TREE && circleViewer[circleId]?.item && <CircleTree circleId={circleId}  />}
+              {viewMode === CIRCLE_VIEW_MODE.HISTORY && circleViewer[circleId]?.item && <CircleHistory circle={circleViewer[circleId]?.item.data}  />}
             </Viewer.Content>
           </>
         )}
@@ -83,7 +110,7 @@ const CircleViewer = ({ circleId, viewMode, onClose, onChangeViewMode }: Props) 
           />
         </Viewer.Tabs>
         <Viewer.Content>
-          {viewMode !== CIRCLE_VIEW_MODE.TREE && <CircleForm circle={circleViewer[circleId]?.item} viewMode={viewMode} onSave={() => {}}  />}
+          {viewMode !== CIRCLE_VIEW_MODE.TREE && <CircleForm circle={circleViewer[circleId]?.item.data} viewMode={viewMode} onSave={handleSave} onUpdate={handleUpdate}  />}
         </Viewer.Content>
       </>
     </Viewer>

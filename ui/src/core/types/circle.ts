@@ -1,20 +1,15 @@
-export interface CircleRoutingCustomMatchHeaders {
+export interface CircleRoutingMatchHeaders {
   [key: string]: string
 }
 
-export interface CircleRoutingCustomMatch {
-  headers: CircleRoutingCustomMatchHeaders
+export interface CircleRoutingMatch {
+  headers: CircleRoutingMatchHeaders
 }
 
 export interface CircleRoutingSegment {
   key: string
   op: string
   value: string
-}
-
-export interface CircleRoutingMatch {
-  customMatch?: CircleRoutingCustomMatch
-  segments?: CircleRoutingSegment[]
 }
 
 export interface CircleRoutingCanary {
@@ -25,10 +20,12 @@ export interface CircleRouting {
   strategy: string
   match?: CircleRoutingMatch
   canary?: CircleRoutingCanary
+  segments?: CircleRoutingSegment[]
 }
 
-export interface Overrides {
-  [key: string]: string
+export interface Override {
+  key: string
+  value: string
 }
 
 export interface ModuleResource {
@@ -50,15 +47,22 @@ export interface ModuleStatus {
   [key: string]: ModuleStatusValue
 }
 
+export interface CircleStatusHistory {
+  action: string
+  eventTime: string
+  message: string
+  status: string
+}
+
 export interface CircleStatus {
   modules: ModuleStatus
+  history: CircleStatusHistory[]
 }
  
 export interface CircleModule {
-  moduleId: string
   name: string
   revision: string
-  overrides: Overrides
+  overrides: Override[]
 }
 
 export interface CircleEnrivonment {
@@ -86,6 +90,7 @@ export interface CircleItem {
   namespace: string
   isDefault: boolean
   modules: CircleModule[]
+  routing: CircleRouting
 }
 
 export interface CircleStatusModelModuleResource {
@@ -113,11 +118,18 @@ export interface CirclePagination {
   items: CircleItem[]
 }
 
+export enum CIRCLE_ROUTING_STRATEGY {
+  MATCH = 'MATCH',
+  SEGMENTS = 'SEGMENTS',
+  CANARY = 'CANARY'
+}
+
 export enum CIRCLE_VIEW_MODE {
   VIEW = 'VIEW',
   CREATE = 'CREATE',
   UPDATE = 'UPDATE',
   TREE = 'TREE',
+  HISTORY = 'HISTORY'
 }
 
 export enum CIRCLE_MODULE_RESOURCE_STATUS {

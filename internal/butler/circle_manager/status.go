@@ -35,19 +35,18 @@ func (c CircleManager) updateCircleStatus(
 	if len(currentHistory) > 0 {
 		lastHistory := currentHistory[len(currentHistory)-1]
 
-		if lastHistory.Action == action && lastHistory.Status == status {
-			return nil
+		if lastHistory.Action != action && lastHistory.Status != status {
+			history := charlescdiov1alpha1.CircleStatusHistory{
+				Status:    status,
+				Message:   message,
+				EventTime: eventTime,
+				Action:    action,
+			}
+
+			currentHistory = append(currentHistory, history)
 		}
 	}
 
-	history := charlescdiov1alpha1.CircleStatusHistory{
-		Status:    status,
-		Message:   message,
-		EventTime: eventTime,
-		Action:    action,
-	}
-
-	currentHistory = append(currentHistory, history)
 	currentCircle.Status = circle.Status
 	currentCircle.Status.History = currentHistory
 	err = utils.UpdateObjectStatusWithDefaultRetry(context.Background(), c.Client, currentCircle)

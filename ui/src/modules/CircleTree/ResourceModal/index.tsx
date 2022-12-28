@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useMemo, useState } from "react";
 import { Alert, Badge, ListGroup, Modal, ModalProps, Nav } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import Editor from "../../../core/components/Editor";
@@ -9,7 +9,7 @@ import './style.scss'
 
 export interface ResourceModalProps extends ModalProps {
   circleId: string
-  selectedResource?: ResourceMetadata
+  currentResource?: ResourceMetadata
 }
 
 enum EVENT_KEYS {
@@ -33,19 +33,20 @@ const ResourceModal = ({ circleId, show, onClose, selectedResource }: ResourceMo
   const [resource, setResource] = useState<Resource>()
   const [events, setEvents] = useState<any>([])
   const [manifest, setManifest] = useState<any>({})
+  const currentResource = useMemo(() => selectedResource, [])
 
   const getResource = async () => {
-    const resource = await fetch(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}?group=${selectedResource?.group || ''}&kind=${selectedResource?.kind}`)
+    const resource = await fetch(`/workspaces/${workspaceId}/circles/${circleId}/resources/${currentResource?.name}?group=${currentResource?.group || ''}&kind=${currentResource?.kind}`)
     setResource(resource || {})
   }
 
   const getManifest = async () => {
-    const manifest = await fetch(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}/manifest?group=${selectedResource?.group || ''}&kind=${selectedResource?.kind}`)
+    const manifest = await fetch(`/workspaces/${workspaceId}/circles/${circleId}/resources/${currentResource?.name}/manifest?group=${currentResource?.group || ''}&kind=${currentResource?.kind}`)
     setManifest(manifest || {})
   }
 
   const getEvents = async () => {
-    const events = await fetch(`/workspaces/${workspaceId}/circles/${circleId}/resources/${selectedResource?.name}/events?kind=${selectedResource?.kind}`)
+    const events = await fetch(`/workspaces/${workspaceId}/circles/${circleId}/resources/${currentResource?.name}/events?kind=${currentResource?.kind}`)
     setEvents(events || [])
   }
 
@@ -67,8 +68,8 @@ const ResourceModal = ({ circleId, show, onClose, selectedResource }: ResourceMo
   const Overview = () => (
     <>
       <div className="mb-3">
-        <Badge><strong>Namespace: </strong>{ resource?.metadata.namespace }</Badge>{' '}
-        <Badge><strong>Kind: </strong>{ resource?.metadata.kind }</Badge>{' '}
+        <Badge><strong>Namespace: </strong>{ resource?.metadata?.namespace }</Badge>{' '}
+        <Badge><strong>Kind: </strong>{ resource?.metadata?.kind }</Badge>{' '}
       </div>
       {resource?.metadata?.status && (
         <Alert variant={getAlertStatus(resource?.metadata?.status || 'Default')}>
@@ -115,7 +116,7 @@ const ResourceModal = ({ circleId, show, onClose, selectedResource }: ResourceMo
   return (
     <Modal show={show} onHide={onClose} size="xl" className="resource-modal">
       <Modal.Header closeButton>
-        <Modal.Title>{selectedResource?.name}</Modal.Title>
+        <Modal.Title>{currentResource?.name}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <div className="resource-modal__header py-2">
@@ -144,4 +145,4 @@ const ResourceModal = ({ circleId, show, onClose, selectedResource }: ResourceMo
   
 }
 
-export default ResourceModal
+export default React.memo(ResourceModal)

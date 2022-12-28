@@ -17,33 +17,37 @@ import (
 
 func (c CircleManager) Sync(circle *charlescdiov1alpha1.Circle) error {
 	var syncErr error
-	circleStatus := SyncSuccessType
 	syncTime := time.Now().Format(time.RFC3339)
 	result := map[string]charlescdiov1alpha1.CircleModuleStatus{}
 	for _, circleModule := range circle.Spec.Modules {
-		res, err := c.syncResourcesByCircleModule(circle, circleModule)
+		res, isModified, err := c.syncResourcesByCircleModule(circle, circleModule)
+		currentResult, ok := result[circleModule.Name]
+		if !ok {
+			currentResult = charlescdiov1alpha1.CircleModuleStatus{}
+		}
+
 		if err != nil {
-			result[circleModule.Name] = charlescdiov1alpha1.CircleModuleStatus{
-				Status:   SyncFailedType,
-				Error:    err.Error(),
-				SyncTime: syncTime,
-			}
+			currentResult.Error = err.Error()
+			currentResult.SyncStatus = charlescdiov1alpha1.FailedStatus
 			syncErr = err
-			circleStatus = SyncFailedType
 			continue
 		}
 
+		moduleSyncedAt := syncTime
+		if m, ok := circle.Status.Modules[circleModule.Name]; ok && !isModified {
+			moduleSyncedAt = m.SyncedAt
+		}
+
 		result[circleModule.Name] = charlescdiov1alpha1.CircleModuleStatus{
-			Resources: res,
-			Status:    SyncSuccessType,
-			SyncTime:  syncTime,
+			Resources:  res,
+			SyncStatus: charlescdiov1alpha1.SuccessStatus,
+			SyncedAt:   moduleSyncedAt,
 		}
 	}
 
 	circle.Status = charlescdiov1alpha1.CircleStatus{
 		Modules:  result,
-		Status:   circleStatus,
-		SyncTime: syncTime,
+		SyncedAt: syncTime,
 	}
 
 	if syncErr != nil {
@@ -65,27 +69,27 @@ func (c CircleManager) Sync(circle *charlescdiov1alpha1.Circle) error {
 	)
 }
 
-func (c CircleManager) syncResourcesByCircleModule(circle *charlescdiov1alpha1.Circle, circleModule charlescdiov1alpha1.CircleModule) ([]charlescdiov1alpha1.CircleModuleResource, error) {
+func (c CircleManager) syncResourcesByCircleModule(circle *charlescdiov1alpha1.Circle, circleModule charlescdiov1alpha1.CircleModule) ([]charlescdiov1alpha1.CircleModuleResource, bool, error) {
 	targets, err := c.getCircleTargets(circle, circleModule.Name, circle.Spec.Namespace)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	res, err := c.syncResources(targets, circleModule.Name, circle.Spec.Namespace)
+	res, isModified, err := c.syncResources(targets, circleModule.Name, circle.Spec.Namespace)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	if c.networkClient != nil {
 		networkingResources, err := c.networkClient.Sync(circle, circleModule)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
 		res = append(res, networkingResources...)
 	}
 
-	return res, nil
+	return res, isModified, nil
 }
 
 func (c *CircleManager) getCircleTargets(circle *charlescdiov1alpha1.Circle, circleModuleName string, namespace string) ([]*unstructured.Unstructured, error) {
@@ -117,7 +121,8 @@ func (c *CircleManager) getCircleTargets(circle *charlescdiov1alpha1.Circle, cir
 	return newTargets, nil
 }
 
-func (c CircleManager) syncResources(targets []*unstructured.Unstructured, circleName string, namespace string) ([]charlescdiov1alpha1.CircleModuleResource, error) {
+func (c CircleManager) syncResources(targets []*unstructured.Unstructured, circleName string, namespace string) ([]charlescdiov1alpha1.CircleModuleResource, bool, error) {
+	isModified := false
 	namespacedName := types.NamespacedName{Name: circleName, Namespace: namespace}
 	res, err := c.gitopsEngine.Sync(
 		context.Background(),
@@ -132,11 +137,15 @@ func (c CircleManager) syncResources(targets []*unstructured.Unstructured, circl
 		sync.WithLogr(c.logger),
 	)
 	if err != nil {
-		return nil, errs.E(errs.Internal, errs.Code("SYNC_ENGINE_ERROR"), err)
+		return nil, false, errs.E(errs.Internal, errs.Code("SYNC_ENGINE_ERROR"), err)
 	}
 
 	circleModuleResources := []charlescdiov1alpha1.CircleModuleResource{}
 	for _, r := range res {
+		if r.Message != "unchanged" {
+			isModified = true
+		}
+
 		circleModuleResource := charlescdiov1alpha1.CircleModuleResource{
 			Group:     r.ResourceKey.Group,
 			Kind:      r.ResourceKey.Kind,
@@ -147,5 +156,5 @@ func (c CircleManager) syncResources(targets []*unstructured.Unstructured, circl
 		circleModuleResources = append(circleModuleResources, circleModuleResource)
 	}
 
-	return circleModuleResources, nil
+	return circleModuleResources, isModified, nil
 }

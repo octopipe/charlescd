@@ -1,17 +1,20 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useCallback, useEffect, useState } from "react";
 import { Dropdown, Modal, Form, Button, ModalProps } from "react-bootstrap";
-import ModalAddModule from './ModalAdd'
+import ModalForm from './ModalForm'
 import Alert from "../../core/components/Alert";
 import './style.scss'
 import { useParams } from "react-router-dom";
-import { CirclePagination, CircleStatusModel, CircleStatusModelModuleResource } from "../../core/types/circle";
+import { CircleModule, CirclePagination, CircleStatusModel, CircleStatusModelModuleResource } from "../../core/types/circle";
 import { CircleModel } from "../../core/types/circle";
 import useFetch from "../../core/hooks/fetch";
 import { ModuleResource } from "../../core/types/circle";
 import usePolling from "../../core/hooks/polling";
 import { circleApi } from "../../core/api/circle";
 import Spinner from "../../core/components/Spinner";
+import { CircleViewerState, fetchCircleStatus } from "../CircleViewer/circleViewerSlice";
+import { useAppDispatch, useAppSelector } from "../../core/hooks/redux";
+import { FETCH_STATUS } from "../../core/utils/fetch";
 
 
 const ModalMoveTo = ({ show, onClose }: ModalProps) => {
@@ -49,7 +52,8 @@ const ModalMoveTo = ({ show, onClose }: ModalProps) => {
 }
 
 export interface Props {
-  circle: CircleModel
+  circle?: CircleModel
+  onChangeModules: (modules: CircleModule[]) => void
 }
 
 const CustomToggle = React.forwardRef<any, any>(({ children, onClick }, ref) => (
@@ -70,19 +74,51 @@ interface Status {
   message?: string
 }
 
-const CircleModules = ({ circle }: Props) => {
+const CircleModules = ({ circle, onChangeModules }: Props) => {
+  const dispatch = useAppDispatch()
   const { workspaceId } = useParams()
   const [moveTo, toggleMoveTo] = useState(false)
   const [remove, toggleRemove] = useState(false)
   const [form, toggleForm] = useState(false)
-  const { startPolling, stopPolling, data, loading } = usePolling<CircleStatusModel>({ timer: 3000, request: () => circleApi.getCircleStatus(workspaceId || '', circle.id) })
-
+  const circleViewer = useAppSelector(state => state.circleViewer[circle?.id || ''])
+  const [selectedModule, setSelectedModule] = useState<CircleModule>()
+  const [viewerState, setViewerState] = useState<CircleViewerState>()
+  const [modules, setModules] = useState<CircleModule[]>(circle?.modules || [])
 
   useEffect(() => {
-    startPolling()
+    if (!circle) {
+      return
+    }
 
-    return () => stopPolling()
+    dispatch(fetchCircleStatus({ workspaceId: workspaceId || '', circleId: circle?.id }))
+    const interval = setInterval(() => {
+      dispatch(fetchCircleStatus({ workspaceId: workspaceId || '', circleId: circle?.id }))
+    }, 3000)
+
+    return () => clearInterval(interval)
   }, [])
+
+  const handleSelectModule = (module: CircleModule, cb: any) => {
+    setSelectedModule(module)
+    cb()
+  }
+
+  const handleChangeModule = (module: CircleModule) => {
+    if (!circle || !circle?.modules) {
+      setModules([module])
+      onChangeModules([module])
+      return
+    }
+
+    setModules([...circle.modules, module])
+    onChangeModules(circle.modules.map(m => {
+      if (m.name === module.name) {
+        return module
+      }
+
+      return m
+    }))
+  }
 
   const getStatus = (resources: CircleStatusModelModuleResource[]) => {
     let status: Status = {health: 'Healthy'}
@@ -105,26 +141,29 @@ const CircleModules = ({ circle }: Props) => {
       <div className="circle-modules">
         <div className="circle-modules__title">
           Modules
+          {circle && circleViewer?.status?.syncedAt && (<div>
+            { `synced at ${viewerState?.status?.syncedAt}` }
+          </div> )}
         </div>
-        { loading ? <Spinner /> : Object.keys(data?.modules || {}).map(moduleName => (
-          <div className={`circle-modules__item--${getStatus(data?.modules[moduleName]?.resources || []).health}`} key={moduleName}>
+        { modules?.map(module => (
+          <div className={circle && circleViewer?.status?.data ? `circle-modules__item--${getStatus(circleViewer?.status?.data?.modules[module.name]?.resources)?.health}` : 'circle-modules__item'} key={module.name}>
             <div className="circle-modules__item__header">
-              <span>{moduleName}</span>
+              <span>{module.name}</span>
               <Dropdown>
                 <Dropdown.Toggle as={CustomToggle}>
                   <FontAwesomeIcon icon="ellipsis-vertical" />
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
-                  <Dropdown.Item onClick={() => toggleForm(true)}>Edit</Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleSelectModule(module, () => toggleForm(true))}>Edit</Dropdown.Item>
                   <Dropdown.Item onClick={() => toggleMoveTo(true)}>Move to</Dropdown.Item>
                   <Dropdown.Item onClick={() => toggleRemove(true)}>Remove</Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
             </div>
-            {getStatus(data?.modules[moduleName]?.resources || [])?.message && (
+            {circle && getStatus(circleViewer?.status?.data?.modules[module.name]?.resources || [])?.message && (
               <div className="circle-modules__item__status">
                 <hr />
-                {getStatus(data?.modules[moduleName]?.resources || []).message}.message
+                {getStatus(circleViewer?.status.data?.modules[module.name]?.resources || []).message}.message
               </div>
             )}
           </div>
@@ -135,7 +174,7 @@ const CircleModules = ({ circle }: Props) => {
           </Button>
         </div>
       </div>
-      <ModalAddModule show={form} onClose={() => toggleForm(false)} />
+      {form && <ModalForm module={selectedModule} show={true} onSave={handleChangeModule} onClose={() => toggleForm(false)} />}
       <ModalMoveTo show={moveTo} onClose={() => toggleMoveTo(false)}/>
       <Alert action={() => ({})} show={remove} onClose={() => toggleRemove(false)}/>
     </>

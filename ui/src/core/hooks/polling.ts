@@ -1,48 +1,47 @@
 import { useCallback, useEffect, useState } from "react"
 import axios, { AxiosResponse } from "axios"
+import { useAppDispatch } from "./redux"
+import { AsyncThunk } from "@reduxjs/toolkit"
 
 interface FetchOptions<T> {
   timer?: any
-  request: () => Promise<AxiosResponse<T>> 
+  thunk: any
 }
 
 interface Response<T> {
   loading: boolean
-  data?: T
-  error?: Error
-  startPolling: () => Promise<any>
+  startPolling: () => Promise<void>
   stopPolling: () => void
 }
 
 
 const usePolling = <T>(options?: FetchOptions<T>): Response<T> => {
-  const [data, setData] = useState<T>()
   const [error,setError] = useState<Error>()
   const [loading,setLoading] = useState(false)
+  const dispatch = useAppDispatch()
   let interval: any
   
 
+  const doRequest = async() => {
+    try{
+      await dispatch(options?.thunk)
+    }catch(err){
+      setError(err as Error)
+    }
+  }
+    
   const startPolling = useCallback(async() => {
     setLoading(true)
-    interval = setInterval(async() => {
-      try{
-        const response = await options?.request()
-        setData(response?.data)
-        return response?.data
-      }catch(err){
-        setError(err as Error)
-      } finally {
-        setLoading(false)
-      }
-
-    }, options?.timer)
+    await doRequest()
+    interval = setInterval(doRequest, options?.timer)
+    setLoading(false)
   }, [])
 
   const stopPolling = useCallback(() => {
     clearInterval(interval)
   }, [])
 
-  return { startPolling, stopPolling, error, data, loading }
+  return { startPolling, stopPolling, loading }
 }
 
 export default usePolling

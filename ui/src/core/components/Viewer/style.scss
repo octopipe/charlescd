@@ -18,7 +18,7 @@
       cursor: pointer;
       display: flex;
       padding: 0 10px 0 10px;
-      width: 210px;
+      width: 150px;
       background: $first-grey;
       height: 40px;
       display: flex;
@@ -32,6 +32,26 @@
       &--active {
         @extend .viewer__tabs__item;
         background: $second-grey;
+      }
+    }
+
+    &__options {
+      &__menu {
+        background-color: $first-grey !important;
+        color: $text-color !important;
+        border-radius: 4px !important;
+
+        ul {
+          margin-bottom: 0;
+        }
+
+        .dropdown-item {
+          color: $text-color !important;
+
+          &:hover {
+            background-color: $second-grey !important;
+          }
+        }
       }
     }
   }

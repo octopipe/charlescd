@@ -6,11 +6,11 @@ import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-monokai";
 
 interface Props {
-  value: string
+  value?: string
   readonly?: boolean
   width?: string
   height?: string
-  onChange: (value: string) => void
+  onChange?: (value: string) => void
 }
 
 const Editor = ({ value, readonly = false, height = "100%", width = "100%", onChange }: Props) => {

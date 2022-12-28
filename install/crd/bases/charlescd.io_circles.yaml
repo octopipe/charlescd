@@ -83,25 +83,22 @@ spec:
                     type: object
                   match:
                     properties:
-                      customMatch:
-                        properties:
-                          headers:
-                            additionalProperties:
-                              type: string
-                            type: object
+                      headers:
+                        additionalProperties:
+                          type: string
                         type: object
-                      segments:
-                        items:
-                          properties:
-                            condition:
-                              type: string
-                            key:
-                              type: string
-                            value:
-                              type: string
-                          type: object
-                        type: array
                     type: object
+                  segments:
+                    items:
+                      properties:
+                        condition:
+                          type: string
+                        key:
+                          type: string
+                        value:
+                          type: string
+                      type: object
+                    type: array
                   strategy:
                     type: string
                 type: object
@@ -140,13 +137,13 @@ spec:
                             type: string
                         type: object
                       type: array
-                    status:
+                    syncStatus:
                       type: string
                     syncTime:
                       type: string
                   type: object
                 type: object
-              status:
+              syncStatus:
                 type: string
               syncTime:
                 type: string

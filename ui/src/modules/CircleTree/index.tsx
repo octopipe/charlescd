@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Edge, Node, Position} from "react-flow-renderer";
 import { useParams } from "react-router-dom";
 import dagre from 'dagre';
@@ -69,6 +69,7 @@ const CircleTree = ({ circleId }: Props) => {
   const [tree, setTree] = useState<ResourceMetadata[]>([])
   const [currentView, setCurrentView] = useState(VIEWS.LIST)
   const [selectedResource, setSelectedResource] = useState<ResourceMetadata | undefined>()
+  const [showModal, toggleModal] = useState(false)
 
   const loadTree = async () => {
     const tree = await fetch(`/workspaces/${workspaceId}/circles/${circleId}/resources/tree`)
@@ -82,6 +83,12 @@ const CircleTree = ({ circleId }: Props) => {
     }, 3000)
     
     return () => clearInterval(interval)
+  }, [])
+
+
+  const handleSelectResource = useCallback((selectedResource: ResourceMetadata) => {
+    setSelectedResource(selectedResource)
+    toggleModal(true)
   }, [])
 
 
@@ -105,9 +112,9 @@ const CircleTree = ({ circleId }: Props) => {
           ))}
         </ButtonGroup>
       </div>
-      {currentView === VIEWS.LIST && <TreeList circleId={circleId} tree={tree} onSelectResource={setSelectedResource} /> }
-      {currentView === VIEWS.DIAGRAM && <TreeDiagram show={true} tree={tree} onClose={() => setCurrentView(VIEWS.LIST)} onSelectResource={setSelectedResource} /> }
-      {selectedResource && <ResourceModal show={!!selectedResource} circleId={circleId} selectedResource={selectedResource} onClose={() => setSelectedResource(undefined)}/>}
+      {currentView === VIEWS.LIST && <TreeList circleId={circleId} tree={tree} onSelectResource={handleSelectResource} /> }
+      {currentView === VIEWS.DIAGRAM && <TreeDiagram show={true} tree={tree} onClose={() => setCurrentView(VIEWS.LIST)} onSelectResource={handleSelectResource} /> }
+      {selectedResource && <ResourceModal show={showModal} circleId={circleId} selectedResource={selectedResource} onClose={() => toggleModal(false)}/>}
     </div>
   )
 }

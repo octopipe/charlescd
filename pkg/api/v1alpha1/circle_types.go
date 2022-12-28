@@ -65,18 +65,15 @@ type CanaryDeployStrategy struct {
 	Weight int `json:"weight"`
 }
 
-type MatchRouteStrategy struct {
-	CustomMatch *CircleMatch     `json:"customMatch,omitempty"`
-	Segments    []*CircleSegment `json:"segments,omitempty"`
-}
-
 const MatchRoutingStrategy = "MATCH"
+const SegmentsRoutingStrategy = "SEGMENTS"
 const CanaryRoutingStrategy = "CANARY"
 
 type CircleRouting struct {
 	Strategy string                `json:"strategy,omitempty" validate:"oneof=MATCH CANARY"`
 	Canary   *CanaryDeployStrategy `json:"canary,omitempty"`
-	Match    *MatchRouteStrategy   `json:"match,omitempty"`
+	Match    *CircleMatch          `json:"match,omitempty"`
+	Segments []*CircleSegment      `json:"segments,omitempty"`
 }
 
 // CircleSpec defines the desired state of Circle
@@ -98,10 +95,10 @@ type CircleModuleResource struct {
 }
 
 type CircleModuleStatus struct {
-	Status    string                 `json:"status,omitempty"`
-	SyncTime  string                 `json:"syncTime,omitempty"`
-	Error     string                 `json:"error,omitempty"`
-	Resources []CircleModuleResource `json:"resources,omitempty"`
+	SyncedAt   string                 `json:"syncTime,omitempty"`
+	SyncStatus string                 `json:"syncStatus,omitempty"`
+	Error      string                 `json:"error,omitempty"`
+	Resources  []CircleModuleResource `json:"resources,omitempty"`
 }
 
 type CircleStatusHistory struct {
@@ -116,10 +113,10 @@ type CircleStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	History  []CircleStatusHistory         `json:"history,omitempty"`
-	SyncTime string                        `json:"syncTime,omitempty"`
-	Status   string                        `json:"status,omitempty"`
-	Modules  map[string]CircleModuleStatus `json:"modules,omitempty"`
+	History    []CircleStatusHistory         `json:"history,omitempty"`
+	SyncStatus string                        `json:"syncStatus,omitempty"`
+	SyncedAt   string                        `json:"syncTime,omitempty"`
+	Modules    map[string]CircleModuleStatus `json:"modules,omitempty"`
 }
 
 //+kubebuilder:object:root=true

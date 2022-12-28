@@ -7,26 +7,29 @@ import WorkspaceForm from './ModalForm';
 import './style.scss'
 import useFetch from '../../core/hooks/fetch';
 import DynamicContainer from '../../core/components/DynamicContainer';
+import { useAppDispatch, useAppSelector } from '../../core/hooks/redux';
+import { createWorkspaceThunk, getWorkspacesThunk } from './workspacesSlice';
+import { FETCH_STATUS } from '../../core/utils/fetch';
 
 
 const Workspaces = () => {
+  const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const workspacesState = useAppSelector(state => state.workspaces)
   const [show, toggleModal] = useState(false)
-  const [workspaces, setWorkspaces] = useState<WorkspaceModel[]>([])
-  const { fetch, data, loading } = useFetch<WorkspaceModel[]>()
-
 
   const saveWorkspace = useCallback(async (workspace: Workspace) => {
-    await fetch('/workspaces', {method: 'POST', data: workspace})
-    await fetch('/workspaces')
+    await dispatch(createWorkspaceThunk({ data: workspace }))
+    dispatch(getWorkspacesThunk())
+    toggleModal(false)
   }, [fetch])
 
   useEffect(() => {
-    fetch('/workspaces').then(res => setWorkspaces(res))
+    dispatch(getWorkspacesThunk())
   }, [])  
 
   return (
-    <DynamicContainer loading={loading} className='workspaces'>
+    <DynamicContainer loading={workspacesState.listStatus === FETCH_STATUS.LOADING} className='workspaces'>
       <div className='workspaces__background'></div>
       <Container className='workspaces__content'>
         <h2 className='mb-4'>Workspaces</h2>
@@ -36,7 +39,7 @@ const Workspaces = () => {
               <FontAwesomeIcon icon="plus" size='2x'/>
             </div>
           </Col>
-          {workspaces?.map((workspace, idx) => (
+          {workspacesState.list?.map((workspace, idx) => (
             <Col xs={3} key={idx}>
               <div className='workspaces__content__item' onClick={() => navigate(`/workspaces/${workspace.id}/circles`)}>
                 <div>

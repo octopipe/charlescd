@@ -19,6 +19,7 @@ import './core/components/icons/library'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'react-toastify/dist/ReactToastify.css';
 import './core/style/base.scss'
+import GlobalError from './modules/GlobalError';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
