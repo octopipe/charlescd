@@ -197,6 +197,12 @@ const CircleForm = ({ circle, viewMode, onSave, onUpdate }: Props) => {
           />
         </FormControl>
       </ViewInput>
+      <ViewInput
+        label='Metrics'
+        icon="chart-simple"
+      >
+
+      </ViewInput>
     </div>
   )
 }

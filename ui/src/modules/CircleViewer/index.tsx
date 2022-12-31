@@ -11,6 +11,7 @@ import CircleTree from '../CircleTree'
 import { fetchCircle, fetchCircleCreate, fetchCircleSync, fetchCircleUpdate, removeCircleViewer } from './circleViewerSlice'
 import CircleForm from './Form'
 import CircleHistory from './History'
+import CircleMetrics from './Metrics'
 
 interface Props {
   circleId: string
@@ -78,16 +79,16 @@ const CircleViewer = ({ circleId, viewMode, onClose, onChangeViewMode }: Props) 
               />
              <Viewer.TabsItem
                 id={circleId}
-                icon="align-justify"
-                text="History"
-                isActive={viewMode === CIRCLE_VIEW_MODE.HISTORY}
-                onClick={() => onChangeViewMode(circleId, CIRCLE_VIEW_MODE.HISTORY)}
+                icon="chart-simple"
+                text="Metrics"
+                isActive={viewMode === CIRCLE_VIEW_MODE.METRICS}
+                onClick={() => onChangeViewMode(circleId, CIRCLE_VIEW_MODE.METRICS)}
               /> 
             </Viewer.Tabs>
             <Viewer.Content>
               {viewMode === CIRCLE_VIEW_MODE.VIEW && circleViewer[circleId]?.item && <CircleForm circle={circleViewer[circleId]?.item.data} viewMode={viewMode} onSave={handleSave} onUpdate={handleUpdate}  />}
               {viewMode === CIRCLE_VIEW_MODE.TREE && circleViewer[circleId]?.item && <CircleTree circleId={circleId}  />}
-              {viewMode === CIRCLE_VIEW_MODE.HISTORY && circleViewer[circleId]?.item && <CircleHistory circle={circleViewer[circleId]?.item.data}  />}
+              {viewMode === CIRCLE_VIEW_MODE.METRICS && circleViewer[circleId]?.item && <CircleMetrics circle={circleViewer[circleId]?.item.data}  />}
             </Viewer.Content>
           </>
         )}
