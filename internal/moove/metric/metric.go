@@ -18,6 +18,13 @@ const (
 	PrometheusMetricProvider = "PROMETHEUS"
 )
 
+const (
+	FiveMinutes   = "5m"
+	ThirdyMinutes = "30m"
+	OneHour       = "1h"
+	ThreeHours    = "3h"
+)
+
 type Metric struct {
 	charlescdiov1alpha1.MetricSpec
 	Name     string `json:"name,omitempty"`
@@ -55,5 +62,5 @@ type MetricUseCase interface {
 	Create(ctx context.Context, workspaceId string, circleId string, circle Metric) (MetricModel, error)
 	Update(ctx context.Context, workspaceId string, circleId string, metricId string, circle Metric) (MetricModel, error)
 	Delete(ctx context.Context, workspaceId string, metricId string) error
-	Query(ctx context.Context, workspaceId string, circleId string, metricId string, metricRange MetricRange) (interface{}, error)
+	Query(ctx context.Context, workspaceId string, circleId string, metricId string, rangeTime string) (interface{}, error)
 }

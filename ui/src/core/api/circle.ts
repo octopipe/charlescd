@@ -9,7 +9,7 @@ const createCircle = (workspaceId: string, data: Circle): Promise<AxiosResponse<
 const updateCircle = (workspaceId: string, circleId: string, data: Circle): Promise<AxiosResponse<CircleModel>> => client.put(`/workspaces/${workspaceId}/circles/${circleId}`, data)
 const sync = (workspaceId: string, circleId: string): Promise<AxiosResponse<CircleStatusModel>> => client.post(`/workspaces/${workspaceId}/circles/${circleId}/sync`, { data: {} })
 const getMetrics = (workspaceId: string, circleId: string): Promise<AxiosResponse<any>> => client.get(`/workspaces/${workspaceId}/circles/${circleId}/metrics`)
-const metricQuery = (workspaceId: string, circleId: string, metricId: string): Promise<AxiosResponse<any>> => client.get(`/workspaces/${workspaceId}/circles/${circleId}/metrics/${metricId}/query`)
+const metricQuery = (workspaceId: string, circleId: string, metricId: string, range: string): Promise<AxiosResponse<any>> => client.get(`/workspaces/${workspaceId}/circles/${circleId}/metrics/${metricId}/query?range=${range}`)
 
 
 export const circleApi = {

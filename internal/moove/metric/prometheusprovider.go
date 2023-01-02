@@ -24,9 +24,9 @@ func (p prometheusProvider) Query(ctx context.Context, circleModel circle.Circle
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	r := v1.Range{
-		Start: time.Now().Add(-(time.Hour * 24)),
-		End:   time.Now(),
-		Step:  time.Hour,
+		Start: metricRange.Start,
+		End:   metricRange.End,
+		Step:  metricRange.Step,
 	}
 
 	result, _, err := v1api.QueryRange(ctx, metricModel.Query, r, v1.WithTimeout(5*time.Second))

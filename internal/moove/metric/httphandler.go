@@ -3,7 +3,6 @@ package metric
 import (
 	"errors"
 	"strconv"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/octopipe/charlescd/internal/moove/core/customvalidator"
@@ -62,28 +61,13 @@ func (h EchoHandler) Query(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	circleId := c.Param("circleId")
 	metricId := c.Param("metricId")
-	continueParam := c.QueryParam("continue")
-	limitParam := c.QueryParam("limit")
+	rangeTime := c.QueryParam("range")
 
-	listOptions := listoptions.Request{
-		Limit:    10,
-		Continue: continueParam,
+	if rangeTime == "" {
+		rangeTime = ThirdyMinutes
 	}
 
-	if limitParam != "" {
-		limit, err := strconv.Atoi(limitParam)
-		if err != nil {
-			return errs.NewHTTPResponse(c, h.logger, errors.New("limit param invalid"))
-		}
-
-		listOptions.Limit = int64(limit)
-	}
-
-	circles, err := h.metricUseCase.Query(c.Request().Context(), workspaceId, circleId, metricId, MetricRange{
-		Start: time.Now().Add(-(time.Hour * 24)),
-		End:   time.Now(),
-		Step:  time.Hour,
-	})
+	circles, err := h.metricUseCase.Query(c.Request().Context(), workspaceId, circleId, metricId, rangeTime)
 	if err != nil {
 		return errs.NewHTTPResponse(c, h.logger, err)
 	}

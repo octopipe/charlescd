@@ -107,6 +107,22 @@ const CircleForm = ({ circle, viewMode, onSave, onUpdate }: Props) => {
     }
   }
 
+  const handleDeleteModule = (module: CircleModule) => {
+    if (!circle) {
+      return
+    }
+
+    const modules = circle?.modules?.filter(m => m.name !== module.name) || [] as CircleModule[]
+    let curretCircle: Circle = {
+      name: circle.name,
+      description: circle.description,
+      modules: modules,
+      environments: circle.environments,
+      routing: circle.routing
+    }
+    onUpdate(curretCircle)
+  }
+
 
   return (
     <div className='circle__content'>
@@ -185,7 +201,7 @@ const CircleForm = ({ circle, viewMode, onSave, onUpdate }: Props) => {
         label="Modules"
         icon="folder"
       >
-        <CircleModules onChangeModules={modules => setValue('modules', modules)} circle={circle} />
+        <CircleModules onDelete={handleDeleteModule} onChangeModules={modules => setValue('modules', modules)} circle={circle} />
       </ViewInput>
       <ViewInput
         label="Environments"

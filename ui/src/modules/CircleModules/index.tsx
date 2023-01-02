@@ -54,6 +54,7 @@ const ModalMoveTo = ({ show, onClose }: ModalProps) => {
 export interface Props {
   circle?: CircleModel
   onChangeModules: (modules: CircleModule[]) => void
+  onDelete: (circleModule: CircleModule) => void
 }
 
 const CustomToggle = React.forwardRef<any, any>(({ children, onClick }, ref) => (
@@ -74,7 +75,7 @@ interface Status {
   message?: string
 }
 
-const CircleModules = ({ circle, onChangeModules }: Props) => {
+const CircleModules = ({ circle, onChangeModules, onDelete }: Props) => {
   const dispatch = useAppDispatch()
   const { workspaceId } = useParams()
   const [moveTo, toggleMoveTo] = useState(false)
@@ -136,6 +137,11 @@ const CircleModules = ({ circle, onChangeModules }: Props) => {
     return status
   }
 
+  const handleDelete = (module: CircleModule) => {
+    onDelete(module)
+    toggleRemove(false)
+  }
+
   return (
     <>
       <div className="circle-modules">
@@ -166,6 +172,7 @@ const CircleModules = ({ circle, onChangeModules }: Props) => {
                 {getStatus(circleViewer?.status.data?.modules[module.name]?.resources || []).message}.message
               </div>
             )}
+            <Alert action={() => handleDelete(module)} show={remove} onClose={() => toggleRemove(false)}/>
           </div>
         )) }
         <div className="d-grid gap-2">
@@ -176,7 +183,6 @@ const CircleModules = ({ circle, onChangeModules }: Props) => {
       </div>
       {form && <ModalForm module={selectedModule} show={true} onSave={handleChangeModule} onClose={() => toggleForm(false)} />}
       <ModalMoveTo show={moveTo} onClose={() => toggleMoveTo(false)}/>
-      <Alert action={() => ({})} show={remove} onClose={() => toggleRemove(false)}/>
     </>
   )
 

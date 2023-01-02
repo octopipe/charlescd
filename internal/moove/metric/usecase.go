@@ -3,6 +3,7 @@ package metric
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/octopipe/charlescd/internal/moove/circle"
 	"github.com/octopipe/charlescd/internal/moove/core/listoptions"
@@ -78,7 +79,7 @@ func (u UseCase) basicMatrics(circleModel circle.CircleModel) (map[string]Metric
 				Category: BasicMetricCategory,
 				Provider: PrometheusMetricProvider,
 				MetricSpec: charlescdiov1alpha1.MetricSpec{
-					Query: fmt.Sprintf(`sum(rate(container_cpu_usage_seconds_total{pod=~".*%s.*"}[12d]))`, circleName),
+					Query: `container_cpu_usage_seconds_total{pod=~".*new-circle-1.*"}`,
 				},
 			},
 			CreatedAt: circleModel.CreatedAt,
@@ -177,7 +178,34 @@ func (u UseCase) Update(ctx context.Context, workspaceId string, circleId string
 	return updatedMetric, nil
 }
 
-func (u UseCase) Query(ctx context.Context, workspaceId string, circleId string, metricId string, metricRange MetricRange) (interface{}, error) {
+func getMetricRange(rangeTime string) MetricRange {
+	timeToAdd := time.Minute
+
+	if rangeTime == FiveMinutes {
+		timeToAdd = time.Minute * 5
+	}
+
+	if rangeTime == ThirdyMinutes {
+		timeToAdd = time.Minute * 30
+	}
+
+	if rangeTime == OneHour {
+		timeToAdd = time.Hour
+	}
+
+	if rangeTime == ThreeHours {
+		timeToAdd = time.Hour * 3
+	}
+
+	return MetricRange{
+		Start: time.Now().Add(-timeToAdd),
+		End:   time.Now(),
+		Step:  timeToAdd / 5,
+	}
+
+}
+
+func (u UseCase) Query(ctx context.Context, workspaceId string, circleId string, metricId string, rangeTime string) (interface{}, error) {
 	namespace, err := u.circleUseCase.FindById(ctx, workspaceId, circleId)
 	if err != nil {
 		return nil, err
@@ -209,7 +237,7 @@ func (u UseCase) Query(ctx context.Context, workspaceId string, circleId string,
 		}
 	}
 
-	res, err := u.metricProvider.Query(ctx, circleModel, metricModel, metricRange)
+	res, err := u.metricProvider.Query(ctx, circleModel, metricModel, getMetricRange(rangeTime))
 	if err != nil {
 		return nil, err
 	}
