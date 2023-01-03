@@ -23,6 +23,10 @@ const (
 	ThirdyMinutes = "30m"
 	OneHour       = "1h"
 	ThreeHours    = "3h"
+	OneDay        = "1d"
+	ThreeDays     = "3d"
+	OneWeek       = "1w"
+	FourWeeks     = "3w"
 )
 
 type Metric struct {

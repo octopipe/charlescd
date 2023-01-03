@@ -79,7 +79,7 @@ func (u UseCase) basicMatrics(circleModel circle.CircleModel) (map[string]Metric
 				Category: BasicMetricCategory,
 				Provider: PrometheusMetricProvider,
 				MetricSpec: charlescdiov1alpha1.MetricSpec{
-					Query: `container_cpu_usage_seconds_total{pod=~".*new-circle-1.*"}`,
+					Query: fmt.Sprintf(`container_cpu_usage_seconds_total{pod=~".*%s.*"}`, circleName),
 				},
 			},
 			CreatedAt: circleModel.CreatedAt,
@@ -91,7 +91,7 @@ func (u UseCase) basicMatrics(circleModel circle.CircleModel) (map[string]Metric
 				Category: BasicMetricCategory,
 				Provider: PrometheusMetricProvider,
 				MetricSpec: charlescdiov1alpha1.MetricSpec{
-					Query: fmt.Sprintf(`sum(rate(container_memory_usage_bytes{pod=~".*%s.*"}[12d]))`, circleName),
+					Query: fmt.Sprintf(`container_memory_usage_bytes{pod=~".*%s.*"}`, circleName),
 				},
 			},
 			CreatedAt: circleModel.CreatedAt,
@@ -179,7 +179,8 @@ func (u UseCase) Update(ctx context.Context, workspaceId string, circleId string
 }
 
 func getMetricRange(rangeTime string) MetricRange {
-	timeToAdd := time.Minute
+	timeToAdd := (time.Minute) * 3
+	step := time.Minute
 
 	if rangeTime == FiveMinutes {
 		timeToAdd = time.Minute * 5
@@ -191,16 +192,33 @@ func getMetricRange(rangeTime string) MetricRange {
 
 	if rangeTime == OneHour {
 		timeToAdd = time.Hour
+		step *= 3
 	}
 
 	if rangeTime == ThreeHours {
 		timeToAdd = time.Hour * 3
+		step *= 10
+	}
+
+	if rangeTime == OneDay {
+		timeToAdd = time.Hour * 24
+		step *= 30
+	}
+
+	if rangeTime == ThreeDays {
+		timeToAdd = (time.Hour * 24) * 3
+		step *= 60
+	}
+
+	if rangeTime == OneWeek {
+		timeToAdd = (time.Hour * 24) * 7
+		step *= 120
 	}
 
 	return MetricRange{
 		Start: time.Now().Add(-timeToAdd),
 		End:   time.Now(),
-		Step:  timeToAdd / 5,
+		Step:  step,
 	}
 
 }
