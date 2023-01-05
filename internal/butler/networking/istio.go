@@ -46,20 +46,7 @@ func getMatch(circle charlescdiov1alpha1.Circle) []*networkingv1alpha3.HTTPMatch
 	return match
 }
 
-func getModuleService(module charlescdiov1alpha1.CircleModuleStatus) *charlescdiov1alpha1.CircleModuleResource {
-	for _, res := range module.Resources {
-		if res.Kind == "Service" {
-			return &res
-		}
-	}
-
-	return nil
-}
-
 func getRoute(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.CircleModule) *networkingv1alpha3.HTTPRoute {
-	currentModule := circle.Status.Modules[module.Name]
-	service := getModuleService(currentModule)
-
 	if circle.Spec.Routing.Strategy != charlescdiov1alpha1.CanaryRoutingStrategy {
 		return &networkingv1alpha3.HTTPRoute{
 			Name:  circle.GetName(),
@@ -67,7 +54,7 @@ func getRoute(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.Circ
 			Route: []*networkingv1alpha3.HTTPRouteDestination{
 				{
 					Destination: &networkingv1alpha3.Destination{
-						Host:   fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace),
+						Host:   fmt.Sprintf("%s-%s.%s.svc.cluster.local", circle.Name, module.Name, circle.Spec.Namespace),
 						Subset: circle.GetName(),
 					},
 				},
@@ -80,7 +67,7 @@ func getRoute(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.Circ
 		Route: []*networkingv1alpha3.HTTPRouteDestination{
 			{
 				Destination: &networkingv1alpha3.Destination{
-					Host:   fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace),
+					Host:   fmt.Sprintf("%s-%s.%s.svc.cluster.local", circle.Name, module.Name, circle.Spec.Namespace),
 					Subset: circle.GetName(),
 				},
 				Weight: int32(circle.Spec.Routing.Canary.Weight),
@@ -95,7 +82,9 @@ func newVirtualService(module charlescdiov1alpha1.CircleModule, circle charlescd
 			Name:      module.Name,
 			Namespace: circle.Spec.Namespace,
 			Labels: map[string]string{
-				utils.AnnotationManagedBy: utils.ManagedBy,
+				utils.LabelManagedBy:                utils.ManagedBy,
+				utils.LabelModuleReference:          module.Name,
+				utils.LabelModuleReferenceNamespace: module.Namespace,
 			},
 		},
 		Spec: networkingv1alpha3.VirtualService{
@@ -153,22 +142,24 @@ func (n networkingLayer) createOrUpdateVirtualService(circle charlescdiov1alpha1
 }
 
 func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlescdiov1alpha1.Circle) *v1alpha3.DestinationRule {
-	service := getModuleService(circle.Status.Modules[module.Name])
 	destinationRule := &v1alpha3.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      module.Name,
 			Namespace: circle.Spec.Namespace,
 			Labels: map[string]string{
-				utils.AnnotationManagedBy: utils.ManagedBy,
+				utils.LabelManagedBy:                utils.ManagedBy,
+				utils.LabelModuleReference:          module.Name,
+				utils.LabelModuleReferenceNamespace: module.Namespace,
 			},
 		},
 		Spec: networkingv1alpha3.DestinationRule{
-			Host: fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace),
+			Host: fmt.Sprintf("%s-%s.%s.svc.cluster.local", circle.Name, module.Name, circle.Spec.Namespace),
 			Subsets: []*networkingv1alpha3.Subset{
 				{
 					Name: circle.GetName(),
 					Labels: map[string]string{
-						utils.AnnotationCircleMark: utils.GetMark(circle.Name, circle.Namespace),
+						utils.LabelCircleOwner:          circle.Name,
+						utils.LabelCircleOwnerNamespace: circle.Namespace,
 					},
 				},
 			},
@@ -184,7 +175,8 @@ func mergeDestionRules(module charlescdiov1alpha1.CircleModule, circle charlescd
 	newSubset := &networkingv1alpha3.Subset{
 		Name: circle.GetName(),
 		Labels: map[string]string{
-			utils.AnnotationCircleMark: utils.GetMark(circle.Name, circle.Namespace),
+			utils.LabelCircleOwner:          circle.Name,
+			utils.LabelCircleOwnerNamespace: circle.Namespace,
 		},
 	}
 
@@ -225,42 +217,39 @@ func (n networkingLayer) createOrUpdateDestinationRules(circle charlescdiov1alph
 	return currDestinationRules, nil
 }
 
-func (n networkingLayer) SyncIstio(circle charlescdiov1alpha1.Circle, circleModule charlescdiov1alpha1.CircleModule) ([]charlescdiov1alpha1.CircleModuleResource, error) {
+func (n networkingLayer) SyncIstio(circle charlescdiov1alpha1.Circle) ([]charlescdiov1alpha1.CircleModuleResource, error) {
 	namespace := circle.Spec.Namespace
 	res := []charlescdiov1alpha1.CircleModuleResource{}
 
-	currentModule := circle.Status.Modules[circleModule.Name]
 	// if currentModule.Status != string(health.HealthStatusHealthy) {
 	// 	return nil, nil
 	// }
-	service := getModuleService(currentModule)
-	if service == nil {
-		return nil, nil
+
+	for _, m := range circle.Spec.Modules {
+		virtualService, err := n.createOrUpdateVirtualService(circle, m, namespace)
+		if err != nil {
+			return nil, err
+		}
+
+		destinationRule, err := n.createOrUpdateDestinationRules(circle, m, namespace)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, charlescdiov1alpha1.CircleModuleResource{
+			Group:     v1alpha3.SchemeGroupVersion.Group,
+			Kind:      "VirtualService",
+			Name:      virtualService.Name,
+			Namespace: virtualService.Namespace,
+		})
+
+		res = append(res, charlescdiov1alpha1.CircleModuleResource{
+			Group:     v1alpha3.SchemeGroupVersion.Group,
+			Kind:      "DestinationRule",
+			Name:      destinationRule.Name,
+			Namespace: destinationRule.Namespace,
+		})
 	}
-
-	virtualService, err := n.createOrUpdateVirtualService(circle, circleModule, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	destinationRule, err := n.createOrUpdateDestinationRules(circle, circleModule, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	res = append(res, charlescdiov1alpha1.CircleModuleResource{
-		Group:     v1alpha3.SchemeGroupVersion.Group,
-		Kind:      "VirtualService",
-		Name:      virtualService.Name,
-		Namespace: virtualService.Namespace,
-	})
-
-	res = append(res, charlescdiov1alpha1.CircleModuleResource{
-		Group:     v1alpha3.SchemeGroupVersion.Group,
-		Kind:      "DestinationRule",
-		Name:      destinationRule.Name,
-		Namespace: destinationRule.Namespace,
-	})
 
 	return res, nil
 }

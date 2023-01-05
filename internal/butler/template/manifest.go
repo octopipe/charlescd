@@ -19,12 +19,11 @@ func (t template) addLabels(currentLabels map[string]string, manifest *unstructu
 		labels = make(map[string]string)
 	}
 
-	labels[utils.AnnotationManagedBy] = utils.ManagedBy
-
-	if manifest.GetKind() != "Service" {
-		labels[utils.AnnotationModuleMark] = utils.GetMark(module.Name, module.Namespace)
-		labels[utils.AnnotationCircleMark] = utils.GetMark(circle.Name, circle.Namespace)
-	}
+	labels[utils.LabelManagedBy] = utils.ManagedBy
+	labels[utils.LabelModuleReference] = module.Name
+	labels[utils.LabelModuleReferenceNamespace] = module.Namespace
+	labels[utils.LabelCircleOwner] = circle.Name
+	labels[utils.LabelCircleOwnerNamespace] = circle.Namespace
 
 	return labels
 }
@@ -72,10 +71,7 @@ func (t template) parseManifests(manifests [][]byte, module charlescdiov1alpha1.
 				return nil, err
 			}
 
-			if newManifest.GetKind() != "Service" {
-				newManifest.SetName(fmt.Sprintf("%s-%s", circle.GetName(), newManifest.GetName()))
-			}
-
+			newManifest.SetName(fmt.Sprintf("%s-%s", circle.GetName(), newManifest.GetName()))
 			newManifest = t.addDefaultAnnotations(newManifest, module, circle)
 			newManifests = append(newManifests, newManifest)
 		}

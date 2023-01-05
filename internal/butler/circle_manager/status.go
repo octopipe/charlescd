@@ -19,6 +19,7 @@ func (c CircleManager) updateCircleStatus(
 	action string,
 	message string,
 	eventTime string,
+	modules map[string]charlescdiov1alpha1.CircleModuleStatus,
 ) error {
 	namespacedName := types.NamespacedName{
 		Name:      circle.Name,
@@ -47,7 +48,12 @@ func (c CircleManager) updateCircleStatus(
 		}
 	}
 
-	currentCircle.Status = circle.Status
+	if modules != nil {
+		currentCircle.Status.Modules = modules
+	}
+
+	currentCircle.Status.SyncStatus = status
+	currentCircle.Status.SyncedAt = eventTime
 	currentCircle.Status.History = currentHistory
 	err = utils.UpdateObjectStatusWithDefaultRetry(context.Background(), c.Client, currentCircle)
 	return err

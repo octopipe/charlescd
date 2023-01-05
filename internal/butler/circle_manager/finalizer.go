@@ -30,7 +30,7 @@ func (c CircleManager) IsCircleToBeDeleted(ctx context.Context, circle *charlesc
 
 func (c CircleManager) FinalizeCircle(ctx context.Context, circle *charlescdiov1alpha1.Circle) error {
 	if controllerutil.ContainsFinalizer(circle, CircleFinalizer) {
-		if _, _, err := c.reconcile([]*unstructured.Unstructured{}, *circle, charlescdiov1alpha1.CircleModule{}); err != nil {
+		if _, err := c.reconcile([]*unstructured.Unstructured{}, *circle); err != nil {
 			return errs.E(errs.Internal, errs.Code("SYNC_RESOURCES_FINALIZER_FAILED"), err)
 		}
 

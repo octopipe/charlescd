@@ -146,7 +146,10 @@ const CircleModules = ({ circle, onChangeModules, onDelete }: Props) => {
     return status
   }
 
-  const handleDelete = (module: CircleModule) => {
+  const handleDelete = (module: CircleModule | undefined) => {
+    if (!module)
+      return
+      
     onDelete(module)
     toggleRemove(false)
   }
@@ -183,7 +186,7 @@ const CircleModules = ({ circle, onChangeModules, onDelete }: Props) => {
                 <Dropdown.Menu>
                   <Dropdown.Item onClick={() => handleSelectModule(module, () => toggleForm(true))}>Edit</Dropdown.Item>
                   <Dropdown.Item onClick={() => toggleMoveTo(true)}>Move to</Dropdown.Item>
-                  <Dropdown.Item onClick={() => toggleRemove(true)}>Remove</Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleSelectModule(module, () => toggleRemove(true))}>Remove</Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
             </div>
@@ -193,7 +196,6 @@ const CircleModules = ({ circle, onChangeModules, onDelete }: Props) => {
                 {getStatus(circleStatus?.modules[module.name]?.resources || []).message}.message
               </div>
             )}
-            <Alert action={() => handleDelete(module)} show={remove} onClose={() => toggleRemove(false)}/>
           </div>
         )) }
         <div className="d-grid gap-2">
@@ -204,6 +206,7 @@ const CircleModules = ({ circle, onChangeModules, onDelete }: Props) => {
       </div>
       {form && <ModalForm module={selectedModule} show={true} onAdd={handleAddModule} onUpdate={handleChangeModule} onClose={() => toggleForm(false)} />}
       <ModalMoveTo show={moveTo} onClose={() => toggleMoveTo(false)}/>
+      <Alert action={() => handleDelete(selectedModule)} show={remove} onClose={() => toggleRemove(false)}/>
     </>
   )
 

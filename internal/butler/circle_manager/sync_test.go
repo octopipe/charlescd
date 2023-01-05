@@ -92,11 +92,13 @@ func (s *SyncCircleTestSuite) newCircleManagerWithDependencies(config *rest.Conf
 	clusterCache := cache.NewClusterCache(config,
 		cache.SetNamespaces([]string{}),
 		cache.SetPopulateResourceInfoHandler(func(un *unstructured.Unstructured, isRoot bool) (interface{}, bool) {
-			managedBy := un.GetLabels()[utils.AnnotationManagedBy]
+			managedBy := un.GetLabels()[utils.LabelManagedBy]
 			info := &utils.ResourceInfo{
-				ManagedBy:  un.GetLabels()[utils.AnnotationManagedBy],
-				CircleMark: un.GetLabels()[utils.AnnotationCircleMark],
-				ModuleMark: un.GetLabels()[utils.AnnotationModuleMark],
+				ManagedBy:                managedBy,
+				CircleOwner:              un.GetLabels()[utils.LabelCircleOwner],
+				CircleOwnerNamespace:     un.GetLabels()[utils.LabelCircleOwnerNamespace],
+				ModuleReference:          un.GetLabels()[utils.LabelModuleReference],
+				ModuleReferenceNamespace: un.GetLabels()[utils.LabelModuleReferenceNamespace],
 			}
 			cacheManifest := managedBy == utils.ManagedBy
 			return info, cacheManifest

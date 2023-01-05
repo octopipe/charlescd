@@ -13,7 +13,7 @@ const (
 )
 
 type NetworkingLayer interface {
-	Sync(circle *charlescdiov1alpha1.Circle, circleModule charlescdiov1alpha1.CircleModule) ([]charlescdiov1alpha1.CircleModuleResource, error)
+	Sync(circle *charlescdiov1alpha1.Circle) ([]charlescdiov1alpha1.CircleModuleResource, error)
 }
 
 type networkingLayer struct {
@@ -28,10 +28,10 @@ func NewNetworkingLayer(networkingType string, istioClient *versionedclient.Clie
 	}
 }
 
-func (n networkingLayer) Sync(circle *charlescdiov1alpha1.Circle, circleModule charlescdiov1alpha1.CircleModule) ([]charlescdiov1alpha1.CircleModuleResource, error) {
+func (n networkingLayer) Sync(circle *charlescdiov1alpha1.Circle) ([]charlescdiov1alpha1.CircleModuleResource, error) {
 	switch n.networkingType {
 	case IstioLayer:
-		res, err := n.SyncIstio(*circle, circleModule)
+		res, err := n.SyncIstio(*circle)
 		return res, err
 	default:
 		return nil, errors.New("cannot support this networking layer")

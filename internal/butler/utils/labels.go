@@ -1,25 +1,19 @@
 package utils
 
-import (
-	"crypto/md5"
-	"fmt"
-)
-
 const (
-	AnnotationModuleMark = "charlecd.io/module"
-	AnnotationCircleMark = "charlecd.io/circle"
-	AnnotationManagedBy  = "app.kubernetes.io/managed-by"
+	LabelModuleReference          = "charlecd.io/module-reference"
+	LabelModuleReferenceNamespace = "charlecd.io/module-reference-namespace"
+	LabelCircleOwner              = "charlecd.io/circle-owner"
+	LabelCircleOwnerNamespace     = "charlecd.io/circle-owner-namespace"
+	LabelManagedBy                = "app.kubernetes.io/managed-by"
 
-	ManagedBy = "charlescd"
+	ManagedBy = "charlescd.io"
 )
 
 type ResourceInfo struct {
-	ModuleMark string
-	CircleMark string
-	ManagedBy  string
-}
-
-func GetMark(name string, namespace string) string {
-	mark := []byte(fmt.Sprintf("%s_%s", name, namespace))
-	return fmt.Sprintf("%x", md5.Sum(mark))
+	ModuleReference          string
+	ModuleReferenceNamespace string
+	CircleOwner              string
+	CircleOwnerNamespace     string
+	ManagedBy                string
 }
