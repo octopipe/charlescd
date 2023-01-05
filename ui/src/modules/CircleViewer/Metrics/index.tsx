@@ -25,15 +25,29 @@ const ranges = [
   { id: '1d', name: "1 day" },
   { id: '3d', name: "3 days" },
   { id: '1w', name: "1 week" },
-  { id: '3w', name: "3 weeks" },
+  { id: '4w', name: "4 weeks" },
 ]
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="circle-metrics__tooltip">
+        {Object.keys(payload[0].payload)?.map(key => (
+          <p>{`${key} : ${payload[0].payload[key]}`}</p>
+        ))}
+      </div>
+    );
+  }
+
+  return null;
+};
 
 const CircleMetrics = ({ circle }: Props) => {
   const { workspaceId } = useParams()
   const [basicMetricType, setBasicMetricType] = useState<string>('')
   const [metrics, setMetrics] = useState<any>([])
   const [metricResult, setMetricResult] = useState([])
-  const [metricRange, setMetricRange] = useState<string>('30m')
+  const [metricRange, setMetricRange] = useState<string>(ranges[0].id)
 
   const getMetrics = async () => {
     const res = await circleApi.getMetrics(workspaceId || '', circle?.id || '')
@@ -46,11 +60,7 @@ const CircleMetrics = ({ circle }: Props) => {
       const values = res?.data[0].values || []
       setMetricResult(values.map((v: any) => {
         const date = new Date(v[0] *1000)
-        const hour = '0' + date.getHours()
-        const minutes = '0' + date.getMinutes()
-        const seconds = date.getSeconds()
-
-        return {time: `${hour.slice(-2)}:${minutes.slice(-2)}:${seconds}`, usage: v[1]}
+        return {time: date.toISOString(), usage: v[1]}
       }))
     } else {
       setMetricResult([])
@@ -69,6 +79,9 @@ const CircleMetrics = ({ circle }: Props) => {
   }, [metrics])
 
   useEffect(() => {
+    if (basicMetricType === '')
+      return
+
     metricQuery(basicMetricType)
     const interval = setInterval(() => {
       metricQuery(basicMetricType)
@@ -80,8 +93,8 @@ const CircleMetrics = ({ circle }: Props) => {
   return (
     <div className="circle-metrics">
       <div>
-        <Form.Select defaultValue="default" onChange={(e) => setMetricRange(e.target.value)}>
-          <option value="default" disabled>Select a routing strategy</option>
+        <Form.Select defaultValue={ranges[0].id} onChange={(e) => setMetricRange(e.target.value)}>
+          <option value="default" disabled>Select a range visualization</option>
           {ranges.map(range => (
             <option value={range.id}>{range.name}</option>
           ))}
@@ -116,7 +129,7 @@ const CircleMetrics = ({ circle }: Props) => {
                       <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <Tooltip />
+                  <Tooltip content={<CustomTooltip />} />
                   <CartesianGrid strokeDasharray="3 3" />
                   <Area type="monotone" dataKey="usage" stackId="1" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
                 </AreaChart>

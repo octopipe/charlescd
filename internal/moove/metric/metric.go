@@ -26,7 +26,7 @@ const (
 	OneDay        = "1d"
 	ThreeDays     = "3d"
 	OneWeek       = "1w"
-	FourWeeks     = "3w"
+	FourWeeks     = "4w"
 )
 
 type Metric struct {

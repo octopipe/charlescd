@@ -93,6 +93,12 @@ export const circleViewerSlice = createSlice<ViewerState, SliceCaseReducers<View
       .addCase(fetchCircleCreate.rejected, (state, action) => {
         toast.error(`Failed to create circle: ${action.error.message}`)
       })
+      .addCase(fetchCircleUpdate.fulfilled, (state, action) => {
+        toast.success(`Circle ${action?.payload?.name} updated with success!`)
+      })
+      .addCase(fetchCircleUpdate.rejected, (state, action) => {
+        toast.error(`Failed to update circle: ${action.error.message}`)
+      })
   }
 })
 

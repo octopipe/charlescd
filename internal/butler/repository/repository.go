@@ -154,8 +154,26 @@ func (r repository) Sync(module charlescdiov1alpha1.Module) error {
 		gitCloneConfig.Auth = authMethod
 	}
 
-	_, err := git.PlainClone(fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), module.Spec.Path), false, gitCloneConfig)
+	path := fmt.Sprintf("%s/%s", os.Getenv("REPOSITORIES_TMP_DIR"), module.Spec.Path)
+	repo, err := git.PlainClone(path, false, gitCloneConfig)
 	if err != nil && !strings.Contains(err.Error(), "repository already exists") {
+		return err
+	}
+
+	if strings.Contains(err.Error(), "repository already exists") {
+		repo, err = git.PlainOpen(path)
+		if err != nil {
+			return err
+		}
+	}
+
+	w, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	err = w.Pull(&git.PullOptions{RemoteName: "origin"})
+	if err != nil && !strings.Contains(err.Error(), "already up-to-date") {
 		return err
 	}
 

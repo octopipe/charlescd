@@ -19,7 +19,8 @@ const exampleOverridesValue = [
 
 interface ModalFormProps extends ModalProps {
   module?: CircleModule
-  onSave: (module: CircleModule) => void
+  onAdd: (module: CircleModule) => void
+  onUpdate: (module: CircleModule) => void
 }
 
 interface Form {
@@ -27,7 +28,7 @@ interface Form {
   overrides: string
 }
 
-const ModalForm = ({ show, module, onClose, onSave }: ModalFormProps) => {
+const ModalForm = ({ show, module, onClose, onAdd, onUpdate }: ModalFormProps) => {
   const {workspaceId} = useParams()
   const dispatch = useAppDispatch()
   const { list } = useAppSelector(state => state.modules)
@@ -43,7 +44,11 @@ const ModalForm = ({ show, module, onClose, onSave }: ModalFormProps) => {
   }, [])
 
   const handleSave = (form: Form) => {
-    onSave({overrides: JSON.parse(form.overrides), revision: "", name: form.name})
+    if (!module) {
+      onAdd({overrides: JSON.parse(form.overrides), revision: "", name: form.name})
+    } else {
+      onUpdate({overrides: JSON.parse(form.overrides), revision: "", name: form.name})
+    }
     onClose()
   }
 
@@ -79,7 +84,7 @@ const ModalForm = ({ show, module, onClose, onSave }: ModalFormProps) => {
      
       </Modal.Body>
       <Modal.Footer>
-        <Button type='submit'>Save</Button>
+        <Button type='submit'>{module ? 'Edit' : 'Add'}</Button>
         <Button variant='secondary' onClick={onClose}>Cancel</Button>
       </Modal.Footer>
       </form>

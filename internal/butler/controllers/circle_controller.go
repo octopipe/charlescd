@@ -56,23 +56,10 @@ func (r *CircleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 	circle := &charlescdiov1alpha1.Circle{}
 	err := r.Get(ctx, req.NamespacedName, circle)
-
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{}, err
-	}
-
-	err = r.CircleManager.AddFinalizer(ctx, circle)
-	if err != nil {
-		logger.Error(err, "failed to add finalizer to circle", "error", err)
-		return ctrl.Result{}, err
-	}
-
-	if r.CircleManager.IsCircleToBeDeleted(ctx, circle) {
-		err = r.CircleManager.FinalizeCircle(ctx, circle)
-		logger.Error(err, "failed to finalize circle", "error", err)
 		return ctrl.Result{}, err
 	}
 

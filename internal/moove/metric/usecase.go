@@ -79,7 +79,7 @@ func (u UseCase) basicMatrics(circleModel circle.CircleModel) (map[string]Metric
 				Category: BasicMetricCategory,
 				Provider: PrometheusMetricProvider,
 				MetricSpec: charlescdiov1alpha1.MetricSpec{
-					Query: fmt.Sprintf(`container_cpu_usage_seconds_total{pod=~".*%s.*"}`, circleName),
+					Query: fmt.Sprintf(`sum(container_cpu_usage_seconds_total{pod=~".*%s.*"})`, circleName),
 				},
 			},
 			CreatedAt: circleModel.CreatedAt,
@@ -91,7 +91,7 @@ func (u UseCase) basicMatrics(circleModel circle.CircleModel) (map[string]Metric
 				Category: BasicMetricCategory,
 				Provider: PrometheusMetricProvider,
 				MetricSpec: charlescdiov1alpha1.MetricSpec{
-					Query: fmt.Sprintf(`container_memory_usage_bytes{pod=~".*%s.*"}`, circleName),
+					Query: fmt.Sprintf(`sum(container_memory_usage_bytes{pod=~".*%s.*"})`, circleName),
 				},
 			},
 			CreatedAt: circleModel.CreatedAt,
@@ -213,6 +213,11 @@ func getMetricRange(rangeTime string) MetricRange {
 	if rangeTime == OneWeek {
 		timeToAdd = (time.Hour * 24) * 7
 		step *= 120
+	}
+
+	if rangeTime == FourWeeks {
+		timeToAdd = ((time.Hour * 24) * 7) * 4
+		step *= 240
 	}
 
 	return MetricRange{

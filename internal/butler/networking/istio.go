@@ -10,7 +10,6 @@ import (
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 )
 
@@ -169,7 +168,7 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 				{
 					Name: circle.GetName(),
 					Labels: map[string]string{
-						utils.AnnotationCircleMark: utils.GetCircleMark(types.NamespacedName{Namespace: circle.Namespace, Name: circle.Name}),
+						utils.AnnotationCircleMark: utils.GetMark(circle.Name, circle.Namespace),
 					},
 				},
 			},
@@ -185,7 +184,7 @@ func mergeDestionRules(module charlescdiov1alpha1.CircleModule, circle charlescd
 	newSubset := &networkingv1alpha3.Subset{
 		Name: circle.GetName(),
 		Labels: map[string]string{
-			utils.AnnotationCircleMark: utils.GetCircleMark(types.NamespacedName{Namespace: circle.Namespace, Name: circle.Name}),
+			utils.AnnotationCircleMark: utils.GetMark(circle.Name, circle.Namespace),
 		},
 	}
 

@@ -76,24 +76,28 @@ interface Status {
 }
 
 const CircleModules = ({ circle, onChangeModules, onDelete }: Props) => {
-  const dispatch = useAppDispatch()
   const { workspaceId } = useParams()
   const [moveTo, toggleMoveTo] = useState(false)
   const [remove, toggleRemove] = useState(false)
   const [form, toggleForm] = useState(false)
-  const circleViewer = useAppSelector(state => state.circleViewer[circle?.id || ''])
   const [selectedModule, setSelectedModule] = useState<CircleModule>()
-  const [viewerState, setViewerState] = useState<CircleViewerState>()
   const [modules, setModules] = useState<CircleModule[]>(circle?.modules || [])
+  const [circleStatus, setCircleStatus] = useState<CircleStatusModel>()
+  const [draftModules, setDraftModules] = useState<CircleModule[]>([])
+
+  const fetchCircleStatus = async (workspaceId: string, circleId: string) => {
+    const res = await circleApi.getCircleStatus(workspaceId || '', circle?.id || '')
+    setCircleStatus(res.data)
+  }
 
   useEffect(() => {
     if (!circle) {
       return
     }
 
-    dispatch(fetchCircleStatus({ workspaceId: workspaceId || '', circleId: circle?.id }))
+    fetchCircleStatus(workspaceId || '', circle?.id)
     const interval = setInterval(() => {
-      dispatch(fetchCircleStatus({ workspaceId: workspaceId || '', circleId: circle?.id }))
+      fetchCircleStatus(workspaceId || '', circle?.id)
     }, 3000)
 
     return () => clearInterval(interval)
@@ -104,32 +108,37 @@ const CircleModules = ({ circle, onChangeModules, onDelete }: Props) => {
     cb()
   }
 
-  const handleChangeModule = (module: CircleModule) => {
-    if (!circle || !circle?.modules) {
-      setModules([module])
-      onChangeModules([module])
-      return
-    }
-
-    setModules([...circle.modules, module])
-    onChangeModules(circle.modules.map(m => {
-      if (m.name === module.name) {
-        return module
-      }
-
-      return m
-    }))
+  const handleAddModule = (module: CircleModule) => {
+    setDraftModules(modules => ([...modules, module]))
   }
 
+  const handleChangeModule = (module: CircleModule) => {
+    let currentModules: CircleModule[] = []
+    if (circle && circle?.modules) {
+      currentModules = circle.modules
+    }
+
+    onChangeModules([module, ...currentModules?.filter(m => m.name !== module.name)])
+  }
+
+  useEffect(() => {
+    let currentModules: CircleModule[] = []
+    if (circle && circle?.modules) {
+      currentModules = circle.modules
+    }
+
+    onChangeModules([...draftModules, ...currentModules])
+  }, [draftModules])
+
   const getStatus = (resources: CircleStatusModelModuleResource[]) => {
-    let status: Status = {health: 'Healthy'}
-    for (let i = 0; i < resources.length; i++) {
+    let status = { health: 'Healthy', message: '' }
+    for (let i = 0; i < resources?.length; i++) {
       if (resources[i]?.health === 'Progressing') {
-        status =  { health: 'Progressing', message: resources[i]?.message}
+        status =  { health: 'Progressing', message: resources[i]?.message || ''}
       }
 
       if (resources[i]?.health === 'Degraded') {
-        status =  { health: 'Degraded', message: resources[i]?.message}
+        status =  { health: 'Degraded', message: resources[i]?.message || ''}
         break
       }
     }
@@ -147,14 +156,26 @@ const CircleModules = ({ circle, onChangeModules, onDelete }: Props) => {
       <div className="circle-modules">
         <div className="circle-modules__title">
           Modules
-          {circle && circleViewer?.status?.syncedAt && (<div>
-            { `synced at ${viewerState?.status?.syncedAt}` }
-          </div> )}
         </div>
-        { modules?.map(module => (
-          <div className={circle && circleViewer?.status?.data ? `circle-modules__item--${getStatus(circleViewer?.status?.data?.modules[module.name]?.resources)?.health}` : 'circle-modules__item'} key={module.name}>
+        { draftModules?.map(module => (
+          <div className='circle-modules__item' key={module?.name}>
             <div className="circle-modules__item__header">
               <span>{module.name}</span>
+              <Dropdown>
+                <Dropdown.Toggle as={CustomToggle}>
+                  <FontAwesomeIcon icon="ellipsis-vertical" />
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={() => handleSelectModule(module, () => toggleForm(true))}>Edit</Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            </div>
+          </div>
+        )) }
+        { circleStatus && circleStatus?.modules && modules?.map(module => (
+          <div className={circleStatus && circleStatus?.modules ? `circle-modules__item--${getStatus(circleStatus?.modules[module?.name]?.resources)?.health}` : 'circle-modules__item'} key={module?.name}>
+            <div className="circle-modules__item__header">
+              <span>{module?.name}</span>
               <Dropdown>
                 <Dropdown.Toggle as={CustomToggle}>
                   <FontAwesomeIcon icon="ellipsis-vertical" />
@@ -166,10 +187,10 @@ const CircleModules = ({ circle, onChangeModules, onDelete }: Props) => {
                 </Dropdown.Menu>
               </Dropdown>
             </div>
-            {circle && getStatus(circleViewer?.status?.data?.modules[module.name]?.resources || [])?.message && (
+            {circle && getStatus(circleStatus?.modules[module.name]?.resources || [])?.message && (
               <div className="circle-modules__item__status">
                 <hr />
-                {getStatus(circleViewer?.status.data?.modules[module.name]?.resources || []).message}.message
+                {getStatus(circleStatus?.modules[module.name]?.resources || []).message}.message
               </div>
             )}
             <Alert action={() => handleDelete(module)} show={remove} onClose={() => toggleRemove(false)}/>
@@ -181,7 +202,7 @@ const CircleModules = ({ circle, onChangeModules, onDelete }: Props) => {
           </Button>
         </div>
       </div>
-      {form && <ModalForm module={selectedModule} show={true} onSave={handleChangeModule} onClose={() => toggleForm(false)} />}
+      {form && <ModalForm module={selectedModule} show={true} onAdd={handleAddModule} onUpdate={handleChangeModule} onClose={() => toggleForm(false)} />}
       <ModalMoveTo show={moveTo} onClose={() => toggleMoveTo(false)}/>
     </>
   )

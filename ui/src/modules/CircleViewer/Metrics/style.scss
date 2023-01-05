@@ -1,7 +1,13 @@
+@import "../../../core/style/colors.scss";
+
 .circle-metrics {
 
   &__base {
     height: 300px;
+  }
+
+  &__tooltip {
+    background-color: $second-grey;
   }
 
 }

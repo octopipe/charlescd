@@ -52,6 +52,7 @@ const CircleViewer = ({ circleId, viewMode, onClose, onChangeViewMode }: Props) 
   const handleUpdate = async (form: Circle) => {
     await dispatch(fetchCircleUpdate({workspaceId, circleId, data: form}))
     dispatch(fetchCircles(workspaceId))
+    dispatch(fetchCircle({workspaceId, circleId}))
   }
 
   if (circleViewer[circleId]) {

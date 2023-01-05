@@ -19,29 +19,37 @@ func (c CircleManager) Sync(circle *charlescdiov1alpha1.Circle) error {
 	var syncErr error
 	syncTime := time.Now().Format(time.RFC3339)
 	result := map[string]charlescdiov1alpha1.CircleModuleStatus{}
-	for _, circleModule := range circle.Spec.Modules {
-		res, isModified, err := c.syncResourcesByCircleModule(circle, circleModule)
-		currentResult, ok := result[circleModule.Name]
-		if !ok {
-			currentResult = charlescdiov1alpha1.CircleModuleStatus{}
-		}
-
+	if circle.Spec.Modules == nil || len(circle.Spec.Modules) == 0 {
+		_, _, err := c.reconcile([]*unstructured.Unstructured{}, *circle, charlescdiov1alpha1.CircleModule{})
 		if err != nil {
-			currentResult.Error = err.Error()
-			currentResult.SyncStatus = charlescdiov1alpha1.FailedStatus
-			syncErr = err
-			continue
+			return err
 		}
+	} else {
+		for _, circleModule := range circle.Spec.Modules {
+			res, isModified, err := c.syncResourcesByCircleModule(circle, circleModule)
+			currentResult, ok := result[circleModule.Name]
+			if !ok {
+				currentResult = charlescdiov1alpha1.CircleModuleStatus{}
+			}
 
-		moduleSyncedAt := syncTime
-		if m, ok := circle.Status.Modules[circleModule.Name]; ok && !isModified {
-			moduleSyncedAt = m.SyncedAt
-		}
+			if err != nil {
+				currentResult.Error = err.Error()
+				currentResult.SyncStatus = charlescdiov1alpha1.FailedStatus
+				result[circleModule.Name] = currentResult
+				syncErr = err
+				continue
+			}
 
-		result[circleModule.Name] = charlescdiov1alpha1.CircleModuleStatus{
-			Resources:  res,
-			SyncStatus: charlescdiov1alpha1.SuccessStatus,
-			SyncedAt:   moduleSyncedAt,
+			moduleSyncedAt := syncTime
+			if m, ok := circle.Status.Modules[circleModule.Name]; ok && !isModified {
+				moduleSyncedAt = m.SyncedAt
+			}
+
+			result[circleModule.Name] = charlescdiov1alpha1.CircleModuleStatus{
+				Resources:  res,
+				SyncStatus: charlescdiov1alpha1.SuccessStatus,
+				SyncedAt:   moduleSyncedAt,
+			}
 		}
 	}
 
@@ -75,7 +83,7 @@ func (c CircleManager) syncResourcesByCircleModule(circle *charlescdiov1alpha1.C
 		return nil, false, err
 	}
 
-	res, isModified, err := c.syncResources(targets, circleModule.Name, circle.Spec.Namespace)
+	res, isModified, err := c.reconcile(targets, *circle, circleModule)
 	if err != nil {
 		return nil, false, err
 	}
@@ -121,18 +129,23 @@ func (c *CircleManager) getCircleTargets(circle *charlescdiov1alpha1.Circle, cir
 	return newTargets, nil
 }
 
-func (c CircleManager) syncResources(targets []*unstructured.Unstructured, circleName string, namespace string) ([]charlescdiov1alpha1.CircleModuleResource, bool, error) {
+func (c CircleManager) reconcile(targets []*unstructured.Unstructured, circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.CircleModule) ([]charlescdiov1alpha1.CircleModuleResource, bool, error) {
 	isModified := false
-	namespacedName := types.NamespacedName{Name: circleName, Namespace: namespace}
 	res, err := c.gitopsEngine.Sync(
 		context.Background(),
 		targets,
 		func(r *cache.Resource) bool {
-			isSameCircle := r.Info.(*utils.ResourceInfo).CircleMark == utils.GetCircleMark(namespacedName)
-			return isSameCircle
+			isSameCircle := r.Info.(*utils.ResourceInfo).CircleMark == utils.GetMark(circle.Name, circle.Namespace)
+
+			if len(targets) <= 0 {
+				return isSameCircle
+			}
+
+			isSameModule := r.Info.(*utils.ResourceInfo).ModuleMark == utils.GetMark(module.Name, module.Namespace)
+			return isSameCircle && isSameModule
 		},
 		time.Now().String(),
-		namespace,
+		circle.Spec.Namespace,
 		sync.WithPrune(true),
 		sync.WithLogr(c.logger),
 	)

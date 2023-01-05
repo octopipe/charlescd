@@ -61,7 +61,7 @@ const CircleForm = ({ circle, viewMode, onSave, onUpdate }: Props) => {
   const { workspace } = useAppSelector(state => state.main)
   const [hasChange, setHasChange] = useState(false)
   const [matchStrategy, setMatchStrategy] = useState<CIRCLE_ROUTING_STRATEGY>(CIRCLE_ROUTING_STRATEGY.MATCH)
-  const { control, formState: {errors}, handleSubmit, setValue } = useForm<CircleForm>({
+  const { control, formState: {errors}, watch, handleSubmit, setValue } = useForm<CircleForm>({
     defaultValues: {
       name: circle?.name || '',
       description: circle?.description || '',
@@ -72,6 +72,11 @@ const CircleForm = ({ circle, viewMode, onSave, onUpdate }: Props) => {
       environments: JSON.stringify(circle?.environments || initialEnviroments, null, 2)
     }
   })
+
+  useEffect(() => {
+    const subscription = watch((value, { name, type }) => setHasChange(true));
+    return () => subscription.unsubscribe();
+  }, [watch])
 
   const isCreate = () => {
     return viewMode === CIRCLE_VIEW_MODE.CREATE
@@ -112,7 +117,7 @@ const CircleForm = ({ circle, viewMode, onSave, onUpdate }: Props) => {
       return
     }
 
-    const modules = circle?.modules?.filter(m => m.name !== module.name) || [] as CircleModule[]
+    const modules = circle?.modules?.filter(m => m.name !== module.name) || []
     let curretCircle: Circle = {
       name: circle.name,
       description: circle.description,
