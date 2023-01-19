@@ -54,7 +54,7 @@ func getRoute(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.Circ
 			Route: []*networkingv1alpha3.HTTPRouteDestination{
 				{
 					Destination: &networkingv1alpha3.Destination{
-						Host:   fmt.Sprintf("%s-%s.%s.svc.cluster.local", circle.Name, module.Name, circle.Spec.Namespace),
+						Host:   fmt.Sprintf("%s.%s.svc.cluster.local", module.Name, circle.Spec.Namespace),
 						Subset: circle.GetName(),
 					},
 				},
@@ -67,7 +67,7 @@ func getRoute(circle charlescdiov1alpha1.Circle, module charlescdiov1alpha1.Circ
 		Route: []*networkingv1alpha3.HTTPRouteDestination{
 			{
 				Destination: &networkingv1alpha3.Destination{
-					Host:   fmt.Sprintf("%s-%s.%s.svc.cluster.local", circle.Name, module.Name, circle.Spec.Namespace),
+					Host:   fmt.Sprintf("%s.%s.svc.cluster.local", module.Name, circle.Spec.Namespace),
 					Subset: circle.GetName(),
 				},
 				Weight: int32(circle.Spec.Routing.Canary.Weight),
@@ -153,7 +153,7 @@ func newDestinationRule(module charlescdiov1alpha1.CircleModule, circle charlesc
 			},
 		},
 		Spec: networkingv1alpha3.DestinationRule{
-			Host: fmt.Sprintf("%s-%s.%s.svc.cluster.local", circle.Name, module.Name, circle.Spec.Namespace),
+			Host: fmt.Sprintf("%s.%s.svc.cluster.local", module.Name, circle.Spec.Namespace),
 			Subsets: []*networkingv1alpha3.Subset{
 				{
 					Name: circle.GetName(),

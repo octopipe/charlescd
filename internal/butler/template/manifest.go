@@ -71,7 +71,12 @@ func (t template) parseManifests(manifests [][]byte, module charlescdiov1alpha1.
 				return nil, err
 			}
 
-			newManifest.SetName(fmt.Sprintf("%s-%s", circle.GetName(), newManifest.GetName()))
+			if newManifest.GetKind() == "Service" {
+				newManifest.SetName(module.Name)
+			} else {
+				newManifest.SetName(fmt.Sprintf("%s-%s", circle.GetName(), newManifest.GetName()))
+			}
+
 			newManifest = t.addDefaultAnnotations(newManifest, module, circle)
 			newManifests = append(newManifests, newManifest)
 		}
